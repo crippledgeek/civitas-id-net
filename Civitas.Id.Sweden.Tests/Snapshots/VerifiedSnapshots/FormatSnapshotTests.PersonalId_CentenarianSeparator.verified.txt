@@ -1,0 +1,17 @@
+﻿BirthDate=1920-05-08, canonical=192005087883
+
+today=2019-05-07
+  LongFormatWithSeparator   = 19200508-7883
+  ShortFormatWithSeparator  = 200508-7883
+today=2020-05-07
+  LongFormatWithSeparator   = 19200508-7883
+  ShortFormatWithSeparator  = 200508-7883
+today=2020-05-08
+  LongFormatWithSeparator   = 19200508+7883
+  ShortFormatWithSeparator  = 200508+7883
+today=2020-05-09
+  LongFormatWithSeparator   = 19200508+7883
+  ShortFormatWithSeparator  = 200508+7883
+today=2025-01-01
+  LongFormatWithSeparator   = 19200508+7883
+  ShortFormatWithSeparator  = 200508+7883

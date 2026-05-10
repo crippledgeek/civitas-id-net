@@ -1,0 +1,31 @@
+## .NET build outputs
+bin/
+obj/
+
+## Test results / coverage
+TestResults/
+*.coverage
+coverage.cobertura.xml
+
+## IDE
+.idea/
+.vs/
+*.user
+*.suo
+*.cache
+
+## Verify snapshot received files (verified files ARE committed)
+*.received.*
+
+## Project-private (excluded per project rules)
+docs/
+CLAUDE.md
+.claude/
+
+## OS
+.DS_Store
+Thumbs.db
+
+## Tooling output
+*.log
+node_modules/

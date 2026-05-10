@@ -1,0 +1,10 @@
+﻿LegalPerson:
+  LongFormat       = 8722125229
+  ShortFormat      = 8722125229
+  Form             = OffentligaKorporationerAnstalter
+
+EnskildFirma:
+  LongFormat       = 8302177210
+  ShortFormat      = 8302177210
+  Form             = None
+

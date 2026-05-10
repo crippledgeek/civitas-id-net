@@ -1,0 +1,28 @@
+root = true
+
+[*]
+indent_style = space
+end_of_line = lf
+charset = utf-8
+trim_trailing_whitespace = true
+insert_final_newline = true
+
+[*.cs]
+indent_size = 4
+
+# Folder = sub-namespace. Files in Civitas.Id.Sweden/Format/ use namespace
+# Civitas.Id.Sweden.Format, etc. Matches NodaTime and Serilog convention.
+# (Reverted from earlier "flat namespace" policy on 2026-05-08.)
+dotnet_style_namespace_match_folder = true:error
+dotnet_diagnostic.IDE0130.severity = error
+
+# File-scoped namespaces (Microsoft Coding Conventions 2025)
+csharp_style_namespace_declarations = file_scoped:error
+dotnet_diagnostic.IDE0161.severity = error
+
+[*.{csproj,slnx,json}]
+indent_size = 2
+
+[*.md]
+indent_size = 2
+trim_trailing_whitespace = false

@@ -1,0 +1,30 @@
+﻿BirthDate=1900-01-01
+  LongFormat                       = 190001616606
+  ShortFormat                      = 0001616606
+  Format(LongFormat)               = 190001616606
+  Format(ShortFormatWithStandard)  = 000161-6606
+
+BirthDate=1955-07-14
+  LongFormat                       = 195507745221
+  ShortFormat                      = 5507745221
+  Format(LongFormat)               = 195507745221
+  Format(ShortFormatWithStandard)  = 550774-5221
+
+BirthDate=1988-02-29
+  LongFormat                       = 198802897218
+  ShortFormat                      = 8802897218
+  Format(LongFormat)               = 198802897218
+  Format(ShortFormatWithStandard)  = 880289-7218
+
+BirthDate=2008-12-31
+  LongFormat                       = 200812917623
+  ShortFormat                      = 0812917623
+  Format(LongFormat)               = 200812917623
+  Format(ShortFormatWithStandard)  = 081291-7623
+
+BirthDate=2024-06-06
+  LongFormat                       = 202406665022
+  ShortFormat                      = 2406665022
+  Format(LongFormat)               = 202406665022
+  Format(ShortFormatWithStandard)  = 240666-5022
+

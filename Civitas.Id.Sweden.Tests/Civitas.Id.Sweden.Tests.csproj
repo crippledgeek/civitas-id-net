@@ -1,0 +1,39 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!-- Standard test-project analyzer suppressions (universal across FluentValidation,
+         dotnet/runtime, NodaTime test suites):
+         CA1707 — test methods use Method_Scenario_Expected naming (underscores).
+         CA1515 — test classes must be public for the runner to discover them.
+         CA1034 — nested test classes are the chosen organisation pattern (Phil Haack).
+         CA1052 — outer test classes with only nested types and shared consts aren't static. -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TngTech.ArchUnitNET" Version="0.13.3" />
+    <PackageReference Include="TngTech.ArchUnitNET.TUnit" Version="0.13.3" />
+    <PackageReference Include="TUnit" Version="1.*" />
+    <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.*" />
+    <PackageReference Include="TUnit.FsCheck" Version="1.43.41" />
+    <PackageReference Include="Verify.TUnit" Version="31.16.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.Fakers\Civitas.Id.Sweden.Fakers.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="Fixtures\**\*.*" CopyToOutputDirectory="PreserveNewest" />
+  </ItemGroup>
+
+</Project>

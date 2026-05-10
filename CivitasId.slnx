@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Civitas.Id.Sweden.Fakers/Civitas.Id.Sweden.Fakers.csproj" />
+  <Project Path="Civitas.Id.Sweden.Tests/Civitas.Id.Sweden.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden/Civitas.Id.Sweden.csproj" />
+</Solution>
