@@ -32,4 +32,4 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ### Migration notes
 - No public API was removed. Existing zero-arg method signatures are unchanged.
 - The behavior change is only observable for callers running in non-Stockholm host timezones (typically UTC containers) AT the boundary instant of a birthday or year-rollover. Passing `DateOnly.FromDateTime(DateTime.UtcNow)` as the explicit `DateOnly today` argument reproduces the prior behavior.
-- The legal-compliance audit and primary-source citations are recorded in the design spec under `docs/superpowers/specs/2026-05-08-task1-timeprovider-overloads-design.md`.
+- The legal-compliance basis for the Stockholm civil-time anchor is documented in the README and in the XML doc-remarks on the affected methods. Primary statutory sources: Föräldrabalken (1949:381) 9 kap 1 §, Lag (1930:173) §1, Förordning (1979:988) om svensk normaltid, Förordning (2001:127) om sommartid.
