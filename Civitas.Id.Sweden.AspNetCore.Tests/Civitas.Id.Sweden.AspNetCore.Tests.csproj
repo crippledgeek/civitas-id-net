@@ -9,7 +9,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
-    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
+    <!-- CA2007: ConfigureAwait is unnecessary in test code (no synchronization context). -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052;CA2007</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
