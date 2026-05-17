@@ -19,6 +19,7 @@ coverage.cobertura.xml
 
 ## Project-private (excluded per project rules)
 docs/
+samples/
 CLAUDE.md
 .claude/
 
