@@ -1,9 +1,9 @@
-namespace Civitas.Id.Sweden.Json.Converters;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Civitas.Id.Sweden.Core;
 using JetBrains.Annotations;
+
+namespace Civitas.Id.Sweden.Json.Converters;
 
 /// <summary>
 /// Serializes and deserializes <see cref="CoordinationId"/> values as 12-digit
@@ -18,12 +18,9 @@ public sealed class CoordinationIdJsonConverter : JsonConverter<CoordinationId>
     /// <inheritdoc />
     public override CoordinationId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("CoordinationId is null");
-        }
-
-        return CoordinationId.Parse(reader.GetString() ?? throw new JsonException("CoordinationId is null"));
+        return reader.TokenType == JsonTokenType.Null
+            ? throw new JsonException("CoordinationId is null")
+            : CoordinationId.Parse(reader.GetString() ?? throw new JsonException("CoordinationId is null"));
     }
 
     /// <inheritdoc />

@@ -1,9 +1,9 @@
-namespace Civitas.Id.Sweden.Json.Converters;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Civitas.Id.Sweden.Core;
 using JetBrains.Annotations;
+
+namespace Civitas.Id.Sweden.Json.Converters;
 
 /// <summary>
 /// Serializes and deserializes <see cref="OrganisationId"/> values as 10-digit
@@ -18,12 +18,9 @@ public sealed class OrganisationIdJsonConverter : JsonConverter<OrganisationId>
     /// <inheritdoc />
     public override OrganisationId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("OrganisationId is null");
-        }
-
-        return OrganisationId.Parse(reader.GetString() ?? throw new JsonException("OrganisationId is null"));
+        return reader.TokenType == JsonTokenType.Null
+            ? throw new JsonException("OrganisationId is null")
+            : OrganisationId.Parse(reader.GetString() ?? throw new JsonException("OrganisationId is null"));
     }
 
     /// <inheritdoc />

@@ -1,14 +1,14 @@
-namespace Civitas.Id.Sweden.Json.Tests.Converters;
-
 using System.Text.Json;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Json.Converters;
+
+namespace Civitas.Id.Sweden.Json.Tests.Converters;
 
 public class SwedishOfficialIdJsonConverterTests
 {
     private static readonly JsonSerializerOptions Opts = new()
     {
-        Converters = { new SwedishOfficialIdJsonConverter() },
+        Converters = { new SwedishOfficialIdJsonConverter() }
     };
 
     public class Deserialize

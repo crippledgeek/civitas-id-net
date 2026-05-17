@@ -1,9 +1,9 @@
-namespace Civitas.Id.Sweden.Json.Converters;
-
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Civitas.Id.Sweden.Core;
 using JetBrains.Annotations;
+
+namespace Civitas.Id.Sweden.Json.Converters;
 
 /// <summary>
 /// Polymorphic converter that materializes <see cref="SwedishOfficialId"/>
@@ -21,12 +21,9 @@ public sealed class SwedishOfficialIdJsonConverter : JsonConverter<SwedishOffici
     /// <inheritdoc />
     public override SwedishOfficialId Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
     {
-        if (reader.TokenType == JsonTokenType.Null)
-        {
-            throw new JsonException("SwedishOfficialId is null");
-        }
-
-        return SwedishOfficialId.ParseAny(reader.GetString() ?? throw new JsonException("SwedishOfficialId is null"));
+        return reader.TokenType == JsonTokenType.Null
+            ? throw new JsonException("SwedishOfficialId is null")
+            : SwedishOfficialId.ParseAny(reader.GetString() ?? throw new JsonException("SwedishOfficialId is null"));
     }
 
     /// <inheritdoc />
