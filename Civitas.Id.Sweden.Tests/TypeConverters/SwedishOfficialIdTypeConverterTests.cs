@@ -7,7 +7,7 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 
 /// <summary>
 ///     Tests for <see cref="SwedishOfficialIdTypeConverter" /> (composite — dispatches
-///     to any of the three subtypes via <see cref="SwedishOfficialId.TryParseAny(string, out SwedishOfficialId?)" />).
+///     to any of the three subtypes via <see cref="SwedishOfficialId.TryParseAny(string?, out SwedishOfficialId?)" />).
 /// </summary>
 public class SwedishOfficialIdTypeConverterTests
 {

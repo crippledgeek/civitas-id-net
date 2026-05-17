@@ -9,7 +9,7 @@ namespace Civitas.Id.Sweden.TypeConverters;
 /// <summary>
 ///     Converts <see cref="SwedishOfficialId" /> values (any subtype) to and
 ///     from their canonical string form via
-///     <see cref="SwedishOfficialId.TryParseAny(string, out SwedishOfficialId)" />.
+///     <see cref="SwedishOfficialId.TryParseAny(string?, out SwedishOfficialId?)" />.
 /// </summary>
 [PublicAPI]
 public sealed class SwedishOfficialIdTypeConverter : TypeConverter
