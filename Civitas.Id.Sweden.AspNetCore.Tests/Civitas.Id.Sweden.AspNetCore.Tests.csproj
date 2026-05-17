@@ -16,6 +16,7 @@
   <ItemGroup>
     <PackageReference Include="TUnit" Version="1.*" />
     <PackageReference Include="Verify.TUnit" Version="31.16.3" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.*" />
   </ItemGroup>
 
   <ItemGroup>
@@ -24,5 +25,6 @@
     <ProjectReference Include="..\Civitas.Id.Sweden.DataAnnotations\Civitas.Id.Sweden.DataAnnotations.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.AspNetCore\Civitas.Id.Sweden.AspNetCore.csproj" />
   </ItemGroup>
+
 
 </Project>
