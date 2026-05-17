@@ -65,15 +65,9 @@ public class OrganisationIdTypeConverterTests
         public async Task Throws_InvalidIdNumberException_OnMalformedString()
         {
             var sut = new OrganisationIdTypeConverter();
-            try
-            {
-                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-an-org");
-                throw new InvalidOperationException("Expected exception not thrown.");
-            }
-            catch (InvalidIdNumberException ex)
-            {
-                await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
-            }
+            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-an-org"))
+                .Throws<InvalidIdNumberException>();
+            await Assert.That(ex!.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
         }
 
         [Test]

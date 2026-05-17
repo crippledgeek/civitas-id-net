@@ -72,15 +72,9 @@ public class CoordinationIdTypeConverterTests
         public async Task Throws_InvalidIdNumberException_OnMalformedString()
         {
             var sut = new CoordinationIdTypeConverter();
-            try
-            {
-                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-a-samordningsnummer");
-                throw new InvalidOperationException("Expected exception not thrown.");
-            }
-            catch (InvalidIdNumberException ex)
-            {
-                await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
-            }
+            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-a-samordningsnummer"))
+                .Throws<InvalidIdNumberException>();
+            await Assert.That(ex!.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
         }
 
         [Test]

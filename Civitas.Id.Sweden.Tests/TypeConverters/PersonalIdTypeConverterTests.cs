@@ -74,15 +74,9 @@ public class PersonalIdTypeConverterTests
         public async Task Throws_InvalidIdNumberException_OnMalformedString()
         {
             var sut = new PersonalIdTypeConverter();
-            try
-            {
-                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-a-pnr");
-                throw new InvalidOperationException("Expected exception not thrown.");
-            }
-            catch (InvalidIdNumberException ex)
-            {
-                await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
-            }
+            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-a-pnr"))
+                .Throws<InvalidIdNumberException>();
+            await Assert.That(ex!.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
         }
 
         [Test]
@@ -90,22 +84,16 @@ public class PersonalIdTypeConverterTests
         {
             var sut = new PersonalIdTypeConverter();
             const string Input = "189001019800";
-            try
-            {
-                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, Input);
-                throw new InvalidOperationException("Expected exception not thrown.");
-            }
-            catch (InvalidIdNumberException ex)
-            {
-                // The current parser surfaces all failure modes as InvalidFormat;
-                // when the parser is refined to distinguish checksum failures
-                // (out of scope for v1.0), the assertion should tighten to
-                // InvalidIdNumberReason.InvalidChecksum. Until then, assert
-                // that the exception's redacted input preserves the original
-                // prefix/suffix — a regression guard against the converter
-                // swallowing the value before constructing the exception.
-                await Assert.That(ex.RedactedInput).IsEqualTo("18******9800");
-            }
+            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, Input))
+                .Throws<InvalidIdNumberException>();
+            // The current parser surfaces all failure modes as InvalidFormat;
+            // when the parser is refined to distinguish checksum failures
+            // (out of scope for v1.0), the assertion should tighten to
+            // InvalidIdNumberReason.InvalidChecksum. Until then, assert
+            // that the exception's redacted input preserves the original
+            // prefix/suffix — a regression guard against the converter
+            // swallowing the value before constructing the exception.
+            await Assert.That(ex!.RedactedInput).IsEqualTo("18******9800");
         }
 
         [Test]

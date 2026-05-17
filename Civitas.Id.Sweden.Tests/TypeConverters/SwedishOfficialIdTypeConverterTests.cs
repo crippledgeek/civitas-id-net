@@ -63,15 +63,9 @@ public class SwedishOfficialIdTypeConverterTests
         public async Task Throws_OnUnknownInput()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            try
-            {
-                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, "garbage");
-                throw new InvalidOperationException("Expected exception not thrown.");
-            }
-            catch (InvalidIdNumberException ex)
-            {
-                await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.UnsupportedIdType);
-            }
+            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, "garbage"))
+                .Throws<InvalidIdNumberException>();
+            await Assert.That(ex!.Reason).IsEqualTo(InvalidIdNumberReason.UnsupportedIdType);
         }
 
         [Test]
