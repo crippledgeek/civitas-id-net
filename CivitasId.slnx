@@ -1,4 +1,6 @@
 <Solution>
+  <Project Path="Civitas.Id.Sweden.AspNetCore.Tests/Civitas.Id.Sweden.AspNetCore.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden.AspNetCore/Civitas.Id.Sweden.AspNetCore.csproj" />
   <Project Path="Civitas.Id.Sweden.DataAnnotations.Tests/Civitas.Id.Sweden.DataAnnotations.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.DataAnnotations/Civitas.Id.Sweden.DataAnnotations.csproj" />
   <Project Path="Civitas.Id.Sweden.Fakers/Civitas.Id.Sweden.Fakers.csproj" />
