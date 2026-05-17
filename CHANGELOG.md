@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- New companion package `Civitas.Id.Sweden.AspNetCore` — full ASP.NET Core 10 integration:
+  - `AddCivitasIdSwedenAspNetCore` extension methods (3 overloads: no-arg, `Action<TOptions>`, `IConfiguration`) following the canonical .NET 10 Options pattern (`AddOptions<T>().Configure/Bind().Validate().ValidateOnStart()` + `TryAddEnumerable` for idempotency).
+  - `CivitasIdSwedenAspNetCoreOptions` (sealed, mutable properties) + source-generated `[OptionsValidator]` validator; `JsonFormat` propagates into `CivitasIdSwedenJsonOptions.PersonnummerFormat` via DI-aware cross-options bridge.
+  - `InvalidIdNumberExceptionHandler` — `IExceptionHandler` translating `InvalidIdNumberException` into RFC 9457 `ProblemDetails` 400 responses with caller-overridable PII redaction (defaults to the exception's built-in `RedactedInput`).
+  - `SwedishIdSchemaTransformer` — `IOpenApiSchemaTransformer` augmenting component schemas for `PersonalId`/`CoordinationId`/`OrganisationId`/`SwedishOfficialId` with `format`, `pattern`, `example`, `description`. Registered via `AddOpenApi(opts => opts.AddSchemaTransformer<T>())` on the default document.
+  - `CivitasIdHttpJsonOptionsSetup` — `IConfigureOptions<JsonOptions>` that chains `CivitasIdSwedenJsonContext` AND registers the 4 `JsonConverter<T>` instances on `JsonSerializerOptions.Converters` so body deserialization of typed-ID DTOs works under AOT.
+  - `WithCivitasIdSwedenMetadata` — `IEndpointConventionBuilder` extension that attaches `ProducesResponseTypeMetadata(400, typeof(ProblemDetails), "application/problem+json")` to individual endpoints or `MapGroup` calls accepting typed Swedish IDs.
+  - Uses `FrameworkReference Microsoft.AspNetCore.App` (NOT the legacy `Microsoft.AspNetCore.Http.Abstractions` 2.x NuGet package). AOT-clean (`IL3058` suppressed for the shared-framework `[IsTrimmable]`-but-not-`[IsAotCompatible]` assembly metadata gap).
 - New companion package `Civitas.Id.Sweden.DataAnnotations` — System.ComponentModel.DataAnnotations validation attributes:
   - `ValidSwedishOfficialIdAttribute` (composite — accepts any of the three subtypes via `SwedishOfficialId.TryParseAny`).
   - `ValidPersonalIdAttribute`, `ValidCoordinationIdAttribute`, `ValidOrganisationIdAttribute` (type-strict).
