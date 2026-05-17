@@ -35,4 +35,29 @@
     <InternalsVisibleTo Include="Civitas.Id.Sweden.AspNetCore.Tests" />
   </ItemGroup>
 
+  <!--
+    OpenAPI XmlComment source generator workaround.
+
+    Microsoft.AspNetCore.OpenApi.targets ("GenerateAdditionalXmlFilesForOpenApi")
+    adds the XML doc file of every ProjectReference as an AdditionalFile, so
+    the bundled XmlCommentGenerator can emit per-member documentation. All
+    Civitas.Id.Sweden* sibling packages embed JetBrains.Annotations.Sources
+    as internal types, so the same XML doc keys
+    ("T:JetBrains.Annotations.CanBeNullAttribute", etc.) appear in EVERY
+    referenced XML file. The generator's Dictionary.Add fails with
+    ArgumentException ("An item with the same key has already been added")
+    on the first /openapi/v1.json request.
+
+    Remove the sibling-project XML doc files before the source generator
+    sees them. SwedishIdSchemaTransformer still applies format / pattern /
+    example / description for the Civitas types via metadata.
+  -->
+  <Target Name="_StripCivitasXmlFromOpenApiAdditionalFiles"
+          AfterTargets="GenerateAdditionalXmlFilesForOpenApi">
+    <ItemGroup>
+      <AdditionalFiles Remove="@(AdditionalFiles)"
+                       Condition="$([System.String]::Copy('%(Filename)').StartsWith('Civitas.Id.Sweden'))" />
+    </ItemGroup>
+  </Target>
+
 </Project>
