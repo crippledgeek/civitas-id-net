@@ -26,6 +26,7 @@
     <PackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.4">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Json\Civitas.Id.Sweden.Json.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.DataAnnotations\Civitas.Id.Sweden.DataAnnotations.csproj" />
   </ItemGroup>
