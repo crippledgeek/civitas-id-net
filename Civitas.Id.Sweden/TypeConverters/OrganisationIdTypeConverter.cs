@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Errors;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.TypeConverters;
@@ -34,7 +33,7 @@ public sealed class OrganisationIdTypeConverter : TypeConverter
         => value switch
         {
             string s when OrganisationId.TryParse(s, out var id) => id,
-            string s => throw new InvalidIdNumberException(s, ClassifyFailure(s)),
+            string s => OrganisationId.Parse(s), // throws — reached only when TryParse already returned false
             _ => base.ConvertFrom(context, culture, value),
         };
 
@@ -45,17 +44,4 @@ public sealed class OrganisationIdTypeConverter : TypeConverter
         => destinationType == typeof(string) && value is OrganisationId id
             ? id.LongFormat()
             : base.ConvertTo(context, culture, value, destinationType);
-
-    private static InvalidIdNumberReason ClassifyFailure(string s)
-    {
-        try
-        {
-            _ = OrganisationId.Parse(s);
-            return InvalidIdNumberReason.Unknown;
-        }
-        catch (InvalidIdNumberException ex)
-        {
-            return ex.Reason;
-        }
-    }
 }
