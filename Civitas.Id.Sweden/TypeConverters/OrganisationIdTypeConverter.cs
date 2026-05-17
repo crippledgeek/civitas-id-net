@@ -34,7 +34,7 @@ public sealed class OrganisationIdTypeConverter : TypeConverter
         {
             string s when OrganisationId.TryParse(s, out var id) => id,
             string s => OrganisationId.Parse(s), // throws — reached only when TryParse already returned false
-            _ => base.ConvertFrom(context, culture, value),
+            _ => base.ConvertFrom(context, culture, value)
         };
 
     /// <inheritdoc />

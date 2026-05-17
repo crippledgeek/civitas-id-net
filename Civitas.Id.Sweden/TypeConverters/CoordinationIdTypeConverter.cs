@@ -27,7 +27,7 @@ public sealed class CoordinationIdTypeConverter : TypeConverter
         {
             string s when CoordinationId.TryParse(s, out var id) => id,
             string s => CoordinationId.Parse(s), // throws — reached only when TryParse already returned false
-            _ => base.ConvertFrom(context, culture, value),
+            _ => base.ConvertFrom(context, culture, value)
         };
 
     /// <inheritdoc />

@@ -28,7 +28,7 @@ public sealed class SwedishOfficialIdTypeConverter : TypeConverter
         {
             string s when SwedishOfficialId.TryParseAny(s, out var id) => id,
             string s => throw new InvalidIdNumberException(s, InvalidIdNumberReason.UnsupportedIdType),
-            _ => base.ConvertFrom(context, culture, value),
+            _ => base.ConvertFrom(context, culture, value)
         };
 
     /// <inheritdoc />

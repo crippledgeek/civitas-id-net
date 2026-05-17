@@ -83,8 +83,8 @@ public class PersonalIdTypeConverterTests
         public async Task Throws_InvalidIdNumberException_OnInvalidChecksum()
         {
             var sut = new PersonalIdTypeConverter();
-            const string Input = "189001019800";
-            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, Input))
+            const string input = "189001019800";
+            var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, input))
                 .Throws<InvalidIdNumberException>();
             // The current parser surfaces all failure modes as InvalidFormat;
             // when the parser is refined to distinguish checksum failures

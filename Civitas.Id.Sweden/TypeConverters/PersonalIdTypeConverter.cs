@@ -27,7 +27,7 @@ public sealed class PersonalIdTypeConverter : TypeConverter
         {
             string s when PersonalId.TryParse(s, out var id) => id,
             string s => PersonalId.Parse(s), // throws — reached only when TryParse already returned false
-            _ => base.ConvertFrom(context, culture, value),
+            _ => base.ConvertFrom(context, culture, value)
         };
 
     /// <inheritdoc />
