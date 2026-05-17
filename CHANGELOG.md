@@ -6,6 +6,14 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- `PersonalIdTypeConverter`, `CoordinationIdTypeConverter`, `OrganisationIdTypeConverter`,
+  `SwedishOfficialIdTypeConverter` — `System.ComponentModel.TypeConverter` implementations
+  in `Civitas.Id.Sweden.TypeConverters` namespace. Closes the IConfiguration / Options
+  reflection-binder gap so consumers can bind `PersonalId`-typed settings from
+  `appsettings.json` without writing custom converters. AOT-clean (no `Reflection.Emit`).
+- `[TypeConverter]` attributes applied to `PersonalId`, `CoordinationId`, `OrganisationId`
+  record declarations, enabling automatic discovery via `TypeDescriptor.GetConverter`.
+  Round-trip through `LongFormat()` (10/12-digit canonical form per type).
 - New companion package `Civitas.Id.Sweden.Fakers` providing algorithmic generators for valid Swedish official IDs (`PersonalIdFaker`, `CoordinationIdFaker`, `OrganisationIdFaker`, `SwedishOfficialIdFaker`). Pattern B distribution: regular NuGet, consumer-choice (test or production). AOT-clean. Closes deferred task #4. **Default constructor uses cryptographically secure RNG** (`System.Security.Cryptography.RandomNumberGenerator.GetInt32`). The seeded `(int seed)` and caller-injected `(Random)` constructor overloads exist for deterministic test fixtures only — do NOT rely on those paths for security-sensitive scenarios.
 - `OrganisationId.FromValidated(string)` internal factory — used by the fakers package to skip redundant Luhn re-validation. Not exposed publicly.
 - JetBrains code-annotation attributes applied to the public surface via `JetBrains.Annotations.Sources` (compile-time only, `PrivateAssets="all"`, zero IL impact, no transitive consumer dependency): `[PublicAPI]` on every public type, `[Pure]` on stateless query methods (`Parse`/`TryParse`/`IsValid`/`Format`/`LongFormat`/`ShortFormat`/`GetAge(DateOnly|TimeProvider)`/etc.), `[ContractAnnotation]` stacked alongside `[NotNullWhen]` on every `TryParse*` overload, `[NonNegativeValue]` on `GetAge`. Improves consumer-side static analysis (Rider/ReSharper) without affecting Roslyn behavior.
