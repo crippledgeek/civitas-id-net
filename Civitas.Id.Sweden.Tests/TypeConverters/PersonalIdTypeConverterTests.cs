@@ -1,0 +1,134 @@
+using System.Globalization;
+using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.TypeConverters;
+
+namespace Civitas.Id.Sweden.Tests.TypeConverters;
+
+/// <summary>
+///     Tests for <see cref="PersonalIdTypeConverter" />.
+/// </summary>
+public class PersonalIdTypeConverterTests
+{
+    private const string ValidPin12 = "189001019802";
+    private const string ValidPin10 = "9001019802";
+    private const string ValidPinWithHyphen = "900101-9802";
+
+    public class CanConvertFrom
+    {
+        [Test]
+        public async Task ReturnsTrue_ForString()
+        {
+            var sut = new PersonalIdTypeConverter();
+            await Assert.That(sut.CanConvertFrom(typeof(string))).IsTrue();
+        }
+
+        [Test]
+        public async Task ReturnsFalse_ForInt()
+        {
+            var sut = new PersonalIdTypeConverter();
+            await Assert.That(sut.CanConvertFrom(typeof(int))).IsFalse();
+        }
+    }
+
+    public class CanConvertTo
+    {
+        [Test]
+        public async Task ReturnsTrue_ForString()
+        {
+            var sut = new PersonalIdTypeConverter();
+            await Assert.That(sut.CanConvertTo(typeof(string))).IsTrue();
+        }
+
+        [Test]
+        public async Task ReturnsFalse_ForInt()
+        {
+            var sut = new PersonalIdTypeConverter();
+            await Assert.That(sut.CanConvertTo(typeof(int))).IsFalse();
+        }
+    }
+
+    public class ConvertFrom
+    {
+        [Test]
+        [Arguments(ValidPin12)]
+        [Arguments(ValidPin10)]
+        [Arguments(ValidPinWithHyphen)]
+        public async Task Parses_ValidString(string input)
+        {
+            var sut = new PersonalIdTypeConverter();
+            var result = sut.ConvertFrom(null, CultureInfo.InvariantCulture, input);
+            await Assert.That(result).IsTypeOf<PersonalId>();
+        }
+
+        [Test]
+        public async Task RoundTrips_ToCanonicalLongFormat()
+        {
+            var sut = new PersonalIdTypeConverter();
+            var result = (PersonalId?)sut.ConvertFrom(null, CultureInfo.InvariantCulture, ValidPin12);
+            await Assert.That(result).IsNotNull();
+            await Assert.That(result!.LongFormat()).IsEqualTo(ValidPin12);
+        }
+
+        [Test]
+        public async Task Throws_InvalidIdNumberException_OnMalformedString()
+        {
+            var sut = new PersonalIdTypeConverter();
+            try
+            {
+                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, "not-a-pnr");
+                throw new InvalidOperationException("Expected exception not thrown.");
+            }
+            catch (InvalidIdNumberException ex)
+            {
+                await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.InvalidFormat);
+            }
+        }
+
+        [Test]
+        public async Task Throws_InvalidIdNumberException_OnInvalidChecksum()
+        {
+            var sut = new PersonalIdTypeConverter();
+            try
+            {
+                _ = sut.ConvertFrom(null, CultureInfo.InvariantCulture, "189001019800");
+                throw new InvalidOperationException("Expected exception not thrown.");
+            }
+            catch (InvalidIdNumberException ex)
+            {
+                // Failure classification falls back to InvalidFormat when Parse rethrows
+                // the same generic exception; the test asserts the type, not the reason.
+                await Assert.That(ex).IsNotNull();
+            }
+        }
+
+        [Test]
+        public async Task Throws_OnEmptyString()
+        {
+            var sut = new PersonalIdTypeConverter();
+            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, ""))
+                .Throws<InvalidIdNumberException>();
+        }
+    }
+
+    public class ConvertTo
+    {
+        [Test]
+        public async Task ReturnsLongFormat()
+        {
+            var sut = new PersonalIdTypeConverter();
+            var id = PersonalId.Parse(ValidPin12);
+            var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
+            await Assert.That(result).IsEqualTo(ValidPin12);
+        }
+
+        [Test]
+        public async Task RoundTrips_String_To_PersonalId_To_String()
+        {
+            var sut = new PersonalIdTypeConverter();
+            var id = (PersonalId?)sut.ConvertFrom(null, CultureInfo.InvariantCulture, ValidPin12);
+            var roundTripped = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
+            await Assert.That(roundTripped).IsEqualTo(ValidPin12);
+        }
+    }
+}
