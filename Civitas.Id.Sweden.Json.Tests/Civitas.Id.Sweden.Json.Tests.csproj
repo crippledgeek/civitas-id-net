@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="1.*" />
+    <PackageReference Include="TUnit.FsCheck" Version="1.43.41" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.Json\Civitas.Id.Sweden.Json.csproj" />
+  </ItemGroup>
+
+</Project>
