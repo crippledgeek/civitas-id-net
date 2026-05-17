@@ -6,6 +6,12 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- New companion package `Civitas.Id.Sweden.DataAnnotations` — System.ComponentModel.DataAnnotations validation attributes:
+  - `ValidSwedishOfficialIdAttribute` (composite — accepts any of the three subtypes via `SwedishOfficialId.TryParseAny`).
+  - `ValidPersonalIdAttribute`, `ValidCoordinationIdAttribute`, `ValidOrganisationIdAttribute` (type-strict).
+  - Each attribute accepts both `string` and typed-instance values; `null` short-circuits to `ValidationResult.Success` per DataAnnotations convention (use `[Required]` for null-rejection separately).
+  - Cross-type rejection enforced at instance level for all three per-type attributes. Note: at the string level, a 12-digit personnummer can legitimately parse as `OrganisationId` (Enskild firma per Lag 1974:174) — documented inline.
+  - Zero dependency on ASP.NET Core or System.Text.Json. Consumable standalone by MAUI, WPF, Avalonia, Blazor.
 - New companion package `Civitas.Id.Sweden.Json` — System.Text.Json integration:
   - Per-type `JsonConverter<T>` for `PersonalId`, `CoordinationId`, `OrganisationId`.
   - Polymorphic `SwedishOfficialIdJsonConverter` materializing the correct subtype via `TryParseAny`.
