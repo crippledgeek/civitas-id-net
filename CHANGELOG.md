@@ -6,6 +6,13 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 ## [Unreleased]
 
 ### Added
+- New companion package `Civitas.Id.Sweden.Json` — System.Text.Json integration:
+  - Per-type `JsonConverter<T>` for `PersonalId`, `CoordinationId`, `OrganisationId`.
+  - Polymorphic `SwedishOfficialIdJsonConverter` materializing the correct subtype via `TryParseAny`.
+  - Source-generated `CivitasIdSwedenJsonContext : JsonSerializerContext` (public, composable via `TypeInfoResolverChain.Add`) for AOT-friendly serialization.
+  - `CivitasIdSwedenJsonOptions` (sealed class, mutable properties) + source-generated `[OptionsValidator]` validator.
+  - `AddCivitasIdSwedenJson` extension methods (3 overloads: no-arg, `Action<TOptions>`, `IConfiguration`) following the canonical .NET 10 Options pattern (`AddOptions<T>().Configure().Validate().ValidateOnStart()` + `TryAddEnumerable` for idempotency).
+  - All converters AOT-clean, all carry `[PublicAPI]`. Zero dependency on ASP.NET Core.
 - `PersonalIdTypeConverter`, `CoordinationIdTypeConverter`, `OrganisationIdTypeConverter`,
   `SwedishOfficialIdTypeConverter` — `System.ComponentModel.TypeConverter` implementations
   in `Civitas.Id.Sweden.TypeConverters` namespace. Closes the IConfiguration / Options
