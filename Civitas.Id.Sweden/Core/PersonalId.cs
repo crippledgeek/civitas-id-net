@@ -1,9 +1,11 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.TypeConverters;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Core;
@@ -11,6 +13,7 @@ namespace Civitas.Id.Sweden.Core;
 /// <summary>
 ///     A Swedish personal identification number (personnummer).
 /// </summary>
+[TypeConverter(typeof(PersonalIdTypeConverter))]
 public sealed record PersonalId : PhysicalPersonId,
     ISpanParsable<PersonalId>
 {
