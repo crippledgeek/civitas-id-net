@@ -3,9 +3,7 @@ using System.Text.Json.Nodes;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 using Civitas.Id.Sweden.AspNetCore.Options;
 using Civitas.Id.Sweden.Errors;
-using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.ExceptionHandlers;
 
@@ -33,7 +31,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ctx = MakeContext();
             var ex = new InvalidIdNumberException("19811218bad9", InvalidIdNumberReason.InvalidFormat);
 
-            var handled = await handler.TryHandleAsync(ctx, ex, default);
+            var handled = await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
             await Assert.That(handled).IsTrue();
             await Assert.That(ctx.Response.StatusCode).IsEqualTo(StatusCodes.Status400BadRequest);
@@ -46,7 +44,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ctx = MakeContext();
             var ex = new InvalidOperationException("not ours");
 
-            var handled = await handler.TryHandleAsync(ctx, ex, default);
+            var handled = await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
             await Assert.That(handled).IsFalse();
         }
@@ -58,7 +56,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ctx = MakeContext();
             var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
 
-            await handler.TryHandleAsync(ctx, ex, default);
+            await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
             ctx.Response.Body.Position = 0;
             var body = await JsonSerializer.DeserializeAsync<JsonObject>(ctx.Response.Body);
@@ -72,7 +70,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ctx = MakeContext();
             var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
 
-            await handler.TryHandleAsync(ctx, ex, default);
+            await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
             ctx.Response.Body.Position = 0;
             var body = await JsonSerializer.DeserializeAsync<JsonObject>(ctx.Response.Body);
@@ -86,7 +84,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ctx = MakeContext();
             var ex = new InvalidIdNumberException("19811218bad9", InvalidIdNumberReason.InvalidChecksum);
 
-            await handler.TryHandleAsync(ctx, ex, default);
+            await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
             ctx.Response.Body.Position = 0;
             var body = await JsonSerializer.DeserializeAsync<JsonObject>(ctx.Response.Body);
@@ -100,7 +98,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
 
             await Assert.That(async () =>
-                    await handler.TryHandleAsync(null!, ex, default))
+                    await handler.TryHandleAsync(null!, ex, CancellationToken.None))
                 .Throws<ArgumentNullException>();
         }
 
@@ -111,7 +109,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var ctx = MakeContext();
 
             await Assert.That(async () =>
-                    await handler.TryHandleAsync(ctx, null!, default))
+                    await handler.TryHandleAsync(ctx, null!, CancellationToken.None))
                 .Throws<ArgumentNullException>();
         }
     }

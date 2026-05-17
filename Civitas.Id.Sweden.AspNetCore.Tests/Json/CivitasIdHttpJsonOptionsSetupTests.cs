@@ -1,4 +1,3 @@
-using System.Linq;
 using Civitas.Id.Sweden.AspNetCore.Json;
 using Civitas.Id.Sweden.Json;
 using Microsoft.AspNetCore.Http.Json;

@@ -63,6 +63,10 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
         // reflection-based WriteAsJsonAsync overload (IL2026/IL3050) and
         // the difficulty of source-generating the IDictionary-shaped
         // Extensions property.
+        // ReSharper disable UseAwaitUsing
+        // Synchronous Dispose is intentional: MemoryStream and Utf8JsonWriter
+        // both have trivial Dispose paths and DisposeAsync would force
+        // ConfigureAwait(false) hops (CA2007) without any throughput benefit.
         using var buffer = new MemoryStream();
         using (var writer = new Utf8JsonWriter(buffer))
         {
