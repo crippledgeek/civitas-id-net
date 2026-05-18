@@ -25,10 +25,10 @@ public class CivitasIdSwedenJsonContextTests
         {
             Converters =
             {
-                new PersonalIdJsonConverter(),
-                new CoordinationIdJsonConverter(),
+                new PersonalIdLongFormatJsonConverter(),
+                new CoordinationIdLongFormatJsonConverter(),
                 new OrganisationIdJsonConverter(),
-                new SwedishOfficialIdJsonConverter()
+                new SwedishOfficialIdLongFormatJsonConverter()
             }
         };
         opts.TypeInfoResolverChain.Add(CivitasIdSwedenJsonContext.Default);

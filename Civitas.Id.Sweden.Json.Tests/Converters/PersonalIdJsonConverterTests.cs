@@ -8,7 +8,7 @@ public class PersonalIdJsonConverterTests
 {
     private static readonly JsonSerializerOptions Opts = new()
     {
-        Converters = { new PersonalIdJsonConverter() }
+        Converters = { new PersonalIdLongFormatJsonConverter() }
     };
 
     public class Serialize

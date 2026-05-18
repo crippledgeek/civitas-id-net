@@ -8,7 +8,7 @@ public class CoordinationIdJsonConverterTests
 {
     private static readonly JsonSerializerOptions Opts = new()
     {
-        Converters = { new CoordinationIdJsonConverter() }
+        Converters = { new CoordinationIdLongFormatJsonConverter() }
     };
 
     public class Serialize
