@@ -1,5 +1,6 @@
 using Civitas.Id.Sweden.AspNetCore.Endpoints;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
+using Civitas.Id.Sweden.AspNetCore.OpenApi;
 using Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
@@ -36,6 +37,10 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
                 ? new string('*', s.Length - 4) + s[^4..]
                 : "****";
         });
+
+        // OpenAPI is opt-in as of Phase 2 (Finding 3): library no longer
+        // calls AddOpenApi from RegisterInfrastructure.
+        builder.Services.AddOpenApi(opts => opts.AddCivitasIdSwedenSchemas());
 
         var app = builder.Build();
         app.UseExceptionHandler();
