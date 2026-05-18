@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Civitas.Id.Sweden.AspNetCore.Endpoints;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
+using Civitas.Id.Sweden.AspNetCore.OpenApi;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.DataAnnotations;
 using Civitas.Id.Sweden.Json;
@@ -53,6 +54,8 @@ Console.WriteLine("  ✓ DataAnnotations ValidPersonalIdAttribute");
 // ── 5. Minimal API host (AspNetCore) ────────────────────────────────────────
 var builder = WebApplication.CreateSlimBuilder(args);
 builder.Services.AddCivitasIdSwedenAspNetCore();
+// OpenAPI is opt-in (Phase 2): register and attach Civitas schema metadata.
+builder.Services.AddOpenApi(static opts => opts.AddCivitasIdSwedenSchemas());
 
 var app = builder.Build();
 app.UseExceptionHandler();
@@ -98,6 +101,20 @@ if (openApiBody?["paths"] is null)
 Console.WriteLine("  ✓ OpenAPI document available");
 
 await app.StopAsync();
+
+// ── 6. Caveat 3 probe — Mvc.JsonOptions setup registered without AddControllers ───
+// AddCivitasIdSwedenAspNetCore() above registers BOTH IConfigureOptions<Http.Json.JsonOptions>
+// AND IConfigureOptions<Mvc.JsonOptions>. The MVC option is a silent no-op when AddControllers
+// is not invoked (Mvc.JsonOptions is never resolved by the framework without the MVC pipeline).
+// This section asserts that the registration itself does not trip IL2026/IL3050 trimming
+// warnings under PublishAot=true — that's verified at publish time by the surrounding script.
+var mvcJsonSetupRegistered = builder.Services.Any(d =>
+    d.ServiceType == typeof(Microsoft.Extensions.Options.IConfigureOptions<Microsoft.AspNetCore.Mvc.JsonOptions>)
+    && d.ImplementationType?.FullName == "Civitas.Id.Sweden.AspNetCore.Json.CivitasIdMvcJsonOptionsSetup");
+if (!mvcJsonSetupRegistered)
+    throw new InvalidOperationException(
+        "Expected IConfigureOptions<Mvc.JsonOptions> -> CivitasIdMvcJsonOptionsSetup to be registered by AddCivitasIdSwedenAspNetCore.");
+Console.WriteLine("  ✓ Mvc.JsonOptions setup registered (Caveat 3 — AOT-clean without AddControllers)");
 
 Console.WriteLine("=== AOT smoke test PASS ===");
 return 0;
