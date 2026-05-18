@@ -23,6 +23,7 @@ internal static class ConverterInstaller
     {
         ArgumentNullException.ThrowIfNull(serializer);
         serializer.TypeInfoResolverChain.Add(CivitasIdSwedenJsonContext.Default);
+        serializer.TypeInfoResolverChain.Add(CivitasIdAspNetCoreJsonContext.Default);
 
         if (format == PnrFormat.ShortFormat)
         {
