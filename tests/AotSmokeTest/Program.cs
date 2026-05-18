@@ -35,7 +35,7 @@ Console.WriteLine("  ✓ TypeConverter discovery + round-trip");
 var stjOptions = new JsonSerializerOptions
 {
     Converters = { new PersonalIdJsonConverter() },
-    TypeInfoResolver = CivitasIdSwedenJsonContext.Default,
+    TypeInfoResolver = CivitasIdSwedenJsonContext.Default
 };
 var pidTypeInfo = (System.Text.Json.Serialization.Metadata.JsonTypeInfo<PersonalId>)stjOptions.GetTypeInfo(typeof(PersonalId));
 
@@ -63,13 +63,14 @@ var typed = app.MapGroup("").WithCivitasIdSwedenMetadata();
 typed.MapGet("/customers/{id}", (PersonalId id) => Results.Text(id.LongFormat()));
 typed.MapGet("/orgs/{id}", (OrganisationId id) => Results.Text(id.LongFormat()));
 
-const string TestBaseUrl = "http://127.0.0.1:5454";
+const string testBaseUrl = "http://127.0.0.1:5454";
 
 // Start in background, wait briefly, fire requests, then stop
-var runTask = Task.Run(() => app.Run(TestBaseUrl));
+_ = Task.Run(() => app.Run(testBaseUrl));
 await Task.Delay(2000);
 
-using var http = new HttpClient { BaseAddress = new Uri(TestBaseUrl) };
+using var http = new HttpClient();
+http.BaseAddress = new Uri(testBaseUrl);
 
 var validResp = await http.GetAsync(new Uri("/customers/189001019802", UriKind.Relative));
 if (!validResp.IsSuccessStatusCode)
@@ -92,7 +93,7 @@ if (!openApiResp.IsSuccessStatusCode)
     throw new InvalidOperationException($"Expected 200 from OpenAPI doc, got {(int)openApiResp.StatusCode}");
 var openApiRaw = await openApiResp.Content.ReadAsStringAsync();
 var openApiBody = JsonNode.Parse(openApiRaw);
-if (openApiBody is null || openApiBody["paths"] is null)
+if (openApiBody?["paths"] is null)
     throw new InvalidOperationException("OpenAPI doc missing 'paths' node");
 Console.WriteLine("  ✓ OpenAPI document available");
 
