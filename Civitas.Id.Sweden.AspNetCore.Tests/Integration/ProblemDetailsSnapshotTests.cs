@@ -21,7 +21,7 @@ public sealed partial class ProblemDetailsSnapshotTests
         await using var fx = await IntegrationTestFixture.CreateAsync();
         var resp = await fx.Client.GetAsync(new Uri("/customers-strict/19811218bad9", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
-        await Verify(ScrubTraceId(body))
+        await Verify(ScrubTraceId(body), "json")
             .UseFileName("PersonalId_Malformed_ProblemDetails");
     }
 
@@ -31,7 +31,7 @@ public sealed partial class ProblemDetailsSnapshotTests
         await using var fx = await IntegrationTestFixture.CreateAsync();
         var resp = await fx.Client.GetAsync(new Uri("/customers-strict/198112180000", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
-        await Verify(ScrubTraceId(body))
+        await Verify(ScrubTraceId(body), "json")
             .UseFileName("PersonalId_InvalidChecksum_ProblemDetails");
     }
 
@@ -41,7 +41,7 @@ public sealed partial class ProblemDetailsSnapshotTests
         await using var fx = await IntegrationTestFixture.CreateAsync();
         var resp = await fx.Client.GetAsync(new Uri("/customers-strict/199002309876", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
-        await Verify(ScrubTraceId(body))
+        await Verify(ScrubTraceId(body), "json")
             .UseFileName("PersonalId_InvalidDate_ProblemDetails");
     }
 
@@ -51,7 +51,7 @@ public sealed partial class ProblemDetailsSnapshotTests
         await using var fx = await IntegrationTestFixture.CreateAsync();
         var resp = await fx.Client.GetAsync(new Uri("/customers-strict/123", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
-        await Verify(ScrubTraceId(body))
+        await Verify(ScrubTraceId(body), "json")
             .UseFileName("PersonalId_TooShort_ProblemDetails");
     }
 
@@ -61,7 +61,7 @@ public sealed partial class ProblemDetailsSnapshotTests
         await using var fx = await IntegrationTestFixture.CreateAsync();
         var resp = await fx.Client.GetAsync(new Uri("/customers-strict/198112189876XXX", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
-        await Verify(ScrubTraceId(body))
+        await Verify(ScrubTraceId(body), "json")
             .UseFileName("PersonalId_TooLong_ProblemDetails");
     }
 
@@ -71,7 +71,7 @@ public sealed partial class ProblemDetailsSnapshotTests
         await using var fx = await IntegrationTestFixture.CreateAsync();
         var resp = await fx.Client.GetAsync(new Uri("/orgs-strict/0000001234", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
-        await Verify(ScrubTraceId(body))
+        await Verify(ScrubTraceId(body), "json")
             .UseFileName("OrganisationId_UnknownForm_ProblemDetails");
     }
 }
