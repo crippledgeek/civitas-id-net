@@ -141,6 +141,13 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             IConfigureOptions<JsonOptions>,
             CivitasIdHttpJsonOptionsSetup>());
 
+        // Gap A bridge — mirror onto Mvc.JsonOptions so SystemTextJsonInputFormatter
+        // (MVC [FromBody]) sees the converters. Safe no-op when AddControllers()
+        // is never called: Mvc.JsonOptions is never resolved → Configure never fires.
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<
+            IConfigureOptions<Microsoft.AspNetCore.Mvc.JsonOptions>,
+            CivitasIdMvcJsonOptionsSetup>());
+
         services.AddHostedService<Hosting.CivitasIdSwedenStartupValidator>();
     }
 }
