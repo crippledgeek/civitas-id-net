@@ -38,6 +38,11 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
                 : "****";
         });
 
+        // MVC controllers — exercises [ApiController] auto-400 path used by
+        // CustomizeProblemDetailsTests + ValidationProblemDetails locking.
+        builder.Services.AddControllers().AddCivitasIdSweden()
+            .AddApplicationPart(typeof(IntegrationTestFixture).Assembly);
+
         // OpenAPI is opt-in as of Phase 2 (Finding 3): library no longer
         // calls AddOpenApi from RegisterInfrastructure.
         builder.Services.AddOpenApi(opts => opts.AddCivitasIdSwedenSchemas());
@@ -46,6 +51,7 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
         app.UseExceptionHandler();
         app.UseStatusCodePages();
         app.MapOpenApi();
+        app.MapControllers();
 
         var typed = app.MapGroup(string.Empty).WithCivitasIdSwedenMetadata();
 

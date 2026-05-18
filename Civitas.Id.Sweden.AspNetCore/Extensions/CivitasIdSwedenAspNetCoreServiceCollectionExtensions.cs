@@ -7,6 +7,7 @@ using Civitas.Id.Sweden.Json.Extensions;
 using Civitas.Id.Sweden.Json.Options;
 using JetBrains.Annotations;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -113,7 +114,40 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
 
     private static void RegisterInfrastructure(IServiceCollection services)
     {
-        services.AddProblemDetails();
+        // CustomizeProblemDetails normalizes the `type` URI across BOTH surfaces:
+        //   1. Minimal API ProblemDetails (IProblemDetailsService.TryWriteAsync)
+        //   2. MVC ValidationProblemDetails (DefaultProblemDetailsFactory)
+        // Verified against aspnetcore release/10.0 source: the factory's
+        // ApplyProblemDetailsDefaults invokes _configure (= CustomizeProblemDetails)
+        // for both CreateProblemDetails and CreateValidationProblemDetails. The
+        // closure-allocating lambda is acceptable here because we need
+        // ctx.HttpContext.RequestServices to resolve the IOptions instance.
+        services.AddProblemDetails(opts =>
+        {
+            opts.CustomizeProblemDetails = ctx =>
+            {
+                // Only normalize 400 ProblemDetails. Non-400 responses pass
+                // through untouched.
+                if (ctx.ProblemDetails.Status != StatusCodes.Status400BadRequest)
+                {
+                    return;
+                }
+
+                var aspOpts = ctx.HttpContext.RequestServices
+                    .GetRequiredService<IOptions<CivitasIdSwedenAspNetCoreOptions>>();
+                var baseUri = aspOpts.Value.ProblemDetailsTypeBaseUri;
+
+                // Idempotency: if Type is already under our base URI (e.g., set
+                // by InvalidIdNumberExceptionHandler to "{base}invalid-id-number"),
+                // leave it alone. Otherwise replace the framework default
+                // (rfc9110#section-15.5.1) with the library's normalized URI.
+                if (string.IsNullOrEmpty(ctx.ProblemDetails.Type)
+                    || !ctx.ProblemDetails.Type.StartsWith(baseUri, StringComparison.Ordinal))
+                {
+                    ctx.ProblemDetails.Type = $"{baseUri}bad-request";
+                }
+            };
+        });
 
         // Use TryAddEnumerable for true idempotency on IExceptionHandler
         // (services.AddExceptionHandler<T> uses AddSingleton which would duplicate).
