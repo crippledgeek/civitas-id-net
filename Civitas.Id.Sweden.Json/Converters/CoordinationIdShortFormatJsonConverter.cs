@@ -1,16 +1,20 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Format;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Json.Converters;
 
 /// <summary>
-/// Serializes and deserializes <see cref="CoordinationId"/> values as 12-digit
-/// canonical strings (LongFormat).
+/// Serializes <see cref="CoordinationId"/> values using the
+/// <see cref="PnrFormat.ShortFormat"/> 10-digit wire form (with hyphen, or
+/// "+" separator for centenarians) and deserializes any canonical Swedish
+/// CoordinationId string. The centenarian "+" path requires reading Stockholm
+/// civil time internally to determine whether the bearer is &gt;=100 years old.
 /// </summary>
 [PublicAPI]
-public sealed class CoordinationIdJsonConverter : JsonConverter<CoordinationId>
+public sealed class CoordinationIdShortFormatJsonConverter : JsonConverter<CoordinationId>
 {
     /// <inheritdoc />
     public override bool HandleNull => true;
@@ -28,6 +32,6 @@ public sealed class CoordinationIdJsonConverter : JsonConverter<CoordinationId>
     {
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentNullException.ThrowIfNull(value);
-        writer.WriteStringValue(value.LongFormat());
+        writer.WriteStringValue(value.Format(PnrFormat.ShortFormat));
     }
 }

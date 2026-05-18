@@ -34,7 +34,7 @@ Console.WriteLine("  ✓ TypeConverter discovery + round-trip");
 // ── 3. STJ source-gen ───────────────────────────────────────────────────────
 var stjOptions = new JsonSerializerOptions
 {
-    Converters = { new PersonalIdJsonConverter() },
+    Converters = { new PersonalIdLongFormatJsonConverter() },
     TypeInfoResolver = CivitasIdSwedenJsonContext.Default
 };
 var pidTypeInfo = (System.Text.Json.Serialization.Metadata.JsonTypeInfo<PersonalId>)stjOptions.GetTypeInfo(typeof(PersonalId));

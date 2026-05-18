@@ -8,7 +8,7 @@ public class SwedishOfficialIdJsonConverterTests
 {
     private static readonly JsonSerializerOptions Opts = new()
     {
-        Converters = { new SwedishOfficialIdJsonConverter() }
+        Converters = { new SwedishOfficialIdLongFormatJsonConverter() }
     };
 
     public class Deserialize

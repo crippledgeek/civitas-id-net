@@ -1,19 +1,22 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Format;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Json.Converters;
 
 /// <summary>
 /// Polymorphic converter that materializes <see cref="SwedishOfficialId"/>
-/// values from canonical strings, dispatching to the correct concrete subtype
-/// (<see cref="PersonalId"/>, <see cref="CoordinationId"/>, or
-/// <see cref="OrganisationId"/>) via
-/// <see cref="SwedishOfficialId.TryParseAny(string?, out SwedishOfficialId?)"/>.
+/// values from canonical strings and writes them using the
+/// <see cref="PnrFormat.ShortFormat"/> wire form for
+/// <see cref="PersonalId"/> / <see cref="CoordinationId"/>.
+/// <see cref="OrganisationId"/> has no ShortFormat axis and is always
+/// written as its 10-digit LongFormat.
 /// </summary>
 [PublicAPI]
-public sealed class SwedishOfficialIdJsonConverter : JsonConverter<SwedishOfficialId>
+public sealed class SwedishOfficialIdShortFormatJsonConverter : JsonConverter<SwedishOfficialId>
 {
     /// <inheritdoc />
     public override bool HandleNull => true;
@@ -31,6 +34,12 @@ public sealed class SwedishOfficialIdJsonConverter : JsonConverter<SwedishOffici
     {
         ArgumentNullException.ThrowIfNull(writer);
         ArgumentNullException.ThrowIfNull(value);
-        writer.WriteStringValue(value.LongFormat());
+        writer.WriteStringValue(value switch
+        {
+            PersonalId p => p.Format(PnrFormat.ShortFormat),
+            CoordinationId c => c.Format(PnrFormat.ShortFormat),
+            OrganisationId o => o.LongFormat(),
+            _ => throw new UnreachableException($"Unhandled SwedishOfficialId subtype: {value.GetType()}")
+        });
     }
 }

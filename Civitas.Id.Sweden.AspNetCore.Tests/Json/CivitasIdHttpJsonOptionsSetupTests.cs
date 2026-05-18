@@ -1,18 +1,22 @@
 using Civitas.Id.Sweden.AspNetCore.Json;
 using Civitas.Id.Sweden.Json;
+using Civitas.Id.Sweden.Json.Options;
 using Microsoft.AspNetCore.Http.Json;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Json;
 
 public class CivitasIdHttpJsonOptionsSetupTests
 {
+    private static CivitasIdHttpJsonOptionsSetup CreateSut() =>
+        new(Microsoft.Extensions.Options.Options.Create(new CivitasIdSwedenJsonOptions()));
+
     public class Configure
     {
         [Test]
         public async Task ChainsCivitasIdSwedenJsonContext()
         {
             var opts = new JsonOptions();
-            var sut = new CivitasIdHttpJsonOptionsSetup();
+            var sut = CreateSut();
 
             sut.Configure(opts);
 
@@ -23,7 +27,7 @@ public class CivitasIdHttpJsonOptionsSetupTests
         [Test]
         public async Task NullOptions_Throws()
         {
-            var sut = new CivitasIdHttpJsonOptionsSetup();
+            var sut = CreateSut();
             await Assert.That(() => sut.Configure(null!)).Throws<ArgumentNullException>();
         }
 
@@ -31,7 +35,7 @@ public class CivitasIdHttpJsonOptionsSetupTests
         public async Task IsIdempotent_WhenCalledTwice()
         {
             var opts = new JsonOptions();
-            var sut = new CivitasIdHttpJsonOptionsSetup();
+            var sut = CreateSut();
 
             sut.Configure(opts);
             sut.Configure(opts);
