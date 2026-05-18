@@ -1,0 +1,1 @@
+﻿{"type":"https://civitas-id.dev/errors/invalid-id-number","title":"Invalid Swedish ID number","status":400,"detail":"The provided value is not a valid Swedish official ID.","reason":"InvalidFormat","input":"***********6XXX","traceId":"<scrubbed>"}

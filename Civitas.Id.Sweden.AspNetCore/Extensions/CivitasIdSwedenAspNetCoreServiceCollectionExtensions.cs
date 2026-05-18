@@ -64,6 +64,9 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             .Configure(configure)
             .Validate(static o => o.JsonFormat is PnrFormat.LongFormat or PnrFormat.ShortFormat,
                 "JsonFormat must be LongFormat or ShortFormat.")
+            .Validate(static o => Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out _)
+                    && o.ProblemDetailsTypeBaseUri.EndsWith('/'),
+                "ProblemDetailsTypeBaseUri must be an absolute URI ending with '/'.")
             .ValidateOnStart();
 
         return services;
@@ -100,6 +103,9 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             .Bind(section)
             .Validate(static o => o.JsonFormat is PnrFormat.LongFormat or PnrFormat.ShortFormat,
                 "JsonFormat must be LongFormat or ShortFormat.")
+            .Validate(static o => Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out _)
+                    && o.ProblemDetailsTypeBaseUri.EndsWith('/'),
+                "ProblemDetailsTypeBaseUri must be an absolute URI ending with '/'.")
             .ValidateOnStart();
 
         return services;
@@ -134,5 +140,7 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<
             IConfigureOptions<JsonOptions>,
             CivitasIdHttpJsonOptionsSetup>());
+
+        services.AddHostedService<Hosting.CivitasIdSwedenStartupValidator>();
     }
 }

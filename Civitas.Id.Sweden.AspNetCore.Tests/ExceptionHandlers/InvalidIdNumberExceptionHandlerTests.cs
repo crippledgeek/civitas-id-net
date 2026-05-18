@@ -9,12 +9,28 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.ExceptionHandlers;
 
 public class InvalidIdNumberExceptionHandlerTests
 {
+    /// <summary>
+    /// <see cref="IProblemDetailsService"/> stub that always returns
+    /// <see langword="false"/> so the handler engages its hand-written
+    /// AOT-safe fallback path — which is what these unit tests assert.
+    /// Integration tests exercise the <see cref="IProblemDetailsService"/>
+    /// success path against a real service-provider build.
+    /// </summary>
+    private sealed class FallbackOnlyProblemDetailsService : IProblemDetailsService
+    {
+        public ValueTask<bool> TryWriteAsync(ProblemDetailsContext context) => new(false);
+
+        public ValueTask WriteAsync(ProblemDetailsContext context) => ValueTask.CompletedTask;
+    }
+
     private static InvalidIdNumberExceptionHandler Make(Func<string, string>? redact = null)
     {
         var opts = Microsoft.Extensions.Options.Options.Create(
             new CivitasIdSwedenAspNetCoreOptions { RedactInput = redact });
         return new InvalidIdNumberExceptionHandler(
-            opts, NullLogger<InvalidIdNumberExceptionHandler>.Instance);
+            opts,
+            new FallbackOnlyProblemDetailsService(),
+            NullLogger<InvalidIdNumberExceptionHandler>.Instance);
     }
 
     private static DefaultHttpContext MakeContext()

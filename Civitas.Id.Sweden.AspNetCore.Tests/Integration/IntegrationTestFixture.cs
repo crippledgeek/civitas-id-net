@@ -84,6 +84,13 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
             return Results.Ok(new LookupResponse(id));
         });
 
+        // Org strict variant — same role as /customers-strict but for OrganisationId.
+        _ = typed.MapGet("/orgs-strict/{idString}", (string idString) =>
+        {
+            var id = OrganisationId.Parse(idString);
+            return Results.Ok(new OrgResponse(id, id.Form, id.NumberType == OrganisationNumberType.PhysicalPerson));
+        });
+
         await app.StartAsync();
         return new IntegrationTestFixture(app, app.GetTestClient());
     }
