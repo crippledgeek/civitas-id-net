@@ -39,5 +39,33 @@ public sealed class CustomizeProblemDetailsTests
         await Assert.That(vpd).IsNotNull();
         await Assert.That(vpd!.Type).IsNotNull();
         await Assert.That(vpd.Type!).StartsWith("https://civitas-id.dev/errors/");
+        await Assert.That(vpd.Errors).ContainsKey("Id");
+        await Assert.That(vpd.Errors["Id"]).IsNotEmpty();
+    }
+
+    [Test]
+    public async Task Consumer_CustomizeProblemDetails_Type_NotOverwritten()
+    {
+        await using var fx = await IntegrationTestFixture.CreateAsync();
+        var resp = await fx.Client.GetAsync(new Uri("/consumer-400-probe", UriKind.Relative));
+        await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
+        var pd = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
+        await Assert.That(pd).IsNotNull();
+        // Consumer-set Type from a non-library domain MUST be preserved.
+        await Assert.That(pd!.Type).IsEqualTo("https://consumer.example/errors/payment");
+    }
+
+    [Test]
+    public async Task Non400_ProblemDetails_TypeNotOverwritten()
+    {
+        await using var fx = await IntegrationTestFixture.CreateAsync();
+        var resp = await fx.Client.GetAsync(new Uri("/internal-error-probe", UriKind.Relative));
+        await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.InternalServerError);
+        var pd = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
+        await Assert.That(pd).IsNotNull();
+        if (pd!.Type is not null)
+        {
+            await Assert.That(pd.Type.StartsWith("https://civitas-id.dev/errors/", StringComparison.Ordinal)).IsFalse();
+        }
     }
 }

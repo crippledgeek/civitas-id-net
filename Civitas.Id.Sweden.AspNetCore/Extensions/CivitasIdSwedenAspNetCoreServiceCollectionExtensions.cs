@@ -1,4 +1,5 @@
 using System.Diagnostics.CodeAnalysis;
+using Civitas.Id.Sweden.AspNetCore.Constants;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 using Civitas.Id.Sweden.AspNetCore.Json;
 using Civitas.Id.Sweden.AspNetCore.Options;
@@ -27,6 +28,14 @@ namespace Civitas.Id.Sweden.AspNetCore.Extensions;
 [PublicAPI]
 public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
 {
+    /// <summary>
+    /// The framework's RFC 9110 default ProblemDetails Type URI emitted when no
+    /// explicit Type is set on a 400 response. Identified by string comparison
+    /// so the library can replace it without stomping consumer-set Type values
+    /// from non-library domains.
+    /// </summary>
+    private const string FrameworkRfc9110BadRequestType = "https://tools.ietf.org/html/rfc9110#section-15.5.1";
+
     /// <summary>
     /// Adds Civitas.Id.Sweden ASP.NET Core integration with default options.
     /// </summary>
@@ -65,9 +74,11 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             .Configure(configure)
             .Validate(static o => o.JsonFormat is PnrFormat.LongFormat or PnrFormat.ShortFormat,
                 "JsonFormat must be LongFormat or ShortFormat.")
-            .Validate(static o => Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out _)
+            .Validate(static o =>
+                    Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out var uri)
+                    && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
                     && o.ProblemDetailsTypeBaseUri.EndsWith('/'),
-                "ProblemDetailsTypeBaseUri must be an absolute URI ending with '/'.")
+                "ProblemDetailsTypeBaseUri must be an absolute https or http URI ending with '/'.")
             .ValidateOnStart();
 
         return services;
@@ -104,9 +115,11 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             .Bind(section)
             .Validate(static o => o.JsonFormat is PnrFormat.LongFormat or PnrFormat.ShortFormat,
                 "JsonFormat must be LongFormat or ShortFormat.")
-            .Validate(static o => Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out _)
+            .Validate(static o =>
+                    Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out var uri)
+                    && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
                     && o.ProblemDetailsTypeBaseUri.EndsWith('/'),
-                "ProblemDetailsTypeBaseUri must be an absolute URI ending with '/'.")
+                "ProblemDetailsTypeBaseUri must be an absolute https or http URI ending with '/'.")
             .ValidateOnStart();
 
         return services;
@@ -137,14 +150,14 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
                     .GetRequiredService<IOptions<CivitasIdSwedenAspNetCoreOptions>>();
                 var baseUri = aspOpts.Value.ProblemDetailsTypeBaseUri;
 
-                // Idempotency: if Type is already under our base URI (e.g., set
-                // by InvalidIdNumberExceptionHandler to "{base}invalid-id-number"),
-                // leave it alone. Otherwise replace the framework default
-                // (rfc9110#section-15.5.1) with the library's normalized URI.
+                // Replace ONLY the framework's RFC 9110 default OR null/empty.
+                // Consumer-set non-library Type values (e.g., from third-party
+                // domains) are preserved. Library-set values (already under
+                // baseUri) are left alone for idempotency.
                 if (string.IsNullOrEmpty(ctx.ProblemDetails.Type)
-                    || !ctx.ProblemDetails.Type.StartsWith(baseUri, StringComparison.Ordinal))
+                    || string.Equals(ctx.ProblemDetails.Type, FrameworkRfc9110BadRequestType, StringComparison.Ordinal))
                 {
-                    ctx.ProblemDetails.Type = $"{baseUri}bad-request";
+                    ctx.ProblemDetails.Type = $"{baseUri}{ProblemTypeFragments.BadRequest}";
                 }
             };
         });

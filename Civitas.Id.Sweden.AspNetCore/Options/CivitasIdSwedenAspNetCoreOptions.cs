@@ -37,8 +37,12 @@ public sealed class CivitasIdSwedenAspNetCoreOptions
     /// and may produce a stricter redaction.
     /// </summary>
     /// <remarks>
-    /// Not bindable from appsettings.json (delegate). Set via the
-    /// <see cref="Action{T}"/> overload of <c>AddCivitasIdSwedenAspNetCore</c>.
+    /// <para>Not bindable from appsettings.json (delegate). Set via the
+    /// <see cref="Action{T}"/> overload of <c>AddCivitasIdSwedenAspNetCore</c>.</para>
+    /// <para><b>Contract:</b> the delegate MUST return a string containing equal or
+    /// fewer identifying characters than the input it receives. Returning a string
+    /// longer than the input, or one that reveals additional digits of the original
+    /// ID, re-introduces PII risk that the library cannot guard against.</para>
     /// </remarks>
     /// <example>
     /// Bridging to Microsoft.Extensions.Compliance.Redaction:

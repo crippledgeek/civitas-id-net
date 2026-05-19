@@ -90,6 +90,22 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
             return Results.Ok(new LookupResponse(id));
         });
 
+        // Consumer-set non-library 400 Type — used to verify CustomizeProblemDetails
+        // preserves it (does NOT overwrite arbitrary consumer Type values).
+        _ = typed.MapGet("/consumer-400-probe", () =>
+            Results.Problem(
+                statusCode: StatusCodes.Status400BadRequest,
+                type: "https://consumer.example/errors/payment",
+                title: "Consumer error"));
+
+        // Non-400 ProblemDetails — used to verify CustomizeProblemDetails early-return
+        // branch (non-400 responses are never normalized).
+        _ = typed.MapGet("/internal-error-probe", () =>
+            Results.Problem(
+                statusCode: StatusCodes.Status500InternalServerError,
+                type: "https://internal/server-error",
+                title: "Internal"));
+
         // Org strict variant — same role as /customers-strict but for OrganisationId.
         _ = typed.MapGet("/orgs-strict/{idString}", (string idString) =>
         {
