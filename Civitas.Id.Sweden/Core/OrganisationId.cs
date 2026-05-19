@@ -225,6 +225,8 @@ public sealed record OrganisationId : SwedishOfficialId,
         var month = matcher.Month;
         var day = matcher.Day;
         int? personCentury = null;
+        int realDay = day;          // for person branches; legal-person branch ignores
+        bool isEnskildFirma = false;
 
         switch (month)
         {
@@ -237,19 +239,18 @@ public sealed record OrganisationId : SwedishOfficialId,
                 {
                     // Enskild firma — personnummer date shape. Require explicit century.
                     if (!matcher.HasCentury) return false;
-                    var fullYear = matcher.CenturyValue * 100 + matcher.Year;
-                    if (day > DateTime.DaysInMonth(fullYear, month)) return false;
                     personCentury = matcher.CenturyValue;
+                    isEnskildFirma = true;
+                    realDay = day;
                     break;
                 }
             case >= 1 and <= 12 when day is >= 61 and <= 91:
                 {
                     // Enskild firma — samordningsnummer day-offset shape. Require explicit century.
                     if (!matcher.HasCentury) return false;
-                    var fullYear = matcher.CenturyValue * 100 + matcher.Year;
-                    var realDay = day - 60;
-                    if (realDay > DateTime.DaysInMonth(fullYear, month)) return false;
                     personCentury = matcher.CenturyValue;
+                    isEnskildFirma = true;
+                    realDay = day - 60;
                     break;
                 }
             default:
@@ -257,15 +258,32 @@ public sealed record OrganisationId : SwedishOfficialId,
                 return false;
         }
 
-        // Build 10-digit canonical form for Luhn validation.
-        Span<char> tenDigits = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
-        if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
+        if (isEnskildFirma)
+        {
+            var fullYear = personCentury!.Value * 100 + matcher.Year;
+            // Shared leaf atomic — calendar-day + Luhn in one call.
+            if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
+                return false;
+        }
+        else
+        {
+            // Legal-person branch — Luhn only, no calendar-date check.
+            Span<char> tenDigits = stackalloc char[10];
+            matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
+            matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
+            matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
+            matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
+            if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
+        }
 
-        result = new OrganisationId(new string(tenDigits), personCentury);
+        // Build canonical 10-digit form regardless of branch.
+        Span<char> canonical = stackalloc char[10];
+        matcher.YearText.AsSpan().CopyTo(canonical[..2]);
+        matcher.MonthText.AsSpan().CopyTo(canonical[2..4]);
+        matcher.DayText.AsSpan().CopyTo(canonical[4..6]);
+        matcher.Unique.AsSpan().CopyTo(canonical[6..10]);
+
+        result = new OrganisationId(new string(canonical), personCentury);
         return true;
     }
 
