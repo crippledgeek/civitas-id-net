@@ -293,16 +293,11 @@ public sealed record CoordinationId : PhysicalPersonId,
             matcher.Delimiter is "+");
         var fullYear = century * 100 + matcher.Year;
 
-        // Validate calendar date using the REAL day (rejects e.g. February 30).
-        if (realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
-
-        // Luhn on the 10-digit form (YYMMDDXXXX) — uses the ENCODED day (the on-the-card form).
-        Span<char> tenDigits = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
-        if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
+        // Shared leaf atomic: calendar-day + Luhn. Note: matcher carries the ENCODED day
+        // (61..91 for samordningsnummer); the leaf reads it from matcher for the Luhn pack.
+        // The realDay parameter is the CALENDAR day (encoded - 60), used for DaysInMonth.
+        if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
+            return false;
 
         var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
         result = new CoordinationId(normalised);
