@@ -31,10 +31,22 @@ public sealed class ResponseShapeTests
         var resp = await fx.Client.GetAsync(new Uri("/customers/19811218bad9", UriKind.Relative));
 
         await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
-        var pd = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        // Read once into a string so we can both ReadFromJson and probe raw JSON.
+        var body = await resp.Content.ReadAsStringAsync();
+        var pd = System.Text.Json.JsonSerializer.Deserialize<ProblemDetails>(body);
         await Assert.That(pd).IsNotNull();
         await Assert.That(pd!.Type).IsNotNull();
         await Assert.That(pd.Type!).StartsWith("https://civitas-id.dev/errors/");
+
+        // Distinguishing property: Row 1 emits ProblemDetails, NOT
+        // HttpValidationProblemDetails. The "errors" property MUST be absent.
+        // (PR aspnetcore#62066 introduced ValidationEndpointFilterFactory which
+        // emits errors-dict on AddValidation() routes; route binding via
+        // IParsable<T> does not invoke that filter — empirically confirmed
+        // against aspnetcore release/10.0.)
+        using var doc = System.Text.Json.JsonDocument.Parse(body);
+        await Assert.That(doc.RootElement.TryGetProperty("errors", out _)).IsFalse();
     }
 
     /// <summary>Row 2 — minimal API endpoint explicitly throws <c>InvalidIdNumberException</c>.</summary>

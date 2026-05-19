@@ -23,8 +23,10 @@ internal sealed class CivitasIdSwedenStartupValidator(IOptions<HttpJsonOptions> 
             throw new InvalidOperationException(
                 "Civitas.Id.Sweden.AspNetCore startup check: ProblemDetails is not reachable through " +
                 "Microsoft.AspNetCore.Http.Json.JsonOptions.SerializerOptions.TypeInfoResolverChain. " +
-                "Add [JsonSerializable(typeof(ProblemDetails))] to a JsonSerializerContext registered " +
-                "in your application's JSON configuration, or call services.AddProblemDetails().");
+                "Either: (a) add a JsonSerializerContext that includes [JsonSerializable(typeof(ProblemDetails))] " +
+                "and chain it into JsonOptions.SerializerOptions.TypeInfoResolverChain.Add(YourContext.Default), " +
+                "or (b) ensure services.AddCivitasIdSwedenAspNetCore() is called (it registers the necessary " +
+                "AddProblemDetails configuration automatically).");
         }
 
         return Task.CompletedTask;

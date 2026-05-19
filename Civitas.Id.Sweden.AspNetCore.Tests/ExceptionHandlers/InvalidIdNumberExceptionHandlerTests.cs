@@ -94,6 +94,22 @@ public class InvalidIdNumberExceptionHandlerTests
         }
 
         [Test]
+        public async Task HandWrittenFallback_IncludesTraceId()
+        {
+            var handler = Make();
+            var ctx = MakeContext();
+            ctx.TraceIdentifier = "test-trace-1234";
+            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
+
+            await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
+
+            ctx.Response.Body.Position = 0;
+            using var reader = new StreamReader(ctx.Response.Body);
+            var body = await reader.ReadToEndAsync();
+            await Assert.That(body).Contains("\"traceId\":");
+        }
+
+        [Test]
         public async Task IncludesReasonInExtensions()
         {
             var handler = Make();

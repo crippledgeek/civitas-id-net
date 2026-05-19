@@ -27,4 +27,16 @@ public sealed class ProblemDetailsTypeBaseUriTests
             _ = sp.GetRequiredService<IOptions<CivitasIdSwedenAspNetCoreOptions>>().Value;
         }).Throws<OptionsValidationException>();
     }
+
+    [Test]
+    public async Task NonHttpScheme_FailsValidation()
+    {
+        var services = new ServiceCollection();
+        services.AddCivitasIdSwedenAspNetCore(o => o.ProblemDetailsTypeBaseUri = "file:///etc/passwd/");
+        await Assert.That(() =>
+        {
+            var sp = services.BuildServiceProvider();
+            _ = sp.GetRequiredService<IOptions<CivitasIdSwedenAspNetCoreOptions>>().Value;
+        }).Throws<OptionsValidationException>();
+    }
 }

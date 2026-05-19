@@ -6,6 +6,7 @@ using Civitas.Id.Sweden.Format;
 using System.Diagnostics.CodeAnalysis;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
+using Microsoft.Extensions.Options;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration;
 
@@ -65,6 +66,17 @@ public sealed class MvcJsonOptionsBridgeTests
             .StartAsync();
         // Reaching here without exception confirms the silent no-op.
         await Assert.That(host).IsNotNull();
+
+        // Probe Mvc.JsonOptions resolution behaviour when AddControllers() is
+        // never called. The IConfigureOptions registration via TryAddEnumerable
+        // is harmless: it executes only if Mvc.JsonOptions is actively resolved.
+        // The relevant invariant is that resolving the options object does not
+        // throw and yields a JsonSerializerOptions instance.
+        var mvcOpts = host.Services.GetService<IOptions<JsonOptions>>();
+        if (mvcOpts is not null)
+        {
+            await Assert.That(mvcOpts.Value.JsonSerializerOptions).IsNotNull();
+        }
     }
 
     [Test]
