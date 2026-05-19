@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using Civitas.Id.Sweden.AspNetCore.Constants;
 using Civitas.Id.Sweden.AspNetCore.Options;
@@ -75,7 +76,8 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
             Extensions =
             {
                 ["reason"] = id.Reason.ToString(),
-                ["input"] = input
+                ["input"] = input,
+                ["traceId"] = Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier
             }
         };
 
@@ -119,10 +121,10 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
     {
         ctx.Response.ContentType = ProblemContentType;
 
-        var traceId = System.Diagnostics.Activity.Current?.Id ?? ctx.TraceIdentifier;
-
         // Hand-written AOT-safe ProblemDetails serialization. Avoids the
         // reflection-based WriteAsJsonAsync overload (IL2026/IL3050).
+        // traceId is sourced from pd.Extensions (set at construction in
+        // TryHandleAsync) so the wire shape matches the success path.
         // ReSharper disable UseAwaitUsing
         using var buffer = new MemoryStream();
         using (var writer = new Utf8JsonWriter(buffer))
@@ -132,7 +134,6 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
             writer.WriteString("title", pd.Title);
             writer.WriteNumber("status", pd.Status ?? StatusCodes.Status400BadRequest);
             writer.WriteString("detail", pd.Detail);
-            writer.WriteString("traceId", traceId);
             foreach (var (key, value) in pd.Extensions)
             {
                 writer.WriteString(key, value?.ToString() ?? string.Empty);

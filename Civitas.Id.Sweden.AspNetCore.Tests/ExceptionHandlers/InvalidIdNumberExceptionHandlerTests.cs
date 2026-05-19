@@ -1,8 +1,10 @@
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
+using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.Options;
 using Civitas.Id.Sweden.Errors;
+using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.ExceptionHandlers;
@@ -143,6 +145,34 @@ public class InvalidIdNumberExceptionHandlerTests
             await Assert.That(async () =>
                     await handler.TryHandleAsync(ctx, null!, CancellationToken.None))
                 .Throws<ArgumentNullException>();
+        }
+
+        [Test]
+        public async Task SuccessPath_IncludesTraceId_InResponseBody()
+        {
+            var services = new ServiceCollection();
+            services.AddCivitasIdSwedenAspNetCore();
+            services.AddLogging();
+            var sp = services.BuildServiceProvider();
+
+            var handler = sp.GetServices<IExceptionHandler>()
+                .OfType<InvalidIdNumberExceptionHandler>().Single();
+
+            var ctx = new DefaultHttpContext
+            {
+                RequestServices = sp,
+                Response = { Body = new MemoryStream() }
+            };
+            ctx.Request.Headers.Accept = "application/problem+json";
+
+            var ex = new InvalidIdNumberException("198112180000", InvalidIdNumberReason.InvalidChecksum);
+            var handled = await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
+
+            await Assert.That(handled).IsTrue();
+            ctx.Response.Body.Position = 0;
+            using var reader = new StreamReader(ctx.Response.Body);
+            var body = await reader.ReadToEndAsync();
+            await Assert.That(body).Contains("\"traceId\"");
         }
     }
 }
