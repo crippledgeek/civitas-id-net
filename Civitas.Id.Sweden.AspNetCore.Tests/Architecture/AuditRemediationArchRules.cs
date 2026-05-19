@@ -11,7 +11,7 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.Architecture;
 /// (Findings 1–9 + Gaps A–D). Failures here indicate the audit-remediation
 /// posture has been silently regressed.
 /// </summary>
-public class AuditRemediationArchRules
+public sealed class AuditRemediationArchRules
 {
     private static readonly ArchUnitNET.Domain.Architecture Arch = new ArchLoader()
         .LoadAssemblies(typeof(CivitasIdSwedenAspNetCoreServiceCollectionExtensions).Assembly)
