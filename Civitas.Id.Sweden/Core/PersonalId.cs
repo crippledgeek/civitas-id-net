@@ -291,17 +291,10 @@ public sealed record PersonalId : PhysicalPersonId,
             matcher.Delimiter is "+");
         var fullYear = century * 100 + matcher.Year;
 
-        // Validate calendar date (rejects e.g. February 30) — DaysInMonth handles leap years.
-        if (matcher.Day > DateTime.DaysInMonth(fullYear, matcher.Month))
+        // Shared leaf atomic: calendar-day + Luhn (single source of truth per
+        // docs/superpowers/specs/2026-05-20-id-parse-dedup-design.md Section 3.3).
+        if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, matcher.Day))
             return false;
-
-        // Validate Luhn on the 10-digit form (YYMMDDXXXX)
-        Span<char> tenDigits = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
-        if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
 
         var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
         result = new PersonalId(normalised);
