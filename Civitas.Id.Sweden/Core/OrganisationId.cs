@@ -35,13 +35,22 @@ public sealed record OrganisationId : SwedishOfficialId,
         _personCentury = personCentury;
     }
 
-    /// <summary>The organisation form derived from the first two digits.</summary>
+    /// <summary>The organisation form derived from the first two (or three) digits.</summary>
     /// <remarks>
     ///     Returns <see cref="OrganisationForm.None" /> for physical-person orgnummer (Enskild firma)
     ///     where the underlying digits are a personnummer or samordningsnummer reused as a
     ///     sole-proprietor identifier. Determined at parse time, not by digit-pattern heuristic.
     ///     For legal-person orgnummer, looks up the form code from the first two digits, falling
     ///     back to <see cref="OrganisationForm.JuridiskFormEjUtredd" /> for unknown codes.
+    ///     <para>
+    ///         Special case: orgnummer in the sub-ranges <c>556…</c> (pre-2015) and
+    ///         <c>559…</c> (post-2015) are <see cref="OrganisationForm.AktiebolagOvriga" />,
+    ///         not <see cref="OrganisationForm.EuropakooperativEgtsEric" />. Per Bolagsverket's
+    ///         2015-01-12 announcement, the historical <c>556…</c> range was exhausted
+    ///         (last <c>556999-9997</c>) and newly issued Aktiebolag use <c>559…</c>
+    ///         (first <c>559000-0005</c>). Other <c>55x</c> prefixes (<c>5500</c>–<c>5559</c>)
+    ///         remain Europakooperativ / EGTS / ERIC.
+    ///     </para>
     /// </remarks>
     public OrganisationForm Form
     {
@@ -50,6 +59,17 @@ public sealed record OrganisationId : SwedishOfficialId,
             // _personCentury is set only when TryParse identified the input as Enskild firma
             // (personnummer or samordningsnummer shape). Legal-person leaves it null.
             if (_personCentury is not null) return OrganisationForm.None;
+
+            // Bolagsverket: orgnummer starting 556xxx (pre-2015) and 559xxx (post-2015) are
+            // Aktiebolag despite the first two digits being "55", which would otherwise map to
+            // Europakooperativ. See the 2015-01-12 announcement
+            // "Aktiebolag får 559 i början av organisationsnumret".
+            // The 556 range was exhausted at 556999-9997 in Jan 2015; new Aktiebolag are
+            // issued in the 559 range from 559000-0005+. Real-world example: 5560160680 =
+            // Telefonaktiebolaget LM Ericsson.
+            var threeDigitPrefix = int.Parse(_tenDigits.AsSpan(0, 3), CultureInfo.InvariantCulture);
+            if (threeDigitPrefix is 556 or 559)
+                return OrganisationForm.AktiebolagOvriga;
 
             var code = int.Parse(_tenDigits.AsSpan(0, 2), CultureInfo.InvariantCulture);
             return OrganisationFormExtensions.FromCode(code) ?? OrganisationForm.JuridiskFormEjUtredd;

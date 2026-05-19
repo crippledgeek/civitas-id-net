@@ -12,7 +12,9 @@ namespace Civitas.Id.Sweden.Tests.Core;
 public class OrganisationIdTests
 {
     // From testorganisationsnummer_extended.csv:
-    // 5560160680 — Aktiebolag, valid (form code "55" → EuropakooperativEgtsEric)
+    // 5560160680 — Telefonaktiebolaget LM Ericsson, AktiebolagOvriga
+    // (556xxx is the pre-2015 Aktiebolag range — NOT EuropakooperativEgtsEric
+    // despite the "55" first-two-digit prefix; see OrganisationId.Form remarks).
     private const string ValidShort = "5560160680";
     private const string ValidLong = "165560160680"; // 12-digit form
     private const string ValidWithHyphen = "556016-0680"; // hyphen separator
@@ -134,9 +136,11 @@ public class OrganisationIdTests
         [Test]
         public async Task Form_DerivedFromFirstTwoDigits()
         {
-            // First two digits "55" → EuropakooperativEgtsEric
+            // 5560160680 = Telefonaktiebolaget LM Ericsson. The 556xxx and 559xxx ranges are
+            // Aktiebolag (form 49), NOT EuropakooperativEgtsEric — see OrganisationId.Form remarks
+            // and the 556/559 regression suite below.
             var id = OrganisationId.Parse(ValidShort);
-            await Assert.That(id.Form).IsEqualTo(OrganisationForm.EuropakooperativEgtsEric);
+            await Assert.That(id.Form).IsEqualTo(OrganisationForm.AktiebolagOvriga);
         }
 
         [Test]
@@ -222,11 +226,49 @@ public class OrganisationIdTests
         [Test]
         public async Task FromValidated_ValidLegalPerson_ReturnsOrganisationId()
         {
-            // 5560160680 is a known-valid legal-person organisationsnummer (form 55).
+            // 5560160680 = Telefonaktiebolaget LM Ericsson. Pre-2015 Aktiebolag (form 49)
+            // despite the "55" first-two-digit prefix.
             var id = OrganisationId.FromValidated("5560160680");
 
-            await Assert.That(id.Form).IsEqualTo(OrganisationForm.EuropakooperativEgtsEric);
+            await Assert.That(id.Form).IsEqualTo(OrganisationForm.AktiebolagOvriga);
             await Assert.That(id.LongFormat()).IsEqualTo("5560160680");
+            await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.LegalPerson);
+        }
+    }
+
+    /// <summary>
+    ///     Regression: <see cref="OrganisationId.Form" /> previously returned
+    ///     <see cref="OrganisationForm.EuropakooperativEgtsEric" /> for all orgnummer
+    ///     starting with "55", including the pre-2015 Aktiebolag range <c>556…</c>
+    ///     and the post-2015 Aktiebolag range <c>559…</c>. Per Bolagsverket's
+    ///     2015-01-12 announcement, both sub-ranges are Aktiebolag (form 49).
+    /// </summary>
+    public class FormRecognises556And559AsAktiebolag
+    {
+        [Test]
+        [Arguments("5560160680")] // Telefonaktiebolaget LM Ericsson (pre-2015)
+        [Arguments("5561034249")] // Synthetic 556 from fixture row
+        [Arguments("5592440001")] // Post-2015 issuance from fixture row
+        public async Task Form_For_556_And_559_Prefix_Is_AktiebolagOvriga(string orgnr)
+        {
+            var id = OrganisationId.Parse(orgnr);
+            await Assert.That(id.Form).IsEqualTo(OrganisationForm.AktiebolagOvriga);
+            await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.LegalPerson);
+        }
+
+        [Test]
+        public async Task Form_For_GenuineEuropakooperativRange_IsEuropakooperativEgtsEric()
+        {
+            // Construct a Luhn-valid orgnummer in the genuine Europakooperativ sub-range
+            // (5500-5559, i.e. excluding the 556/559 Aktiebolag carve-outs).
+            // First 9 digits "552000000" — prefix 552 (Europakooperativ), positions 2-3 "20"
+            // satisfy the legal-person month >= 20 check. Compute checksum to make Luhn-valid.
+            const string nineDigits = "552000000";
+            var check = Civitas.Id.Sweden.Internal.SwedishLuhnAlgorithm.ComputeCheckDigit(nineDigits);
+            var tenDigits = nineDigits + check.ToString(System.Globalization.CultureInfo.InvariantCulture);
+
+            var id = OrganisationId.Parse(tenDigits);
+            await Assert.That(id.Form).IsEqualTo(OrganisationForm.EuropakooperativEgtsEric);
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.LegalPerson);
         }
     }
