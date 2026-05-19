@@ -1,6 +1,5 @@
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.Options;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Options;
@@ -70,7 +69,7 @@ public sealed class ProblemDetailsTypeBaseUriTests
     {
         var configValues = new Dictionary<string, string?>
         {
-            ["ProblemDetailsTypeBaseUri"] = "https://user:pass@example.com/errors/",
+            ["ProblemDetailsTypeBaseUri"] = "https://user:pass@example.com/errors/"
         };
         var config = new ConfigurationBuilder().AddInMemoryCollection(configValues).Build();
 
