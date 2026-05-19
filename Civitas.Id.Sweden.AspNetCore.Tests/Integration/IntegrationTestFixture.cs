@@ -2,9 +2,7 @@ using Civitas.Id.Sweden.AspNetCore.Endpoints;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.OpenApi;
 using Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp;
-using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration;
@@ -53,74 +51,14 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
         app.MapOpenApi();
         app.MapControllers();
 
-        var typed = app.MapGroup(string.Empty).WithCivitasIdSwedenMetadata();
-
-        _ = typed.MapGet("/customers/{id}", (PersonalId id) =>
-            Results.Ok(new CustomerResponse(id, id.GetAge(), id.IsAdult())));
-
-        _ = typed.MapGet("/lookup", (PersonalId id) => Results.Ok(new LookupResponse(id)));
-
-        // Body deserialization of a top-level PersonalId works through the chained
-        // TypeInfoResolver. Wrapping in a DTO with a typed property relies on
-        // STJ resolving converter-per-property; that pathway requires either
-        // [JsonConverter] on the type or converter registration on the
-        // serializer options. The integration tests cover the top-level body
-        // path, which is what the AspNetCore extension actually wires up.
-        _ = typed.MapPost("/customers", ([FromBody] PersonalId id) =>
-            Results.Created($"/customers/{id}", new LookupResponse(id)));
-
-        // Polymorphic SwedishOfficialId: parse manually inside the handler since
-        // SwedishOfficialId does not implement IParsable<T> (sum-type base).
-        _ = typed.MapGet("/any/{id}", (string id) =>
-        {
-            var parsed = SwedishOfficialId.ParseAny(id);
-            return Results.Ok(new AnyResponse(parsed.GetType().Name, parsed));
-        });
-
-        _ = typed.MapGet("/orgs/{id}", (OrganisationId id) => Results.Ok(new OrgResponse(
-            id,
-            id.Form,
-            id.NumberType == OrganisationNumberType.PhysicalPerson)));
-
-        // Forces the explicit throw -> exception-handler path. Used to verify
-        // ProblemDetails body emitted by InvalidIdNumberExceptionHandler.
-        _ = typed.MapGet("/customers-strict/{idString}", (string idString) =>
-        {
-            var id = PersonalId.Parse(idString);
-            return Results.Ok(new LookupResponse(id));
-        });
-
-        // Consumer-set non-library 400 Type — used to verify CustomizeProblemDetails
-        // preserves it (does NOT overwrite arbitrary consumer Type values).
-        _ = typed.MapGet("/consumer-400-probe", () =>
-            Results.Problem(
-                statusCode: StatusCodes.Status400BadRequest,
-                type: "https://consumer.example/errors/payment",
-                title: "Consumer error"));
-
-        // Non-400 ProblemDetails — used to verify CustomizeProblemDetails early-return
-        // branch (non-400 responses are never normalized).
-        _ = typed.MapGet("/internal-error-probe", () =>
-            Results.Problem(
-                statusCode: StatusCodes.Status500InternalServerError,
-                type: "https://internal/server-error",
-                title: "Internal"));
-
-        // Consumer-set non-library 422 Type — used to verify CustomizeProblemDetails
-        // guard scope: only 400s are normalized, all other statuses (including 422)
-        // preserve consumer Type values verbatim.
-        _ = typed.MapGet("/consumer-422-probe", () =>
-            Results.Problem(
-                statusCode: StatusCodes.Status422UnprocessableEntity,
-                type: "https://consumer.example/errors/unprocessable",
-                title: "Unprocessable"));
-
-        // Org strict variant — same role as /customers-strict but for OrganisationId.
-        _ = typed.MapGet("/orgs-strict/{idString}", (string idString) =>
-        {
-            var id = OrganisationId.Parse(idString);
-            return Results.Ok(new OrgResponse(id, id.Form, id.NumberType == OrganisationNumberType.PhysicalPerson));
-        });
+        // Endpoint registration is centralized in TestEndpointsBuilder so the
+        // fixture body stays focused on host wiring (DI, middleware, lifetime)
+        // and the test-endpoint surface can grow without making the fixture
+        // illegible. See TestEndpointsBuilder for endpoint → test-class
+        // ownership documentation.
+        _ = app.MapGroup(string.Empty)
+            .WithCivitasIdSwedenMetadata()
+            .MapTestEndpoints();
 
         await app.StartAsync();
         return new IntegrationTestFixture(app, app.GetTestClient());
