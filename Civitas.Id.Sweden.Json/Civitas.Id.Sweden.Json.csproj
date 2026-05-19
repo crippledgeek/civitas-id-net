@@ -14,6 +14,8 @@
     <Deterministic>true</Deterministic>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageId>Civitas.Id.Sweden.Json</PackageId>
+    <Description>System.Text.Json source-generated converters for Swedish official ID types. AOT-clean.</Description>
   </PropertyGroup>
 
   <ItemGroup>

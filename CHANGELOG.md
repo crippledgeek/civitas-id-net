@@ -3,7 +3,22 @@
 All notable changes to `Civitas.Id.Sweden` are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [Unreleased]
+## [1.0.0] - 2026-05-19
+
+Initial v1.0.0 release. Highlights:
+
+- **Civitas.Id.Sweden**: AOT-clean core parsing + validation + formatting for personnummer,
+  samordningsnummer, organisationsnummer.
+- **Civitas.Id.Sweden.Fakers**: deterministic algorithmic fakers (cryptographically secure
+  default; seeded overload for deterministic test fixtures).
+- **Civitas.Id.Sweden.Json**: System.Text.Json source-gen converters.
+- **Civitas.Id.Sweden.DataAnnotations**: ValidationAttribute family for string DTOs.
+- **Civitas.Id.Sweden.AspNetCore**: ASP.NET Core 10 integration — `IExceptionHandler`,
+  `ProblemDetails`, OpenAPI schema transformer, dual `Http.Json` + `Mvc.Json` bridge.
+
+See the per-package README on NuGet for usage. See
+`docs/superpowers/specs/2026-05-18-aspnetcore-audit-remediation-design.md` for the audit-
+remediation design that drove the AspNetCore package's final shape.
 
 ### Added
 - New companion package `Civitas.Id.Sweden.AspNetCore` — full ASP.NET Core 10 integration:

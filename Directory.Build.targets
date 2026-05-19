@@ -1,0 +1,30 @@
+<Project>
+  <PropertyGroup Condition="'$(IsPackable)' == 'true'">
+    <!-- Shared NuGet package identity. Each csproj overrides PackageId + Description. -->
+    <Authors>Mattias Carlsson</Authors>
+    <Company>Civitas</Company>
+    <Copyright>Copyright © 2026 Mattias Carlsson</Copyright>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <PackageProjectUrl>https://github.com/crippledgeek/civitas-id-net</PackageProjectUrl>
+    <RepositoryUrl>https://github.com/crippledgeek/civitas-id-net.git</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
+    <PackageTags>swedish;personnummer;samordningsnummer;organisationsnummer;civic-id;validation;aot</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+    <Version>1.0.0</Version>
+    <PackageReleaseNotes>See CHANGELOG.md for the full release notes.</PackageReleaseNotes>
+
+    <!-- Source Link is built into the .NET SDK; just enable embedded sources + repo URL. -->
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <ContinuousIntegrationBuild Condition="'$(CI)' == 'true'">true</ContinuousIntegrationBuild>
+    <IncludeSymbols>true</IncludeSymbols>
+    <SymbolPackageFormat>snupkg</SymbolPackageFormat>
+
+    <!-- Disabled for v1.0.0 (no prior published version to baseline against). -->
+    <EnablePackageValidation>false</EnablePackageValidation>
+  </PropertyGroup>
+
+  <ItemGroup Condition="'$(IsPackable)' == 'true'">
+    <None Include="README.md" Pack="true" PackagePath="\" Condition="Exists('README.md')" />
+  </ItemGroup>
+</Project>

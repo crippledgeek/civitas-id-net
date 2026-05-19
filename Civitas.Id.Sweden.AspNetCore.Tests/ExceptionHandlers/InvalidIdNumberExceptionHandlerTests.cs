@@ -1,3 +1,4 @@
+using System.Diagnostics;
 using System.Text.Json;
 using System.Text.Json.Nodes;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
@@ -150,6 +151,10 @@ public class InvalidIdNumberExceptionHandlerTests
         [Test]
         public async Task SuccessPath_IncludesTraceId_InResponseBody()
         {
+            // Start an Activity so Activity.Current?.TraceId is non-default.
+            using var activity = new Activity("test");
+            activity.Start();
+
             var services = new ServiceCollection();
             services.AddCivitasIdSwedenAspNetCore();
             services.AddLogging();
@@ -170,9 +175,14 @@ public class InvalidIdNumberExceptionHandlerTests
 
             await Assert.That(handled).IsTrue();
             ctx.Response.Body.Position = 0;
-            using var reader = new StreamReader(ctx.Response.Body);
-            var body = await reader.ReadToEndAsync();
-            await Assert.That(body).Contains("\"traceId\"");
+            var doc = await JsonDocument.ParseAsync(ctx.Response.Body);
+            await Assert.That(doc.RootElement.TryGetProperty("traceId", out var traceIdProp)).IsTrue();
+            var traceId = traceIdProp.GetString();
+            await Assert.That(traceId).IsNotNull();
+            // Microsoft's DefaultProblemDetailsWriter populates traceId from Activity.Current.Id
+            // (W3C traceparent format: "00-{TraceId}-{SpanId}-01") when the success path runs.
+            // Assert the emitted value carries our started activity's TraceId.
+            await Assert.That(traceId!).Contains(activity.TraceId.ToString());
         }
     }
 }
