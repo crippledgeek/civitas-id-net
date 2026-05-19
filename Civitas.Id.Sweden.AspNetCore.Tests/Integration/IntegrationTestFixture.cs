@@ -106,6 +106,15 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
                 type: "https://internal/server-error",
                 title: "Internal"));
 
+        // Consumer-set non-library 422 Type — used to verify CustomizeProblemDetails
+        // guard scope: only 400s are normalized, all other statuses (including 422)
+        // preserve consumer Type values verbatim.
+        _ = typed.MapGet("/consumer-422-probe", () =>
+            Results.Problem(
+                statusCode: StatusCodes.Status422UnprocessableEntity,
+                type: "https://consumer.example/errors/unprocessable",
+                title: "Unprocessable"));
+
         // Org strict variant — same role as /customers-strict but for OrganisationId.
         _ = typed.MapGet("/orgs-strict/{idString}", (string idString) =>
         {

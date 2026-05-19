@@ -82,8 +82,9 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             .Validate(static o =>
                     Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out var uri)
                     && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
+                    && string.IsNullOrEmpty(uri.UserInfo)
                     && o.ProblemDetailsTypeBaseUri.EndsWith('/'),
-                "ProblemDetailsTypeBaseUri must be an absolute https or http URI ending with '/'.")
+                "ProblemDetailsTypeBaseUri must be an absolute https or http URI ending with '/' and must not contain user info.")
             .ValidateOnStart();
 
         return services;
@@ -128,8 +129,9 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
             .Validate(static o =>
                     Uri.TryCreate(o.ProblemDetailsTypeBaseUri, UriKind.Absolute, out var uri)
                     && (uri.Scheme == Uri.UriSchemeHttps || uri.Scheme == Uri.UriSchemeHttp)
+                    && string.IsNullOrEmpty(uri.UserInfo)
                     && o.ProblemDetailsTypeBaseUri.EndsWith('/'),
-                "ProblemDetailsTypeBaseUri must be an absolute https or http URI ending with '/'.")
+                "ProblemDetailsTypeBaseUri must be an absolute https or http URI ending with '/' and must not contain user info.")
             .ValidateOnStart();
 
         return services;

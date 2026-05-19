@@ -39,4 +39,16 @@ public sealed class ProblemDetailsTypeBaseUriTests
             _ = sp.GetRequiredService<IOptions<CivitasIdSwedenAspNetCoreOptions>>().Value;
         }).Throws<OptionsValidationException>();
     }
+
+    [Test]
+    public async Task UserInfoInUri_FailsValidation()
+    {
+        var services = new ServiceCollection();
+        services.AddCivitasIdSwedenAspNetCore(o => o.ProblemDetailsTypeBaseUri = "https://user:pass@example.com/errors/");
+        await Assert.That(() =>
+        {
+            var sp = services.BuildServiceProvider();
+            _ = sp.GetRequiredService<IOptions<CivitasIdSwedenAspNetCoreOptions>>().Value;
+        }).Throws<OptionsValidationException>();
+    }
 }

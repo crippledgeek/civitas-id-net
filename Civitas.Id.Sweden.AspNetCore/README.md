@@ -50,7 +50,13 @@ Row 1 — minimal API malformed route param:
 GET /customers/19811218bad9 HTTP/1.1
 ```
 
-Returns 400 with body:
+Short-form input is accepted equivalently (`PersonalId` / `CoordinationId` / `OrganisationId` all implement `IParsable<T>` over both long and short forms):
+
+```http
+GET /customers/811218bad9 HTTP/1.1
+```
+
+Both return 400 with body:
 
 ```json
 {

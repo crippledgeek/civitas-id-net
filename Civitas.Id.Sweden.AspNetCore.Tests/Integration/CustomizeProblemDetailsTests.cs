@@ -56,6 +56,18 @@ public sealed class CustomizeProblemDetailsTests
     }
 
     [Test]
+    public async Task Consumer_422_TypeNotOverwritten()
+    {
+        await using var fx = await IntegrationTestFixture.CreateAsync();
+        var resp = await fx.Client.GetAsync(new Uri("/consumer-422-probe", UriKind.Relative));
+        await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.UnprocessableEntity);
+        var pd = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
+        await Assert.That(pd).IsNotNull();
+        // 422 falls outside the library's normalization scope; consumer Type preserved.
+        await Assert.That(pd!.Type).IsEqualTo("https://consumer.example/errors/unprocessable");
+    }
+
+    [Test]
     public async Task Non400_ProblemDetails_TypeNotOverwritten()
     {
         await using var fx = await IntegrationTestFixture.CreateAsync();
