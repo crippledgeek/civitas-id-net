@@ -289,6 +289,15 @@ public abstract partial record SwedishOfficialId
     }
 
     /// <summary>
+    ///     Internal-only re-exposure of <see cref="TryMatch"/> for use by
+    ///     <see cref="Civitas.Id.Sweden.Internal.SwedishIdParsing"/> during the
+    ///     strangler-fig migration. Removed in Task 10.
+    /// </summary>
+    /// <param name="s">The candidate ID string (any supported format), or null.</param>
+    /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
+    internal static SwedishIdMatcher? MatchForInternal(string? s) => TryMatch(s);
+
+    /// <summary>
     ///     Pre-flight: trims and length-checks the input, then matches against the shared regex.
     ///     Returns null when the input is null, empty, too long, or non-matching.
     /// </summary>

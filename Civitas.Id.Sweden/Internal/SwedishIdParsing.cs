@@ -1,3 +1,6 @@
+using Civitas.Id.Sweden.Core;
+using JetBrains.Annotations;
+
 namespace Civitas.Id.Sweden.Internal;
 
 /// <summary>
@@ -52,5 +55,44 @@ internal static class SwedishIdParsing
             century -= 1;
 
         return century;
+    }
+
+    /// <summary>
+    ///     Thin accessor wrapping <see cref="SwedishOfficialId"/>'s
+    ///     <c>[GeneratedRegex]</c> match. Co-located here so person-ID and
+    ///     organisation-ID dispatchers share one entry point. The regex declaration
+    ///     itself stays on <see cref="SwedishOfficialId"/> per Roslyn's
+    ///     <c>[GeneratedRegex]</c> co-location requirement.
+    /// </summary>
+    /// <param name="s">The candidate ID string (any supported format), or null.</param>
+    /// <returns>The parsed matcher on regex success, or null otherwise.</returns>
+    internal static SwedishOfficialId.SwedishIdMatcher? TryMatch(string? s) => SwedishOfficialId.MatchForInternal(s);
+
+    /// <summary>
+    ///     Shared leaf atomic: validates calendar-day-within-month plus Luhn-10 over
+    ///     the 10-digit body. Used by both the person-ID dispatcher
+    ///     (Tasks 3, 4, 7) and the Enskild firma branch of OrganisationId parsing
+    ///     (Tasks 5, 11). Caller has already resolved <paramref name="fullYear"/>
+    ///     and <paramref name="realDay"/>.
+    /// </summary>
+    /// <param name="matcher">The matcher containing raw year/month/day/unique spans.</param>
+    /// <param name="fullYear">The 4-digit year (caller-resolved).</param>
+    /// <param name="realDay">
+    ///     The calendar day (1..31). For samordningsnummer the caller passes
+    ///     <c>encodedDay - 60</c>; for personnummer the encoded day directly.
+    /// </param>
+    /// <returns><see langword="true"/> if both calendar and Luhn checks pass.</returns>
+    [Pure]
+    internal static bool TryValidatePersonShapedBody(
+        SwedishOfficialId.SwedishIdMatcher matcher, int fullYear, int realDay)
+    {
+        if (realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
+
+        Span<char> tenDigits = stackalloc char[10];
+        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
+        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
+        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
+        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
+        return SwedishLuhnAlgorithm.IsValid(tenDigits);
     }
 }
