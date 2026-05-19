@@ -1,9 +1,11 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.TypeConverters;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Core;
@@ -12,6 +14,7 @@ namespace Civitas.Id.Sweden.Core;
 ///     A Swedish organisation number (organisationsnummer).
 ///     Always serialised in the canonical 10-digit form on the wire.
 /// </summary>
+[TypeConverter(typeof(OrganisationIdTypeConverter))]
 public sealed record OrganisationId : SwedishOfficialId,
     ISpanParsable<OrganisationId>
 {

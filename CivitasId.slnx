@@ -1,5 +1,14 @@
 <Solution>
+  <Folder Name="/tests/">
+    <Project Path="tests/AotSmokeTest/AotSmokeTest.csproj" />
+  </Folder>
+  <Project Path="Civitas.Id.Sweden.AspNetCore.Tests/Civitas.Id.Sweden.AspNetCore.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden.AspNetCore/Civitas.Id.Sweden.AspNetCore.csproj" />
+  <Project Path="Civitas.Id.Sweden.DataAnnotations.Tests/Civitas.Id.Sweden.DataAnnotations.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden.DataAnnotations/Civitas.Id.Sweden.DataAnnotations.csproj" />
   <Project Path="Civitas.Id.Sweden.Fakers/Civitas.Id.Sweden.Fakers.csproj" />
+  <Project Path="Civitas.Id.Sweden.Json.Tests/Civitas.Id.Sweden.Json.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden.Json/Civitas.Id.Sweden.Json.csproj" />
   <Project Path="Civitas.Id.Sweden.Tests/Civitas.Id.Sweden.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden/Civitas.Id.Sweden.csproj" />
 </Solution>

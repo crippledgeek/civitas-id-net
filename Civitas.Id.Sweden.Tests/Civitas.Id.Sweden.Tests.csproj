@@ -25,11 +25,16 @@
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.*" />
     <PackageReference Include="TUnit.FsCheck" Version="1.43.41" />
     <PackageReference Include="Verify.TUnit" Version="31.16.3" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.*" />
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.*" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Fakers\Civitas.Id.Sweden.Fakers.csproj" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.Json\Civitas.Id.Sweden.Json.csproj" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.DataAnnotations\Civitas.Id.Sweden.DataAnnotations.csproj" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.AspNetCore\Civitas.Id.Sweden.AspNetCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>

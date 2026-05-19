@@ -1,9 +1,11 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.TypeConverters;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Core;
@@ -12,6 +14,7 @@ namespace Civitas.Id.Sweden.Core;
 ///     A Swedish coordination number (samordningsnummer).
 ///     Issued to individuals without a Swedish personnummer; the day field is offset by +60.
 /// </summary>
+[TypeConverter(typeof(CoordinationIdTypeConverter))]
 public sealed record CoordinationId : PhysicalPersonId,
     ISpanParsable<CoordinationId>
 {

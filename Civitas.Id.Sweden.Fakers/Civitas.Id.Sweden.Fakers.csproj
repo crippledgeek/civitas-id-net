@@ -14,6 +14,7 @@
     <Deterministic>true</Deterministic>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageId>Civitas.Id.Sweden.Fakers</PackageId>
     <Description>Algorithmic fakers for valid Swedish official ID numbers (personnummer, samordningsnummer, organisationsnummer). Default constructor uses cryptographically secure RNG (System.Security.Cryptography.RandomNumberGenerator). Seeded and caller-injected Random overloads exist for deterministic test fixtures; do not rely on them for security-sensitive values.</Description>
   </PropertyGroup>
 

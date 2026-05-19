@@ -1,0 +1,61 @@
+name: Publish
+
+on:
+  push:
+    tags: ['v*']
+
+env:
+  DOTNET_NOLOGO: true
+  DOTNET_CLI_TELEMETRY_OPTOUT: true
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    permissions:
+      # Required by NuGet.org Trusted Publishing (OIDC). Harmless when falling
+      # back to the NUGET_API_KEY secret. See:
+      # https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build -c Release --no-restore /p:TreatWarningsAsErrors=true
+
+      - name: Test
+        run: dotnet test -c Release --no-build
+
+      - name: Pack
+        run: dotnet pack -c Release --no-build --output ./artifacts
+
+      # Configure ONE of the following before tagging a release:
+      #
+      # (A) Trusted Publishing (preferred):
+      #     - Configure a Trusted Publishing policy on nuget.org pointing to this
+      #       repository/workflow/environment. Then use the official NuGet action
+      #       to exchange the GitHub OIDC token for a short-lived NuGet API key.
+      #     - See https://learn.microsoft.com/nuget/nuget-org/trusted-publishing
+      #
+      # (B) Static API key (fallback):
+      #     - Create a NUGET_API_KEY secret on the repository with a scoped key.
+      #
+      # The step below uses (B). Replace with (A) once the policy is in place.
+      - name: Push to nuget.org
+        run: dotnet nuget push './artifacts/*.nupkg' --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json --skip-duplicate
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nupkg
+          path: artifacts/
