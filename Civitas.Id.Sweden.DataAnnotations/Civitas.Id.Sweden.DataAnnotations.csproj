@@ -14,6 +14,8 @@
     <Deterministic>true</Deterministic>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageId>Civitas.Id.Sweden.DataAnnotations</PackageId>
+    <Description>DataAnnotations ValidationAttribute family for Swedish official ID types in string DTOs.</Description>
   </PropertyGroup>
 
   <ItemGroup>

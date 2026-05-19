@@ -19,6 +19,8 @@
          metadata attribute. Suppress the noise warning that VerifyReferenceAotCompatibility
          would emit; the assembly is verified trim-safe by the ASP.NET Core team. -->
     <NoWarn>$(NoWarn);IL3058</NoWarn>
+    <PackageId>Civitas.Id.Sweden.AspNetCore</PackageId>
+    <Description>ASP.NET Core 10 integration for Civitas.Id.Sweden: IExceptionHandler, ProblemDetails, OpenAPI schema transformer, Mvc.JsonOptions bridge.</Description>
   </PropertyGroup>
 
   <ItemGroup>
