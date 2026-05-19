@@ -3,6 +3,7 @@ using ArchUnitNET.TUnit;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Microsoft.AspNetCore.Diagnostics;
 using static ArchUnitNET.Fluent.ArchRuleDefinition;
+using ArchUnitArchitecture = ArchUnitNET.Domain.Architecture;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Architecture;
 
@@ -13,7 +14,7 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.Architecture;
 /// </summary>
 public sealed class AuditRemediationArchRules
 {
-    private static readonly ArchUnitNET.Domain.Architecture Arch = new ArchLoader()
+    private static readonly ArchUnitArchitecture Arch = new ArchLoader()
         .LoadAssemblies(typeof(CivitasIdSwedenAspNetCoreServiceCollectionExtensions).Assembly)
         .Build();
 

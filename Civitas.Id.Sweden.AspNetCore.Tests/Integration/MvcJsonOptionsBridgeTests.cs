@@ -72,7 +72,7 @@ public sealed class MvcJsonOptionsBridgeTests
         // is harmless: it executes only if Mvc.JsonOptions is actively resolved.
         // The relevant invariant is that resolving the options object does not
         // throw and yields a JsonSerializerOptions instance.
-        var mvcOpts = host.Services.GetService<IOptions<Microsoft.AspNetCore.Mvc.JsonOptions>>();
+        var mvcOpts = host.Services.GetService<IOptions<JsonOptions>>();
         if (mvcOpts is not null)
         {
             await Assert.That(mvcOpts.Value.JsonSerializerOptions).IsNotNull();

@@ -61,6 +61,11 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
     /// <param name="services">The service collection to extend.</param>
     /// <param name="configure">A delegate that configures the options.</param>
     /// <returns>The same service collection for chaining.</returns>
+    /// <remarks>
+    /// OpenAPI schema metadata is opt-in. Call
+    /// <c>builder.Services.AddOpenApi(opts =&gt; opts.AddCivitasIdSwedenSchemas())</c>
+    /// to register the schema transformer that enriches the emitted document.
+    /// </remarks>
     public static IServiceCollection AddCivitasIdSwedenAspNetCore(
         this IServiceCollection services,
         Action<CivitasIdSwedenAspNetCoreOptions> configure)
@@ -98,6 +103,11 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
     /// Note: <see cref="CivitasIdSwedenAspNetCoreOptions.RedactInput"/> is a delegate
     /// and is therefore NOT bound from JSON config; it stays <see langword="null"/>
     /// on this overload. Use the <see cref="Action{T}"/> overload to set it.
+    /// </para>
+    /// <para>
+    /// OpenAPI schema metadata is opt-in. Call
+    /// <c>builder.Services.AddOpenApi(opts =&gt; opts.AddCivitasIdSwedenSchemas())</c>
+    /// to register the schema transformer that enriches the emitted document.
     /// </para>
     /// </remarks>
     [RequiresUnreferencedCode("Binds CivitasIdSwedenAspNetCoreOptions from configuration. Enable the configuration binding source generator (<EnableConfigurationBindingGenerator>true</EnableConfigurationBindingGenerator>) for AOT/trim-safe builds.")]

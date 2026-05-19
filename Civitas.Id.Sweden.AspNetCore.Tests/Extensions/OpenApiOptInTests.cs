@@ -2,6 +2,7 @@ using System.Text.Json;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.OpenApi;
 using Civitas.Id.Sweden.Core;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.OpenApi;
 using Microsoft.AspNetCore.TestHost;
 using Microsoft.Extensions.Options;
@@ -49,7 +50,7 @@ public sealed class OpenApiOptInTests
                         e.MapOpenApi();
                         // Use [FromBody] so PersonalId emits a body schema
                         // (this is the path the transformer is meant to enrich).
-                        e.MapPost("/probe", ([Microsoft.AspNetCore.Mvc.FromBody] PersonalId id) => Results.Ok(id));
+                        e.MapPost("/probe", ([FromBody] PersonalId id) => Results.Ok(id));
                     });
                 }))
             .StartAsync();
