@@ -16,6 +16,7 @@ namespace Civitas.Id.Sweden.Core;
 /// </summary>
 [TypeConverter(typeof(CoordinationIdTypeConverter))]
 public sealed record CoordinationId : PhysicalPersonId,
+    ISwedishPersonIdHooks<CoordinationId>,
     ISpanParsable<CoordinationId>
 {
     /// <summary>The canonical 12-digit normalised form (YYYYMMDDXXXX) with day still +60-offset.</summary>
@@ -25,6 +26,19 @@ public sealed record CoordinationId : PhysicalPersonId,
     {
         _normalised = normalised;
     }
+
+    // ─── Explicit-interface static-abstract implementations of ISwedishPersonIdHooks<CoordinationId>.
+    //     Explicit form keeps these off the public API surface; accessible only through
+    //     the generic CRTP constraint on PhysicalPersonId.TryParseCore<TSelf>. ───
+
+    static bool ISwedishPersonIdHooks<CoordinationId>.IsDayValid(int encodedDay)
+        => encodedDay is >= 61 and <= 91;
+
+    static int ISwedishPersonIdHooks<CoordinationId>.CalendarDay(int encodedDay)
+        => encodedDay - 60;
+
+    static CoordinationId ISwedishPersonIdHooks<CoordinationId>.FromValidated(string normalised12)
+        => new(normalised12);
 
     /// <summary>The decoded date of birth (encoded day minus 60).</summary>
     public override DateOnly BirthDate
