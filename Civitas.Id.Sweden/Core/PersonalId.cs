@@ -16,7 +16,8 @@ namespace Civitas.Id.Sweden.Core;
 [TypeConverter(typeof(PersonalIdTypeConverter))]
 public sealed record PersonalId : PhysicalPersonId,
     ISwedishPersonIdHooks<PersonalId>,
-    ISpanParsable<PersonalId>
+    ISpanParsable<PersonalId>,
+    IUtf8SpanParsable<PersonalId>
 {
     private PersonalId(string normalised) : base(normalised)
     {
@@ -289,6 +290,38 @@ public sealed record PersonalId : PhysicalPersonId,
         return TryParse(s, out _);
     }
 
-    /// <inheritdoc cref="PhysicalPersonId.ToString" />
+    /// <inheritdoc cref="PhysicalPersonId.ToString()" />
     public override string ToString() => LongFormat();
+
+    // ── IUtf8SpanParsable<PersonalId> ──
+
+    /// <summary>Parses a personnummer from a UTF-8 byte span. Throws on failure.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <returns>A valid <see cref="PersonalId"/>.</returns>
+    /// <exception cref="InvalidIdNumberException">When parsing fails.</exception>
+    [Pure]
+    public static PersonalId Parse(ReadOnlySpan<byte> s, IFormatProvider? provider)
+    {
+        return TryParse(s, provider, out var result)
+            ? result
+            : throw new InvalidIdNumberException(
+                System.Text.Encoding.UTF8.GetString(s),
+                InvalidIdNumberReason.InvalidFormat);
+    }
+
+    /// <summary>Attempts to parse a personnummer from a UTF-8 byte span.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <param name="result">The parsed value on success.</param>
+    /// <returns><see langword="true"/> on success.</returns>
+    [Pure]
+    [ContractAnnotation("=> true, result: notnull; => false, result: null")]
+    public static bool TryParse(
+        ReadOnlySpan<byte> s,
+        IFormatProvider? provider,
+        [MaybeNullWhen(false)] out PersonalId result)
+    {
+        return TryParseUtf8Core(s, SwedenClock.Today().Year, out result);
+    }
 }

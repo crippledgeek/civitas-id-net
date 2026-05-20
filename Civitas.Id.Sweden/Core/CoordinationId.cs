@@ -17,7 +17,8 @@ namespace Civitas.Id.Sweden.Core;
 [TypeConverter(typeof(CoordinationIdTypeConverter))]
 public sealed record CoordinationId : PhysicalPersonId,
     ISwedishPersonIdHooks<CoordinationId>,
-    ISpanParsable<CoordinationId>
+    ISpanParsable<CoordinationId>,
+    IUtf8SpanParsable<CoordinationId>
 {
     private CoordinationId(string normalised) : base(normalised)
     {
@@ -289,6 +290,38 @@ public sealed record CoordinationId : PhysicalPersonId,
         return TryParse(s, out _);
     }
 
-    /// <inheritdoc cref="PhysicalPersonId.ToString" />
+    /// <inheritdoc cref="PhysicalPersonId.ToString()" />
     public override string ToString() => LongFormat();
+
+    // ── IUtf8SpanParsable<CoordinationId> ──
+
+    /// <summary>Parses a samordningsnummer from a UTF-8 byte span. Throws on failure.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <returns>A valid <see cref="CoordinationId"/>.</returns>
+    /// <exception cref="InvalidIdNumberException">When parsing fails.</exception>
+    [Pure]
+    public static CoordinationId Parse(ReadOnlySpan<byte> s, IFormatProvider? provider)
+    {
+        return TryParse(s, provider, out var result)
+            ? result
+            : throw new InvalidIdNumberException(
+                System.Text.Encoding.UTF8.GetString(s),
+                InvalidIdNumberReason.InvalidFormat);
+    }
+
+    /// <summary>Attempts to parse a samordningsnummer from a UTF-8 byte span.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <param name="result">The parsed value on success.</param>
+    /// <returns><see langword="true"/> on success.</returns>
+    [Pure]
+    [ContractAnnotation("=> true, result: notnull; => false, result: null")]
+    public static bool TryParse(
+        ReadOnlySpan<byte> s,
+        IFormatProvider? provider,
+        [MaybeNullWhen(false)] out CoordinationId result)
+    {
+        return TryParseUtf8Core(s, SwedenClock.Today().Year, out result);
+    }
 }
