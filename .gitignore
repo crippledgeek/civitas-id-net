@@ -30,3 +30,4 @@ Thumbs.db
 ## Tooling output
 *.log
 node_modules/
+BenchmarkDotNet.Artifacts/

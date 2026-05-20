@@ -1,5 +1,3 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
 using JetBrains.Annotations;
@@ -12,16 +10,8 @@ namespace Civitas.Id.Sweden.Core;
 ///     <c>OrganisationId</c> derive from this type.
 /// </summary>
 [PublicAPI]
-public abstract partial record SwedishOfficialId
+public abstract record SwedishOfficialId
 {
-    /// <summary>
-    ///     Defensive upper bound on input length. No valid Swedish ID number representation
-    ///     approaches this length (longest forms are 13 chars). The regex's 1-second match timeout
-    ///     guards against catastrophic backtracking, but a cheap length check rejects pathological
-    ///     inputs (e.g. 1MB of digits) before the regex engine is involved at all.
-    /// </summary>
-    private const int MaxInputLength = 100;
-
     /// <summary>Internal constructor — prevents external derivation.</summary>
     internal SwedishOfficialId()
     {
@@ -29,12 +19,6 @@ public abstract partial record SwedishOfficialId
 
     /// <summary>The ISO 3166-1 alpha-2 country code (always "SE" for this library).</summary>
     public static string CountryCode => "SE";
-
-    [GeneratedRegex(
-        @"^(?:SE)?(?<century>\d{2})?(?<date>(?<year>\d{2})(?<month>\d{2})(?<day>\d{2}))(?<delimiter>[-+])?(?<unique>\d{4})$",
-        RegexOptions.None,
-        1000)]
-    private static partial Regex SsnRegex { get; }
 
     /// <summary>Returns the canonical 12-digit string representation.</summary>
     public abstract string LongFormat();
@@ -288,81 +272,4 @@ public abstract partial record SwedishOfficialId
         return TryParseAny(s, out _);
     }
 
-    /// <summary>
-    ///     Pre-flight: trims and length-checks the input, then matches against the shared regex.
-    ///     Returns null when the input is null, empty, too long, or non-matching.
-    /// </summary>
-    /// <param name="input">The raw string to test.</param>
-    /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
-    private protected static SwedishIdMatcher? TryMatch(string? input)
-    {
-        if (input is null) return null;
-        var trimmed = input.Trim();
-        if (trimmed.Length is 0 or > MaxInputLength) return null;
-
-        var match = SsnRegex.Match(trimmed);
-        return match.Success ? new SwedishIdMatcher(match) : null;
-    }
-
-    /// <summary>Test-only shim — DO NOT use in production code.</summary>
-    /// <remarks>
-    ///     Exists because the real <c>TryMatch</c> is <c>private protected</c>;
-    ///     this surface lets unit tests verify the matcher without granting broader visibility.
-    ///     Marked <c>internal</c> so only the test assembly (via <c>InternalsVisibleTo</c>) can call it.
-    /// </remarks>
-    /// <param name="input">The raw string to test.</param>
-    /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
-    internal static SwedishIdMatcher? TryMatchForTesting(string? input)
-    {
-        return TryMatch(input);
-    }
-
-    /// <summary>Wraps a successful regex match and exposes named-group accessors.</summary>
-    internal sealed class SwedishIdMatcher
-    {
-        private readonly Match _match;
-
-        /// <summary>Creates a new matcher wrapping the given successful <see cref="Match" />.</summary>
-        /// <param name="match">A successful regex match against <see cref="SsnRegex" />.</param>
-        internal SwedishIdMatcher(Match match)
-        {
-            _match = match;
-        }
-
-        /// <summary>True if the input contained an explicit century prefix (e.g. "19" or "20").</summary>
-        public bool HasCentury => _match.Groups["century"].Success;
-
-        /// <summary>True if the input contained a "-" or "+" delimiter.</summary>
-        public bool HasDelimiter => _match.Groups["delimiter"].Success;
-
-        /// <summary>The delimiter character ("" when absent).</summary>
-        public string Delimiter => _match.Groups["delimiter"].Value;
-
-        /// <summary>The 2-digit year text.</summary>
-        public string YearText => _match.Groups["year"].Value;
-
-        /// <summary>The 2-digit month text.</summary>
-        public string MonthText => _match.Groups["month"].Value;
-
-        /// <summary>The 2-digit day text.</summary>
-        public string DayText => _match.Groups["day"].Value;
-
-        /// <summary>The 4-digit "unique" suffix (last 3 + check digit).</summary>
-        public string Unique => _match.Groups["unique"].Value;
-
-        /// <summary>Century parsed as int.</summary>
-        public int CenturyValue => int.Parse(_match.Groups["century"].Value, CultureInfo.InvariantCulture);
-
-        /// <summary>Year parsed as int (0..99).</summary>
-        public int Year => int.Parse(YearText, CultureInfo.InvariantCulture);
-
-        /// <summary>Month parsed as int.</summary>
-        public int Month => int.Parse(MonthText, CultureInfo.InvariantCulture);
-
-        /// <summary>
-        ///     Day parsed as int (1..31 for personnummer, 61..91 for samordningsnummer, &gt;=20 for organisationsnummer
-        ///     "month").
-        /// </summary>
-        public int Day => int.Parse(DayText, CultureInfo.InvariantCulture);
-    }
 }
