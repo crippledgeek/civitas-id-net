@@ -5,6 +5,7 @@ using ArchUnitNET.Loader;
 using ArchUnitNET.TUnit;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.EntityFrameworkCore;
 using DataAnnotations;
 using Json;
 using Microsoft.AspNetCore.Diagnostics;
@@ -18,7 +19,8 @@ public class ArchitectureRulesTests
             typeof(PersonalId).Assembly,
             typeof(CivitasIdSwedenJsonContext).Assembly,
             typeof(ValidPersonalIdAttribute).Assembly,
-            typeof(CivitasIdSwedenAspNetCoreServiceCollectionExtensions).Assembly)
+            typeof(CivitasIdSwedenAspNetCoreServiceCollectionExtensions).Assembly,
+            typeof(PersonalIdConverter).Assembly)
         .Build();
 
     public class CorePackage
@@ -81,6 +83,31 @@ public class ArchitectureRulesTests
                 .Should().NotDependOnAnyTypesThat()
                     .ResideInNamespaceMatching(@"^System\.Text\.Json(\..*)?$")
                 .Because(".DataAnnotations is JSON-serializer-agnostic")
+                .Check(Arch);
+        }
+    }
+
+    public class EntityFrameworkCorePackage
+    {
+        [Test]
+        public void DoesNotReference_InternalNamespace()
+        {
+            Types().That()
+                .ResideInAssembly(typeof(PersonalIdConverter).Assembly)
+                .Should().NotDependOnAnyTypesThat()
+                    .ResideInNamespaceMatching(@"^Civitas\.Id\.Sweden\.Internal(\..*)?$")
+                .Because(".EntityFrameworkCore must consume only the public API surface of the core library")
+                .Check(Arch);
+        }
+
+        [Test]
+        public void DoesNotReference_AspNetCore()
+        {
+            Types().That()
+                .ResideInAssembly(typeof(PersonalIdConverter).Assembly)
+                .Should().NotDependOnAnyTypesThat()
+                    .ResideInNamespaceMatching(@"^Microsoft\.AspNetCore(\..*)?$")
+                .Because(".EntityFrameworkCore must stay usable in non-web hosts (worker services, console apps, MAUI)")
                 .Check(Arch);
         }
     }
