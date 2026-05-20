@@ -2,6 +2,7 @@
   <Folder Name="/tests/">
     <Project Path="tests/AotSmokeTest/AotSmokeTest.csproj" />
   </Folder>
+  <Project Path="Civitas.Id.Sweden.AotSmokeTest/Civitas.Id.Sweden.AotSmokeTest.csproj" />
   <Project Path="Civitas.Id.Sweden.AspNetCore.Tests/Civitas.Id.Sweden.AspNetCore.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.AspNetCore/Civitas.Id.Sweden.AspNetCore.csproj" />
   <Project Path="Civitas.Id.Sweden.Benchmarks/Civitas.Id.Sweden.Benchmarks.csproj" />
