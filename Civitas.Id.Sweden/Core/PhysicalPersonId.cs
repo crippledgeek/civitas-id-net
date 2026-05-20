@@ -252,12 +252,26 @@ public abstract record PhysicalPersonId : SwedishOfficialId
         if (!SwedishIdParsing.TryValidatePersonShapedBody(in match, fullYear, realDay))
             return false;
 
-        Span<char> normalisedSpan = stackalloc char[12];
-        fullYear.TryFormat(normalisedSpan[..4], out _, "D4", CultureInfo.InvariantCulture);
-        match.MonthTextSpan.CopyTo(normalisedSpan[4..6]);
-        match.DayTextSpan.CopyTo(normalisedSpan[6..8]);
-        match.UniqueSpan.CopyTo(normalisedSpan[8..12]);
-        var normalised = new string(normalisedSpan);
+        // Fast-path: input is already the canonical 12-digit form (YYYYMMDDXXXX),
+        // no SE prefix, no delimiter, no whitespace. Reuse the input string rather
+        // than allocating a new copy. The match.Source == trimmed body — if its
+        // length equals the input's length, no SE prefix was stripped and no
+        // whitespace was trimmed. Combined with HasCentury, no delimiter, and
+        // length 12, the input IS the canonical form bit-for-bit.
+        string normalised;
+        if (s.Length == 12 && match.HasCentury && match.Delimiter == '\0' && match.Source.Length == s.Length)
+        {
+            normalised = s;
+        }
+        else
+        {
+            Span<char> normalisedSpan = stackalloc char[12];
+            fullYear.TryFormat(normalisedSpan[..4], out _, "D4", CultureInfo.InvariantCulture);
+            match.MonthTextSpan.CopyTo(normalisedSpan[4..6]);
+            match.DayTextSpan.CopyTo(normalisedSpan[6..8]);
+            match.UniqueSpan.CopyTo(normalisedSpan[8..12]);
+            normalised = new string(normalisedSpan);
+        }
         result = TSelf.FromValidated(normalised);
         return true;
     }

@@ -319,14 +319,28 @@ internal static class SwedishIdParsing
             if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
         }
 
-        // Build canonical 10-digit form regardless of branch.
-        Span<char> canonical = stackalloc char[10];
-        match.YearTextSpan.CopyTo(canonical[..2]);
-        match.MonthTextSpan.CopyTo(canonical[2..4]);
-        match.DayTextSpan.CopyTo(canonical[4..6]);
-        match.UniqueSpan.CopyTo(canonical[6..10]);
+        // Fast-path: input is already canonical 10-digit form, no SE prefix,
+        // no delimiter, no whitespace. Reuse the input string rather than
+        // allocating a new copy.
+        // s is non-null here: TryMatchSpan(s.AsSpan(), ...) returned true above,
+        // which requires a non-empty span — null s would have returned false at
+        // the top of TryParseOrganisation.
+        string canonicalString;
+        if (s.Length == 10 && !match.HasCentury && match.Delimiter == '\0' && match.Source.Length == s.Length)
+        {
+            canonicalString = s;
+        }
+        else
+        {
+            Span<char> canonical = stackalloc char[10];
+            match.YearTextSpan.CopyTo(canonical[..2]);
+            match.MonthTextSpan.CopyTo(canonical[2..4]);
+            match.DayTextSpan.CopyTo(canonical[4..6]);
+            match.UniqueSpan.CopyTo(canonical[6..10]);
+            canonicalString = new string(canonical);
+        }
 
-        result = OrganisationId.FromValidated(new string(canonical), personCentury);
+        result = OrganisationId.FromValidated(canonicalString, personCentury);
         return true;
     }
 }
