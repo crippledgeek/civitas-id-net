@@ -108,14 +108,8 @@ internal static class SwedishIdParsing
         var trimmed = input.Trim();
         if (trimmed.Length is 0 or > MaxInputLength) return false;
 
-        var bodyStart = 0;
-
-        // Optional literal "SE" prefix (case-sensitive — matches the regex literal).
-        if (trimmed.Length >= 2 && trimmed[0] == 'S' && trimmed[1] == 'E')
-        {
-            bodyStart = 2;
-        }
-
+        // ─── Optional literal "SE" prefix (case-sensitive — matches the regex literal) ───
+        var bodyStart = StartsWithSePrefix(trimmed) ? 2 : 0;
         var bodyLen = trimmed.Length - bodyStart;
 
         // After SE prefix, body must be one of (lengths):
@@ -125,50 +119,47 @@ internal static class SwedishIdParsing
         //   13 — YYYYMMDD?NNNN (century + delimiter)
         if (bodyLen is < 10 or > 13) return false;
 
-        // Delimiter, if present, sits exactly 4 chars from the end (just before the 4-digit unique).
-        // bodyLen ≥ 10 (guarded above) implies delimIdxInBody ≥ 5, so no further bound check needed.
-        var delimIdxInBody = bodyLen - 5;
-        var delimChar = trimmed[bodyStart + delimIdxInBody];
-        var hasDelimiter = delimChar is '-' or '+';
-        var delimAdjust = hasDelimiter ? 1 : 0;
+        // ─── Delimiter (if present) sits exactly 4 chars from the end ───
+        // bodyLen ≥ 10 (guarded above) implies delimiter position ≥ 5, so no further bound check needed.
+        var hasDelimiter = TryReadDelimiter(trimmed, bodyStart + bodyLen - 5, out var delimiter);
+        var effectiveLen = bodyLen - (hasDelimiter ? 1 : 0);
 
-        // Effective digit-only length: must be exactly 10 (no century) or 12 (with century).
-        var effectiveLen = bodyLen - delimAdjust;
-        if (effectiveLen is not (10 or 12)) return false;
-        var hasCentury = effectiveLen == 12;
+        // ─── Determine grammar shape from digit-only length: 10 (no century) or 12 (with century) ───
+        bool hasCentury;
+        switch (effectiveLen)
+        {
+            case 10: hasCentury = false; break;
+            case 12: hasCentury = true; break;
+            default: return false;
+        }
 
         var p = bodyStart;
 
+        // ─── Optional 2-digit century ───
         var centuryValue = 0;
         if (hasCentury)
         {
-            if (!IsDigit(trimmed[p]) || !IsDigit(trimmed[p + 1])) return false;
-            centuryValue = (trimmed[p] - '0') * 10 + (trimmed[p + 1] - '0');
+            if (!TryReadTwoDigits(trimmed, p, out centuryValue)) return false;
             p += 2;
         }
 
-        // YYMMDD — 6 digits
+        // ─── YYMMDD — 6 mandatory digits ───
         var yearStart = p;
-        var monthStart = p + 2;
-        var dayStart = p + 4;
-        for (var k = 0; k < 6; k++)
-            if (!IsDigit(trimmed[p + k])) return false;
-        var year = (trimmed[p] - '0') * 10 + (trimmed[p + 1] - '0');
-        var month = (trimmed[p + 2] - '0') * 10 + (trimmed[p + 3] - '0');
-        var day = (trimmed[p + 4] - '0') * 10 + (trimmed[p + 5] - '0');
-        p += 6;
+        if (!TryReadTwoDigits(trimmed, p, out var year)) return false;
+        p += 2;
+        var monthStart = p;
+        if (!TryReadTwoDigits(trimmed, p, out var month)) return false;
+        p += 2;
+        var dayStart = p;
+        if (!TryReadTwoDigits(trimmed, p, out var day)) return false;
+        p += 2;
 
-        var delimiter = '\0';
-        if (hasDelimiter)
-        {
-            delimiter = trimmed[p];
-            p++;
-        }
+        // ─── Optional delimiter (already detected above; just advance past it) ───
+        if (hasDelimiter) p++;
 
-        // 4-digit unique
+        // ─── 4-digit unique suffix ───
         var uniqueStart = p;
-        for (var k = 0; k < 4; k++)
-            if (!IsDigit(trimmed[p + k])) return false;
+        if (!TryValidateDigits(trimmed, p, 4)) return false;
         p += 4;
 
         if (p != trimmed.Length) return false;
@@ -190,7 +181,65 @@ internal static class SwedishIdParsing
         return true;
     }
 
-    private static bool IsDigit(char c) => (uint)(c - '0') <= 9;
+    /// <summary>
+    ///     Attempts to read exactly two ASCII digits at <paramref name="offset"/>
+    ///     into <paramref name="value"/> (0..99).
+    /// </summary>
+    [Pure]
+    private static bool TryReadTwoDigits(ReadOnlySpan<char> span, int offset, out int value)
+    {
+        if ((uint)(offset + 1) < (uint)span.Length
+            && char.IsAsciiDigit(span[offset])
+            && char.IsAsciiDigit(span[offset + 1]))
+        {
+            value = (span[offset] - '0') * 10 + (span[offset + 1] - '0');
+            return true;
+        }
+        value = 0;
+        return false;
+    }
+
+    /// <summary>
+    ///     Attempts to read exactly <paramref name="count"/> ASCII digits at
+    ///     <paramref name="offset"/>. Validates digit characters; does not decode
+    ///     the numeric value (callers that need positional spans take this path).
+    /// </summary>
+    [Pure]
+    private static bool TryValidateDigits(ReadOnlySpan<char> span, int offset, int count)
+    {
+        if ((uint)(offset + count) > (uint)span.Length) return false;
+        for (var i = 0; i < count; i++)
+        {
+            if (!char.IsAsciiDigit(span[offset + i])) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
+    ///     Attempts to read a '-' or '+' delimiter at <paramref name="offset"/>.
+    ///     Returns <see langword="false"/> with <paramref name="delimiter"/> = '\0'
+    ///     when the position is past end or holds a non-delimiter character.
+    /// </summary>
+    [Pure]
+    private static bool TryReadDelimiter(ReadOnlySpan<char> span, int offset, out char delimiter)
+    {
+        if ((uint)offset < (uint)span.Length
+            && (span[offset] == '-' || span[offset] == '+'))
+        {
+            delimiter = span[offset];
+            return true;
+        }
+        delimiter = '\0';
+        return false;
+    }
+
+    /// <summary>
+    ///     Returns <see langword="true"/> if <paramref name="span"/> starts with
+    ///     the literal "SE" prefix (case-sensitive per Swedish convention).
+    /// </summary>
+    [Pure]
+    private static bool StartsWithSePrefix(ReadOnlySpan<char> span)
+        => span.Length >= 2 && span[0] == 'S' && span[1] == 'E';
 
     /// <summary>
     ///     Shared leaf atomic: validates calendar-day-within-month plus Luhn-10 over
