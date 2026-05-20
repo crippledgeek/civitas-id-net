@@ -215,7 +215,7 @@ public sealed record OrganisationId : SwedishOfficialId,
         [MaybeNullWhen(false)] out OrganisationId result)
     {
         result = null;
-        var matcher = TryMatch(s);
+        var matcher = SwedishIdParsing.TryMatch(s);
         // PeOrgNr "16" prefix is for legal-person 12-digit input only — reject for person-shape.
         // "161212121212" (month 12, day 12, century 16) is not a real birth year (no one born in 1600s).
         // "16" can only appear as input prefix for legal-person orgnummer (month >= 20).

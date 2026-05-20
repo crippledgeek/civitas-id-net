@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text.RegularExpressions;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
+using Civitas.Id.Sweden.Internal;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Core;
@@ -14,14 +15,6 @@ namespace Civitas.Id.Sweden.Core;
 [PublicAPI]
 public abstract partial record SwedishOfficialId
 {
-    /// <summary>
-    ///     Defensive upper bound on input length. No valid Swedish ID number representation
-    ///     approaches this length (longest forms are 13 chars). The regex's 1-second match timeout
-    ///     guards against catastrophic backtracking, but a cheap length check rejects pathological
-    ///     inputs (e.g. 1MB of digits) before the regex engine is involved at all.
-    /// </summary>
-    private const int MaxInputLength = 100;
-
     /// <summary>Internal constructor — prevents external derivation.</summary>
     internal SwedishOfficialId()
     {
@@ -34,7 +27,7 @@ public abstract partial record SwedishOfficialId
         @"^(?:SE)?(?<century>\d{2})?(?<date>(?<year>\d{2})(?<month>\d{2})(?<day>\d{2}))(?<delimiter>[-+])?(?<unique>\d{4})$",
         RegexOptions.None,
         1000)]
-    private static partial Regex SsnRegex { get; }
+    internal static partial Regex SsnRegex { get; }
 
     /// <summary>Returns the canonical 12-digit string representation.</summary>
     public abstract string LongFormat();
@@ -288,42 +281,18 @@ public abstract partial record SwedishOfficialId
         return TryParseAny(s, out _);
     }
 
-    /// <summary>
-    ///     Internal-only re-exposure of <see cref="TryMatch"/> for use by
-    ///     <see cref="Civitas.Id.Sweden.Internal.SwedishIdParsing"/> during the
-    ///     strangler-fig migration. Removed in Task 10.
-    /// </summary>
-    /// <param name="s">The candidate ID string (any supported format), or null.</param>
-    /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
-    internal static SwedishIdMatcher? MatchForInternal(string? s) => TryMatch(s);
-
-    /// <summary>
-    ///     Pre-flight: trims and length-checks the input, then matches against the shared regex.
-    ///     Returns null when the input is null, empty, too long, or non-matching.
-    /// </summary>
-    /// <param name="input">The raw string to test.</param>
-    /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
-    private protected static SwedishIdMatcher? TryMatch(string? input)
-    {
-        if (input is null) return null;
-        var trimmed = input.Trim();
-        if (trimmed.Length is 0 or > MaxInputLength) return null;
-
-        var match = SsnRegex.Match(trimmed);
-        return match.Success ? new SwedishIdMatcher(match) : null;
-    }
-
     /// <summary>Test-only shim — DO NOT use in production code.</summary>
     /// <remarks>
-    ///     Exists because the real <c>TryMatch</c> is <c>private protected</c>;
-    ///     this surface lets unit tests verify the matcher without granting broader visibility.
-    ///     Marked <c>internal</c> so only the test assembly (via <c>InternalsVisibleTo</c>) can call it.
+    ///     Delegates to <see cref="Civitas.Id.Sweden.Internal.SwedishIdParsing.TryMatch"/>
+    ///     so unit tests can verify the matcher without granting broader visibility to
+    ///     the internal parsing surface. Marked <c>internal</c> so only the test
+    ///     assembly (via <c>InternalsVisibleTo</c>) can call it.
     /// </remarks>
     /// <param name="input">The raw string to test.</param>
     /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
     internal static SwedishIdMatcher? TryMatchForTesting(string? input)
     {
-        return TryMatch(input);
+        return SwedishIdParsing.TryMatch(input);
     }
 
     /// <summary>Wraps a successful regex match and exposes named-group accessors.</summary>

@@ -58,15 +58,33 @@ internal static class SwedishIdParsing
     }
 
     /// <summary>
-    ///     Thin accessor wrapping <see cref="SwedishOfficialId"/>'s
-    ///     <c>[GeneratedRegex]</c> match. Co-located here so person-ID and
-    ///     organisation-ID dispatchers share one entry point. The regex declaration
-    ///     itself stays on <see cref="SwedishOfficialId"/> per Roslyn's
-    ///     <c>[GeneratedRegex]</c> co-location requirement.
+    ///     Defensive upper bound on input length. No valid Swedish ID number representation
+    ///     approaches this length (longest forms are 13 chars). The regex's 1-second match timeout
+    ///     guards against catastrophic backtracking, but a cheap length check rejects pathological
+    ///     inputs (e.g. 1MB of digits) before the regex engine is involved at all.
     /// </summary>
-    /// <param name="s">The candidate ID string (any supported format), or null.</param>
-    /// <returns>The parsed matcher on regex success, or null otherwise.</returns>
-    internal static SwedishOfficialId.SwedishIdMatcher? TryMatch(string? s) => SwedishOfficialId.MatchForInternal(s);
+    private const int MaxInputLength = 100;
+
+    /// <summary>
+    ///     Pre-flight: trims and length-checks the input, then matches against the shared regex
+    ///     declared on <see cref="SwedishOfficialId"/>. Returns null when the input is null,
+    ///     empty, too long, or non-matching. Co-located here so person-ID and organisation-ID
+    ///     dispatchers share one entry point. The <c>[GeneratedRegex]</c> partial property
+    ///     itself stays on <see cref="SwedishOfficialId"/> per Roslyn's source-generator
+    ///     co-location requirement (dotnet/runtime#63502).
+    /// </summary>
+    /// <param name="input">The candidate ID string (any supported format), or null.</param>
+    /// <returns>A <see cref="SwedishOfficialId.SwedishIdMatcher"/> when the input matches; otherwise null.</returns>
+    [Pure]
+    internal static SwedishOfficialId.SwedishIdMatcher? TryMatch(string? input)
+    {
+        if (input is null) return null;
+        var trimmed = input.Trim();
+        if (trimmed.Length is 0 or > MaxInputLength) return null;
+
+        var match = SwedishOfficialId.SsnRegex.Match(trimmed);
+        return match.Success ? new SwedishOfficialId.SwedishIdMatcher(match) : null;
+    }
 
     /// <summary>
     ///     Shared leaf atomic: validates calendar-day-within-month plus Luhn-10 over
