@@ -466,4 +466,12 @@ public sealed record OrganisationId : SwedishOfficialId,
         // Enskild firma — derive separator from underlying person's age.
         return ToPhysicalPersonId() is { } p && p.GetAge(today) >= 100 ? "+" : "-";
     }
+
+    /// <summary>
+    ///     Returns the canonical 10-digit form. Matches
+    ///     <see cref="LongFormat"/>. Round-trippable through
+    ///     <see cref="Parse(string)"/>.
+    /// </summary>
+    /// <returns>The canonical 10-digit string.</returns>
+    public override string ToString() => _tenDigits;
 }

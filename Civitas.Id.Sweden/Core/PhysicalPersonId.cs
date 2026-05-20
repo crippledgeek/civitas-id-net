@@ -1,6 +1,8 @@
+using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Internal;
 using JetBrains.Annotations;
 
@@ -29,12 +31,32 @@ namespace Civitas.Id.Sweden.Core;
 /// </remarks>
 public abstract record PhysicalPersonId : SwedishOfficialId
 {
-    /// <summary>Internal constructor — prevents external derivation.</summary>
-    internal PhysicalPersonId()
+    /// <summary>Canonical 12-digit normalised form (YYYYMMDDXXXX).</summary>
+    /// <remarks>
+    ///     Non-positional <see langword="private protected"/> field. By design it
+    ///     does NOT appear in synthesised <see cref="object.ToString()"/> output
+    ///     (records' <c>PrintMembers</c> emits public members only). The overridden
+    ///     <see cref="ToString"/> returns this value directly per the
+    ///     Vogen/StronglyTypedId industry pattern for value-object records.
+    /// </remarks>
+    private protected readonly string _normalised;
+
+    /// <summary>Initialises the canonical normalised form.</summary>
+    /// <param name="normalised12">A valid 12-digit YYYYMMDDXXXX body.</param>
+    private protected PhysicalPersonId(string normalised12)
     {
+        Debug.Assert(normalised12 is not null);
+        Debug.Assert(normalised12.Length == 12);
+        _normalised = normalised12;
     }
 
     /// <summary>The decoded date of birth for this ID.</summary>
+    /// <remarks>
+    ///     Kept abstract on this base because the day-decoding rule differs
+    ///     between subtypes: <see cref="PersonalId"/> reads the day digits
+    ///     literally, while <see cref="CoordinationId"/> subtracts 60 (the
+    ///     samordningsnummer day-offset convention).
+    /// </remarks>
     public abstract DateOnly BirthDate { get; }
 
     /// <summary>The gender-encoding digit from the normalised ID (digit 11 of the 12-digit form).</summary>
@@ -232,4 +254,67 @@ public abstract record PhysicalPersonId : SwedishOfficialId
         result = TSelf.FromValidated(normalised);
         return true;
     }
+
+    /// <inheritdoc />
+    [Pure]
+    public override string LongFormat() => _normalised;
+
+    /// <inheritdoc />
+    [Pure]
+    public override string ShortFormat() => _normalised[2..];
+
+    /// <inheritdoc />
+    public override string Format(PnrFormat format) => FormatCore(format, SwedenClock.Today());
+
+    /// <summary>
+    ///     Formats using <paramref name="timeProvider"/> for centenarian "+"
+    ///     separator inference.
+    /// </summary>
+    /// <param name="format">The desired output format.</param>
+    /// <param name="timeProvider">Time provider for "as of" determination.</param>
+    /// <returns>The formatted ID string.</returns>
+    /// <exception cref="ArgumentNullException">
+    ///     Thrown when <paramref name="timeProvider"/> is <see langword="null"/>.
+    /// </exception>
+    [Pure]
+    public string Format(PnrFormat format, TimeProvider timeProvider)
+        => FormatCore(format, SwedenClock.Today(timeProvider));
+
+    /// <summary>
+    ///     Formats using <paramref name="today"/> as the reference date for
+    ///     centenarian "+" inference. Fully deterministic — no clock read.
+    /// </summary>
+    /// <param name="format">The desired output format.</param>
+    /// <param name="today">Reference date for separator inference.</param>
+    /// <returns>The formatted ID string.</returns>
+    [Pure]
+    public string Format(PnrFormat format, DateOnly today) => FormatCore(format, today);
+
+    private string FormatCore(PnrFormat format, DateOnly today)
+    {
+        var inferredSep = InferSeparator(today);
+        var year12 = _normalised.AsSpan(0, 4);
+        var year10 = _normalised.AsSpan(2, 2);
+        var monthDay = _normalised.AsSpan(4, 4);
+        var unique = _normalised.AsSpan(8, 4);
+
+        return format switch
+        {
+            PnrFormat.LongFormat => _normalised,
+            PnrFormat.ShortFormat => string.Concat(year10, monthDay, unique),
+            PnrFormat.LongFormatWithStandardSeparator => $"{year12}{monthDay}-{unique}",
+            PnrFormat.ShortFormatWithStandardSeparator => $"{year10}{monthDay}-{unique}",
+            PnrFormat.LongFormatWithSeparator => $"{year12}{monthDay}{inferredSep}{unique}",
+            PnrFormat.ShortFormatWithSeparator => $"{year10}{monthDay}{inferredSep}{unique}",
+            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+        };
+    }
+
+    /// <summary>
+    ///     Returns the canonical 12-digit normalised form. Round-trippable through
+    ///     <see cref="PersonalId.Parse(string)"/> or
+    ///     <see cref="CoordinationId.Parse(string)"/>.
+    /// </summary>
+    /// <returns>The canonical 12-digit YYYYMMDDXXXX string.</returns>
+    public override string ToString() => _normalised;
 }

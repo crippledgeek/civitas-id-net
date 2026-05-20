@@ -19,12 +19,8 @@ public sealed record CoordinationId : PhysicalPersonId,
     ISwedishPersonIdHooks<CoordinationId>,
     ISpanParsable<CoordinationId>
 {
-    /// <summary>The canonical 12-digit normalised form (YYYYMMDDXXXX) with day still +60-offset.</summary>
-    private readonly string _normalised;
-
-    private CoordinationId(string normalised)
+    private CoordinationId(string normalised) : base(normalised)
     {
-        _normalised = normalised;
     }
 
     // ─── Explicit-interface static-abstract implementations of ISwedishPersonIdHooks<CoordinationId>.
@@ -293,83 +289,6 @@ public sealed record CoordinationId : PhysicalPersonId,
         return TryParse(s, out _);
     }
 
-    /// <inheritdoc />
-    [Pure]
-    public override string LongFormat()
-    {
-        return _normalised;
-    }
-
-    /// <inheritdoc />
-    [Pure]
-    public override string ShortFormat()
-    {
-        return _normalised[2..];
-    }
-
-    /// <inheritdoc />
-    public override string Format(PnrFormat format)
-    {
-        return FormatCore(format, SwedenClock.Today());
-    }
-
-    /// <summary>
-    ///     Formats the samordningsnummer using <paramref name="timeProvider" /> to
-    ///     determine the centenarian "+" separator (where <paramref name="format" />
-    ///     requests the separator-bearing variant).
-    /// </summary>
-    /// <param name="format">The desired output format.</param>
-    /// <param name="timeProvider">
-    ///     The time provider used to determine the current UTC instant. The library
-    ///     converts the UTC instant to Sweden's civil timezone (<c>Europe/Stockholm</c>);
-    ///     the provider's <see cref="TimeProvider.LocalTimeZone" /> is intentionally
-    ///     ignored to prevent host-timezone drift on cloud containers.
-    /// </param>
-    /// <returns>The formatted samordningsnummer string.</returns>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="timeProvider" /> is <see langword="null" />.
-    /// </exception>
-    [Pure]
-    public string Format(PnrFormat format, TimeProvider timeProvider)
-    {
-        return FormatCore(format, SwedenClock.Today(timeProvider));
-    }
-
-    /// <summary>
-    ///     Formats this samordningsnummer using <paramref name="today" /> as the
-    ///     reference date for centenarian-separator inference. Fully
-    ///     deterministic — does not read any clock.
-    /// </summary>
-    /// <param name="format">The desired output format.</param>
-    /// <param name="today">
-    ///     The reference date used to choose between <c>-</c> and <c>+</c>
-    ///     separators in <see cref="PnrFormat.LongFormatWithSeparator" /> and
-    ///     <see cref="PnrFormat.ShortFormatWithSeparator" />: <c>+</c> when
-    ///     the bearer is 100 or more years old as of <paramref name="today" />,
-    ///     <c>-</c> otherwise.
-    /// </param>
-    /// <returns>The formatted samordningsnummer string.</returns>
-    [Pure]
-    public string Format(PnrFormat format, DateOnly today)
-        => FormatCore(format, today);
-
-    private string FormatCore(PnrFormat format, DateOnly today)
-    {
-        var inferredSep = InferSeparator(today);
-        var year12 = _normalised.AsSpan(0, 4);
-        var year10 = _normalised.AsSpan(2, 2);
-        var monthDay = _normalised.AsSpan(4, 4);
-        var unique = _normalised.AsSpan(8, 4);
-
-        return format switch
-        {
-            PnrFormat.LongFormat => _normalised,
-            PnrFormat.ShortFormat => string.Concat(year10, monthDay, unique),
-            PnrFormat.LongFormatWithStandardSeparator => $"{year12}{monthDay}-{unique}",
-            PnrFormat.ShortFormatWithStandardSeparator => $"{year10}{monthDay}-{unique}",
-            PnrFormat.LongFormatWithSeparator => $"{year12}{monthDay}{inferredSep}{unique}",
-            PnrFormat.ShortFormatWithSeparator => $"{year10}{monthDay}{inferredSep}{unique}",
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
-        };
-    }
+    /// <inheritdoc cref="PhysicalPersonId.ToString" />
+    public sealed override string ToString() => LongFormat();
 }
