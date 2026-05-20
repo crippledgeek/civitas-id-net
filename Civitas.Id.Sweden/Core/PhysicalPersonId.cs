@@ -38,6 +38,8 @@ public abstract record PhysicalPersonId : SwedishOfficialId
     ///     <see cref="ToString"/> returns this value directly per the
     ///     Vogen/StronglyTypedId industry pattern for value-object records.
     /// </remarks>
+    // ReSharper disable once InconsistentNaming -- project convention: _camelCase for backing fields
+    // including private protected (matches the pre-lift field names on PersonalId/CoordinationId/OrganisationId).
     private protected readonly string _normalised;
 
     /// <summary>Initialises the canonical normalised form.</summary>
