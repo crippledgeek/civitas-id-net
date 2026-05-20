@@ -104,6 +104,20 @@ If your column already stores the library's canonical form (12-digit for `Person
 
 If your column stores a different format (hyphenated short, "16"-prefixed 12-digit, etc.) — write a one-off `migrationBuilder.Sql` to normalise before adding the converter.
 
+## Corrupted DB row handling
+
+If a stored row contains a malformed Civitas ID string (e.g. from a legacy
+data migration, off-path writer, or DB corruption), EF Core's materialiser
+will throw `InvalidIdNumberException` (from `Civitas.Id.Sweden.Errors`) when
+the property is read.
+
+The exception's `Input` property is REDACTED by design — the raw rejected
+string is never carried in the exception chain. However, callers MUST NOT
+log `Exception.ToString()` on EF exceptions that may surface this for paths
+touching Civitas ID columns, because the call stack may still leak field
+names that imply PII presence. Log structured fields (`ex.GetType().Name`,
+`ex.Message`) instead.
+
 ## AOT
 
 The core `Civitas.Id.Sweden` library is `IsAotCompatible=true`. This companion package is NOT — EF Core 10's NativeAOT support is documented as experimental upstream. Stable AOT is informally targeted for EF Core 12. We will adopt `IsAotCompatible=true` when EF makes it production-ready.

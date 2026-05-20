@@ -17,7 +17,8 @@ namespace Civitas.Id.Sweden.EntityFrameworkCore;
 ///         (the full personnummer / samordningsnummer form that preserves century).
 ///     </para>
 ///     <para>
-///         Encode logic: <c>ToPhysicalPersonId() != null ? ToPhysicalPersonId()!.LongFormat() : LongFormat()</c>.
+///         Encode logic: delegates to <see cref="Encode"/>, which calls
+///         <see cref="OrganisationId.ToPhysicalPersonId"/> exactly once per row on Save.
 ///         For Enskild firma the 12-digit form is used so that the century is preserved and
 ///         the value round-trips through <see cref="OrganisationId.Parse(string)"/>.
 ///         A naive <c>LongFormat()</c>-only encode would produce a 10-digit form that
@@ -36,11 +37,20 @@ public sealed class OrganisationIdConverter : ValueConverter<OrganisationId, str
     /// <summary>Initialises a new instance of the <see cref="OrganisationIdConverter"/> class.</summary>
     public OrganisationIdConverter()
         : base(
-            id => id.ToPhysicalPersonId() != null
-                ? id.ToPhysicalPersonId()!.LongFormat()
-                : id.LongFormat(),
+            id => Encode(id),
             s => OrganisationId.Parse(s),
             new ConverterMappingHints(size: 12, unicode: false))
     {
+    }
+
+    /// <summary>
+    ///     Encodes an <see cref="OrganisationId"/> to its canonical storage string.
+    ///     Calls <see cref="OrganisationId.ToPhysicalPersonId"/> exactly once.
+    /// </summary>
+    [Pure]
+    internal static string Encode(OrganisationId id)
+    {
+        var physical = id.ToPhysicalPersonId();
+        return physical is not null ? physical.LongFormat() : id.LongFormat();
     }
 }
