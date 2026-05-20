@@ -235,28 +235,28 @@ public abstract record PhysicalPersonId : SwedishOfficialId
         where TSelf : PhysicalPersonId, ISwedishPersonIdHooks<TSelf>
     {
         result = null;
-        var matcher = SwedishIdParsing.TryMatch(s);
-        if (matcher is null) return false;
+        if (s is null) return false;
+        if (!SwedishIdParsing.TryMatchSpan(s.AsSpan(), out var match)) return false;
 
-        if (matcher.Month is < 1 or > 12) return false;
-        if (!TSelf.IsDayValid(matcher.Day)) return false;
+        if (match.Month is < 1 or > 12) return false;
+        if (!TSelf.IsDayValid(match.Day)) return false;
 
         var century = SwedishIdParsing.ResolveCentury(
-            matcher.HasCentury ? matcher.CenturyValue : null,
-            matcher.Year,
+            match.HasCentury ? match.CenturyValue : null,
+            match.Year,
             currentYear,
-            matcher.Delimiter is "+");
-        var fullYear = century * 100 + matcher.Year;
-        var realDay = TSelf.CalendarDay(matcher.Day);
+            match.Delimiter == '+');
+        var fullYear = century * 100 + match.Year;
+        var realDay = TSelf.CalendarDay(match.Day);
 
-        if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
+        if (!SwedishIdParsing.TryValidatePersonShapedBody(in match, fullYear, realDay))
             return false;
 
         Span<char> normalisedSpan = stackalloc char[12];
         fullYear.TryFormat(normalisedSpan[..4], out _, "D4", CultureInfo.InvariantCulture);
-        matcher.MonthTextSpan.CopyTo(normalisedSpan[4..6]);
-        matcher.DayTextSpan.CopyTo(normalisedSpan[6..8]);
-        matcher.UniqueSpan.CopyTo(normalisedSpan[8..12]);
+        match.MonthTextSpan.CopyTo(normalisedSpan[4..6]);
+        match.DayTextSpan.CopyTo(normalisedSpan[6..8]);
+        match.UniqueSpan.CopyTo(normalisedSpan[8..12]);
         var normalised = new string(normalisedSpan);
         result = TSelf.FromValidated(normalised);
         return true;

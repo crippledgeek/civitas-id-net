@@ -4,7 +4,7 @@ using Civitas.Id.Sweden.Internal;
 namespace Civitas.Id.Sweden.Tests.Internal;
 
 /// <summary>
-///     Tests for <see cref="SwedishIdParsing.TryValidatePersonShapedBody"/> — the
+///     Tests for <c>SwedishIdParsing.TryValidatePersonShapedBody</c> — the
 ///     shared leaf atomic that performs DaysInMonth + Luhn validation for both the
 ///     person-ID dispatcher and OrganisationId's Enskild firma branch.
 /// </summary>
