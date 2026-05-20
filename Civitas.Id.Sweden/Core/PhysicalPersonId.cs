@@ -1,3 +1,6 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
+using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Internal;
 using JetBrains.Annotations;
 
@@ -184,5 +187,49 @@ public abstract record PhysicalPersonId : SwedishOfficialId
     {
         ArgumentNullException.ThrowIfNull(timeProvider);
         return !IsAdult(timeProvider);
+    }
+
+    /// <summary>
+    ///     Shared parse dispatcher for <see cref="PersonalId"/> and
+    ///     <see cref="CoordinationId"/>. Hooks dispatched via
+    ///     <see cref="ISwedishPersonIdHooks{TSelf}"/> static abstract members.
+    /// </summary>
+    /// <remarks>
+    ///     Returns <see langword="bool"/> per the <see cref="IParsable{TSelf}"/>
+    ///     convention. Granular failure reason (date vs Luhn vs format) is
+    ///     deliberately not exposed through this dispatcher; the throwing
+    ///     <c>Parse</c> entry-points surface <see cref="InvalidIdNumberReason"/>
+    ///     via <see cref="InvalidIdNumberException"/>. A <c>TryParseWithReason</c>
+    ///     overload can be added non-breakingly if a caller needs reason-on-failure
+    ///     semantics.
+    /// </remarks>
+    [Pure]
+    [ContractAnnotation("=> true, result: notnull; => false, result: null")]
+    private protected static bool TryParseCore<TSelf>(
+        string? s, int currentYear,
+        [MaybeNullWhen(false)] out TSelf result)
+        where TSelf : PhysicalPersonId, ISwedishPersonIdHooks<TSelf>
+    {
+        result = null;
+        var matcher = SwedishIdParsing.TryMatch(s);
+        if (matcher is null) return false;
+
+        if (matcher.Month is < 1 or > 12) return false;
+        if (!TSelf.IsDayValid(matcher.Day)) return false;
+
+        var century = SwedishIdParsing.ResolveCentury(
+            matcher.HasCentury ? matcher.CenturyValue : null,
+            matcher.Year,
+            currentYear,
+            matcher.Delimiter is "+");
+        var fullYear = century * 100 + matcher.Year;
+        var realDay = TSelf.CalendarDay(matcher.Day);
+
+        if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
+            return false;
+
+        var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
+        result = TSelf.FromValidated(normalised);
+        return true;
     }
 }

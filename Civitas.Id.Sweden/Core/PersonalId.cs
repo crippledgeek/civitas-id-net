@@ -149,7 +149,7 @@ public sealed record PersonalId : PhysicalPersonId,
         string? s,
         [MaybeNullWhen(false)] out PersonalId result)
     {
-        return TryParseCore(s, SwedenClock.Today().Year, out result);
+        return TryParseCore<PersonalId>(s, SwedenClock.Today().Year, out result);
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public sealed record PersonalId : PhysicalPersonId,
     {
         ArgumentNullException.ThrowIfNull(s);
         var currentYear = SwedenClock.Today(timeProvider).Year;
-        return TryParseCore(s, currentYear, out var result)
+        return TryParseCore<PersonalId>(s, currentYear, out var result)
             ? result
             : throw new InvalidIdNumberException(s, InvalidIdNumberReason.InvalidFormat);
     }
@@ -206,7 +206,7 @@ public sealed record PersonalId : PhysicalPersonId,
         [MaybeNullWhen(false)] out PersonalId result)
     {
         var currentYear = SwedenClock.Today(timeProvider).Year;
-        return TryParseCore(s, currentYear, out result);
+        return TryParseCore<PersonalId>(s, currentYear, out result);
     }
 
     /// <summary>
@@ -232,7 +232,7 @@ public sealed record PersonalId : PhysicalPersonId,
     public static PersonalId Parse(string s, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(s);
-        return TryParseCore(s, today.Year, out var result)
+        return TryParseCore<PersonalId>(s, today.Year, out var result)
             ? result
             : throw new InvalidIdNumberException(s, InvalidIdNumberReason.InvalidFormat);
     }
@@ -253,7 +253,7 @@ public sealed record PersonalId : PhysicalPersonId,
         DateOnly today,
         [MaybeNullWhen(false)] out PersonalId result)
     {
-        return TryParseCore(s, today.Year, out result);
+        return TryParseCore<PersonalId>(s, today.Year, out result);
     }
 
     /// <summary>Span variant of <see cref="Parse(string, DateOnly)"/>.</summary>
@@ -267,7 +267,7 @@ public sealed record PersonalId : PhysicalPersonId,
     public static PersonalId Parse(ReadOnlySpan<char> s, DateOnly today)
     {
         var input = s.ToString();
-        return TryParseCore(input, today.Year, out var result)
+        return TryParseCore<PersonalId>(input, today.Year, out var result)
             ? result
             : throw new InvalidIdNumberException(input, InvalidIdNumberReason.InvalidFormat);
     }
@@ -283,37 +283,7 @@ public sealed record PersonalId : PhysicalPersonId,
         ReadOnlySpan<char> s,
         DateOnly today,
         [MaybeNullWhen(false)] out PersonalId result)
-        => TryParseCore(s.ToString(), today.Year, out result);
-
-    private static bool TryParseCore(
-        string? s,
-        int currentYear,
-        [MaybeNullWhen(false)] out PersonalId result)
-    {
-        result = null;
-        var matcher = TryMatch(s);
-        if (matcher is null) return false;
-
-        // Personnummer constraints: month 1-12, day 1-31
-        if (matcher.Month is < 1 or > 12) return false;
-        if (matcher.Day is < 1 or > 31) return false;
-
-        var century = SwedishIdParsing.ResolveCentury(
-            matcher.HasCentury ? matcher.CenturyValue : null,
-            matcher.Year,
-            currentYear,
-            matcher.Delimiter is "+");
-        var fullYear = century * 100 + matcher.Year;
-
-        // Shared leaf atomic: calendar-day + Luhn (single source of truth per
-        // docs/superpowers/specs/2026-05-20-id-parse-dedup-design.md Section 3.3).
-        if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, matcher.Day))
-            return false;
-
-        var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
-        result = new PersonalId(normalised);
-        return true;
-    }
+        => TryParseCore<PersonalId>(s.ToString(), today.Year, out result);
 
     /// <summary>Returns true when <paramref name="s" /> is a valid personnummer.</summary>
     /// <param name="s">The input string to validate, or null.</param>
