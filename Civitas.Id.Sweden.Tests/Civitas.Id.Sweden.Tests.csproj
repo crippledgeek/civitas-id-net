@@ -35,6 +35,7 @@
     <ProjectReference Include="..\Civitas.Id.Sweden.Json\Civitas.Id.Sweden.Json.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.DataAnnotations\Civitas.Id.Sweden.DataAnnotations.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.AspNetCore\Civitas.Id.Sweden.AspNetCore.csproj" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.EntityFrameworkCore\Civitas.Id.Sweden.EntityFrameworkCore.csproj" />
   </ItemGroup>
 
   <ItemGroup>
