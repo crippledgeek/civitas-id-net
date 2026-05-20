@@ -1,6 +1,5 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
-using System.Globalization;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Internal;
@@ -74,7 +73,7 @@ public abstract record PhysicalPersonId : SwedishOfficialId
     public bool IsFemale => !IsMale;
 
     /// <summary>Returns "+" if age &gt;= 100 on the given date, otherwise "-".</summary>
-    private protected string InferSeparator(DateOnly today)
+    private string InferSeparator(DateOnly today)
     {
         return GetAge(today) >= 100 ? "+" : "-";
     }

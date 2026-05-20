@@ -12,6 +12,7 @@ namespace Civitas.Id.Sweden.Internal;
 ///     NOT public API.
 /// </summary>
 /// <typeparam name="TSelf">The sealed-record subtype implementing this contract.</typeparam>
+// ReSharper disable once TypeParameterCanBeVariant
 internal interface ISwedishPersonIdHooks<TSelf>
     where TSelf : PhysicalPersonId, ISwedishPersonIdHooks<TSelf>
 {

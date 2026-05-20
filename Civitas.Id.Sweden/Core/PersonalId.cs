@@ -145,7 +145,7 @@ public sealed record PersonalId : PhysicalPersonId,
         string? s,
         [MaybeNullWhen(false)] out PersonalId result)
     {
-        return TryParseCore<PersonalId>(s, SwedenClock.Today().Year, out result);
+        return TryParseCore(s, SwedenClock.Today().Year, out result);
     }
 
     /// <summary>
@@ -202,7 +202,7 @@ public sealed record PersonalId : PhysicalPersonId,
         [MaybeNullWhen(false)] out PersonalId result)
     {
         var currentYear = SwedenClock.Today(timeProvider).Year;
-        return TryParseCore<PersonalId>(s, currentYear, out result);
+        return TryParseCore(s, currentYear, out result);
     }
 
     /// <summary>
@@ -249,7 +249,7 @@ public sealed record PersonalId : PhysicalPersonId,
         DateOnly today,
         [MaybeNullWhen(false)] out PersonalId result)
     {
-        return TryParseCore<PersonalId>(s, today.Year, out result);
+        return TryParseCore(s, today.Year, out result);
     }
 
     /// <summary>Span variant of <see cref="Parse(string, DateOnly)"/>.</summary>
@@ -279,7 +279,7 @@ public sealed record PersonalId : PhysicalPersonId,
         ReadOnlySpan<char> s,
         DateOnly today,
         [MaybeNullWhen(false)] out PersonalId result)
-        => TryParseCore<PersonalId>(s.ToString(), today.Year, out result);
+        => TryParseCore(s.ToString(), today.Year, out result);
 
     /// <summary>Returns true when <paramref name="s" /> is a valid personnummer.</summary>
     /// <param name="s">The input string to validate, or null.</param>
@@ -290,5 +290,5 @@ public sealed record PersonalId : PhysicalPersonId,
     }
 
     /// <inheritdoc cref="PhysicalPersonId.ToString" />
-    public sealed override string ToString() => LongFormat();
+    public override string ToString() => LongFormat();
 }

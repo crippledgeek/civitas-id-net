@@ -41,6 +41,7 @@ public class PhysicalPersonIdEqualityTests
         var p = PersonalId.Parse(ValidPersonal);
         var c = CoordinationId.Parse(ValidCoordination);
         // EqualityContract differs across record subtypes.
+        // ReSharper disable once SuspiciousTypeConversion.Global
         await Assert.That(((object)p).Equals(c)).IsFalse();
     }
 
