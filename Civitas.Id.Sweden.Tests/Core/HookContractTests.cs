@@ -75,5 +75,14 @@ public class HookContractTests
             await Assert.That(CalendarDay<CoordinationId>(75)).IsEqualTo(15);
             await Assert.That(CalendarDay<CoordinationId>(91)).IsEqualTo(31);
         }
+
+        [Test]
+        public async Task FromValidated_RoundTripsThroughLongFormat()
+        {
+            // Luhn-valid samordningsnummer: 1989-01-01 encoded as 1989-01-61 (day = 01 + 60).
+            // Body matches the ValidCoordination pin in PhysicalPersonIdEqualityTests.
+            var c = FromValidated<CoordinationId>("198901610006");
+            await Assert.That(c.LongFormat()).IsEqualTo("198901610006");
+        }
     }
 }

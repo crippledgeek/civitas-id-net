@@ -64,4 +64,15 @@ public class TryValidatePersonShapedBodyTests
         var result = SwedishIdParsing.TryValidatePersonShapedBody(matcher, 1989, 1);
         await Assert.That(result).IsFalse();
     }
+
+    [Test]
+    public async Task DayZero_ReturnsFalse()
+    {
+        // realDay = 0 is not a valid calendar day; leaf must reject it.
+        // (No production caller passes realDay = 0 — TSelf.IsDayValid pre-screens —
+        // but the leaf must be safe by construction.)
+        var matcher = MatchOrThrow(ValidLong12);
+        var result = SwedishIdParsing.TryValidatePersonShapedBody(matcher, 1989, 0);
+        await Assert.That(result).IsFalse();
+    }
 }

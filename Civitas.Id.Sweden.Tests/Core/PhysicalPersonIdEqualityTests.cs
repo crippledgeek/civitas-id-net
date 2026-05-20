@@ -37,13 +37,20 @@ public class PhysicalPersonIdEqualityTests
     }
 
     [Test]
-    public async Task DifferentSubtypes_AreNotEqual_EvenWithSameNormalisedBody()
+    public async Task DifferentSubtypes_WithSameNormalisedBody_AreNotEqual()
     {
-        var p = PersonalId.Parse(ValidPersonal);
-        var c = CoordinationId.Parse(ValidCoordination);
-        // EqualityContract differs across record subtypes.
+        // Use the internal factory (via [InternalsVisibleTo]) to bypass parse
+        // validation and inject the SAME body into both record types. This
+        // isolates the EqualityContract invariant — equality must fail purely
+        // due to runtime-type discrimination, not due to body inequality.
+        const string sameBody = "189001019802";
+        var p = PersonalId.FromValidated(sameBody);
+        var c = CoordinationId.FromValidated(sameBody);
+
         // ReSharper disable once SuspiciousTypeConversion.Global
         await Assert.That(((object)p).Equals(c)).IsFalse();
+        // Sanity: same body — equality MUST differ purely via EqualityContract (runtime type).
+        await Assert.That(p.LongFormat()).IsEqualTo(c.LongFormat());
     }
 
     [Test]

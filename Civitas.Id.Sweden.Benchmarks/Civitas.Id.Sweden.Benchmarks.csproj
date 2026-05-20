@@ -8,6 +8,17 @@
     <Optimize>true</Optimize>
     <ServerGarbageCollection>true</ServerGarbageCollection>
     <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!--
+      BDN-required patterns that conflict with default analyzer rules:
+        CA1515 — benchmark classes must be public (BDN discovers via reflection on public types).
+        CA1707 — benchmark method names use underscores by community convention
+                 (matches BDN report parsing and cross-benchmark comparison tooling).
+    -->
+    <NoWarn>$(NoWarn);CA1515;CA1707</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>

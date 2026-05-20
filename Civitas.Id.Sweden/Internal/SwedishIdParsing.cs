@@ -106,7 +106,7 @@ internal static class SwedishIdParsing
     internal static bool TryValidatePersonShapedBody(
         SwedishOfficialId.SwedishIdMatcher matcher, int fullYear, int realDay)
     {
-        if (realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
+        if (realDay < 1 || realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
 
         Span<char> tenDigits = stackalloc char[10];
         matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
