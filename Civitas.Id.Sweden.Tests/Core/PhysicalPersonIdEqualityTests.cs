@@ -33,6 +33,7 @@ public class PhysicalPersonIdEqualityTests
         var b = CoordinationId.Parse(ValidCoordination);
         await Assert.That(a).IsEqualTo(b);
         await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
+        await Assert.That(a == b).IsTrue();
     }
 
     [Test]

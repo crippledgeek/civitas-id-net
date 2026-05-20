@@ -63,6 +63,7 @@ internal static class SwedishIdParsing
     ///     approaches this length (longest forms are 13 chars). The regex's 1-second match timeout
     ///     guards against catastrophic backtracking, but a cheap length check rejects pathological
     ///     inputs (e.g. 1MB of digits) before the regex engine is involved at all.
+    ///     Declared here rather than on <c>SwedishOfficialId</c> to keep it co-located with its sole consumer.
     /// </summary>
     private const int MaxInputLength = 100;
 
@@ -123,9 +124,8 @@ internal static class SwedishIdParsing
     /// <param name="result">The parsed organisation ID on success.</param>
     /// <returns><see langword="true"/> on success.</returns>
     /// <remarks>
-    ///     Migrated from <c>OrganisationId.TryParse</c> per
-    ///     <c>docs/superpowers/specs/2026-05-20-id-parse-dedup-design.md</c>
-    ///     Section 4.6. OrganisationId is constructed via its internal factory.
+    ///     Migrated from <c>OrganisationId.TryParse</c>.
+    ///     OrganisationId is constructed via its internal factory.
     /// </remarks>
     [Pure]
     [ContractAnnotation("=> true, result: notnull; => false, result: null")]

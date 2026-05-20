@@ -169,13 +169,17 @@ public sealed record OrganisationId : SwedishOfficialId,
     ///     already-validated 10-digit body and the optional person-century
     ///     captured during Enskild firma parsing.
     /// </summary>
-    /// <param name="normalised10">A valid 10-digit canonical body.</param>
+    /// <param name="tenDigitsNormalised">A valid 10-digit canonical body.</param>
     /// <param name="personCentury">
     ///     The 2-digit century if the input was parsed as Enskild firma;
     ///     <see langword="null"/> for legal-person organisation numbers.
     /// </param>
-    internal static OrganisationId FromValidated(string normalised10, int? personCentury)
-        => new(normalised10, personCentury);
+    internal static OrganisationId FromValidated(string tenDigitsNormalised, int? personCentury)
+    {
+        Debug.Assert(tenDigitsNormalised is not null);
+        Debug.Assert(tenDigitsNormalised.Length == 10);
+        return new OrganisationId(tenDigitsNormalised, personCentury);
+    }
 
     /// <summary>
     ///     Returns this organisation number as a <see cref="PersonalId" /> or <see cref="CoordinationId" />

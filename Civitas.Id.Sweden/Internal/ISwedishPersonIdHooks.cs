@@ -17,8 +17,10 @@ internal interface ISwedishPersonIdHooks<TSelf>
     where TSelf : PhysicalPersonId, ISwedishPersonIdHooks<TSelf>
 {
     /// <summary>
-    ///     Validates the encoded day component
-    ///     (1..31 for personnummer, 61..91 for samordningsnummer).
+    ///     Validates the ENCODED day component (the on-the-card form, not the
+    ///     calendar day). For personnummer the encoded day equals the calendar
+    ///     day (range 1..31). For samordningsnummer the encoded day is the
+    ///     calendar day plus 60 (range 61..91; e.g. calendar day 15 → encoded 75).
     /// </summary>
     static abstract bool IsDayValid(int encodedDay);
 

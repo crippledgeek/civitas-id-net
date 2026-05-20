@@ -16,9 +16,10 @@ namespace Civitas.Id.Sweden.Benchmarks;
 [ShortRunJob]
 public class PersonIdParseBenchmarks
 {
-    // All four values are Luhn-valid forms of the same canonical pin:
-    // body 9001010009 → check 9. Two-digit-year inputs route through
-    // century inference; the 12-digit form bypasses inference.
+    // Three forms of 1990-01-01 + one centenarian variant (1890-01-01 via "+"
+    // separator) — tests both the standard sliding-window century inference
+    // and the pre-1900 century inference path.
+    // Luhn check digit 9 holds for body 9001010009 regardless of century.
     [Params(
         "199001010009",        // 12-digit long
         "9001010009",          // 10-digit short
