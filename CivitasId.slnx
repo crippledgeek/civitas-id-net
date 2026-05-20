@@ -1,8 +1,10 @@
 <Solution>
   <Folder Name="/tests/">
+    <!-- AotSmokeTest: AspNetCore-flavored (Microsoft.NET.Sdk.Web); exercises full library family surface. -->
     <Project Path="tests/AotSmokeTest/AotSmokeTest.csproj" />
+    <!-- CoreAotSmokeTest: Core-only (Microsoft.NET.Sdk); exercises PersonalId/CoordinationId/OrganisationId. -->
+    <Project Path="tests/CoreAotSmokeTest/CoreAotSmokeTest.csproj" />
   </Folder>
-  <Project Path="Civitas.Id.Sweden.AotSmokeTest/Civitas.Id.Sweden.AotSmokeTest.csproj" />
   <Project Path="Civitas.Id.Sweden.AspNetCore.Tests/Civitas.Id.Sweden.AspNetCore.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.AspNetCore/Civitas.Id.Sweden.AspNetCore.csproj" />
   <Project Path="Civitas.Id.Sweden.Benchmarks/Civitas.Id.Sweden.Benchmarks.csproj" />

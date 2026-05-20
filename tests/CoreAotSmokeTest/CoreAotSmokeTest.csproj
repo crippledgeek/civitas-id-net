@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
+    <ProjectReference Include="..\..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
     <TrimmerRootAssembly Include="Civitas.Id.Sweden" />
   </ItemGroup>
 
