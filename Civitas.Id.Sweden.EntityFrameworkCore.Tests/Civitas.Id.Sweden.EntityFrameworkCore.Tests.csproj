@@ -11,7 +11,16 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
-    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
+    <!--
+      CA2007: ConfigureAwait — test projects run under TUnit's async infrastructure;
+              there is no synchronization context where ConfigureAwait(false) would
+              help. Suppressed project-wide to keep test bodies readable.
+      CA2000: Dispose — SqliteFixture intentionally leaves the SqliteConnection
+              open for the duration of the :memory: database's lifetime (see
+              TestDbContext.cs, SqliteFixture remarks). Suppressed in the test
+              project where this pattern is documented and intentional.
+    -->
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052;CA2007;CA2000</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
