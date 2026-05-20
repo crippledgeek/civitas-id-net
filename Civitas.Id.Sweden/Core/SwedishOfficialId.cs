@@ -1,8 +1,5 @@
-using System.Globalization;
-using System.Text.RegularExpressions;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
-using Civitas.Id.Sweden.Internal;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Core;
@@ -13,7 +10,7 @@ namespace Civitas.Id.Sweden.Core;
 ///     <c>OrganisationId</c> derive from this type.
 /// </summary>
 [PublicAPI]
-public abstract partial record SwedishOfficialId
+public abstract record SwedishOfficialId
 {
     /// <summary>Internal constructor — prevents external derivation.</summary>
     internal SwedishOfficialId()
@@ -22,12 +19,6 @@ public abstract partial record SwedishOfficialId
 
     /// <summary>The ISO 3166-1 alpha-2 country code (always "SE" for this library).</summary>
     public static string CountryCode => "SE";
-
-    [GeneratedRegex(
-        @"^(?:SE)?(?<century>\d{2})?(?<date>(?<year>\d{2})(?<month>\d{2})(?<day>\d{2}))(?<delimiter>[-+])?(?<unique>\d{4})$",
-        RegexOptions.None,
-        1000)]
-    internal static partial Regex SsnRegex { get; }
 
     /// <summary>Returns the canonical 12-digit string representation.</summary>
     public abstract string LongFormat();
@@ -281,69 +272,4 @@ public abstract partial record SwedishOfficialId
         return TryParseAny(s, out _);
     }
 
-    /// <summary>Test-only shim — DO NOT use in production code.</summary>
-    /// <remarks>
-    ///     Delegates to <see cref="Civitas.Id.Sweden.Internal.SwedishIdParsing.TryMatch"/>
-    ///     so unit tests can verify the matcher without granting broader visibility to
-    ///     the internal parsing surface. Marked <c>internal</c> so only the test
-    ///     assembly (via <c>InternalsVisibleTo</c>) can call it.
-    /// </remarks>
-    /// <param name="input">The raw string to test.</param>
-    /// <returns>A <see cref="SwedishIdMatcher" /> when the input matches; otherwise null.</returns>
-    internal static SwedishIdMatcher? TryMatchForTesting(string? input)
-    {
-        return SwedishIdParsing.TryMatch(input);
-    }
-
-    /// <summary>Wraps a successful regex match and exposes named-group accessors.</summary>
-    internal sealed class SwedishIdMatcher
-    {
-        private readonly Match _match;
-
-        /// <summary>Creates a new matcher wrapping the given successful <see cref="Match" />.</summary>
-        /// <param name="match">A successful regex match against <see cref="SsnRegex" />.</param>
-        internal SwedishIdMatcher(Match match)
-        {
-            _match = match;
-        }
-
-        /// <summary>True if the input contained an explicit century prefix (e.g. "19" or "20").</summary>
-        public bool HasCentury => _match.Groups["century"].Success;
-
-        /// <summary>True if the input contained a "-" or "+" delimiter.</summary>
-        public bool HasDelimiter => _match.Groups["delimiter"].Success;
-
-        /// <summary>The delimiter character ("" when absent).</summary>
-        public string Delimiter => _match.Groups["delimiter"].Value;
-
-        /// <summary>The 4-digit "unique" suffix (last 3 + check digit).</summary>
-        public string Unique => _match.Groups["unique"].Value;
-
-        /// <summary>Century parsed as int.</summary>
-        public int CenturyValue => int.Parse(_match.Groups["century"].ValueSpan, CultureInfo.InvariantCulture);
-
-        /// <summary>Year parsed as int (0..99).</summary>
-        public int Year => int.Parse(_match.Groups["year"].ValueSpan, CultureInfo.InvariantCulture);
-
-        /// <summary>Month parsed as int.</summary>
-        public int Month => int.Parse(_match.Groups["month"].ValueSpan, CultureInfo.InvariantCulture);
-
-        /// <summary>
-        ///     Day parsed as int (1..31 for personnummer, 61..91 for samordningsnummer, &gt;=20 for organisationsnummer
-        ///     "month").
-        /// </summary>
-        public int Day => int.Parse(_match.Groups["day"].ValueSpan, CultureInfo.InvariantCulture);
-
-        /// <summary>Allocation-free span over the 2-digit year text (hot-path canonical-string assembly).</summary>
-        internal ReadOnlySpan<char> YearTextSpan => _match.Groups["year"].ValueSpan;
-
-        /// <summary>Allocation-free span over the 2-digit month text (hot-path canonical-string assembly).</summary>
-        internal ReadOnlySpan<char> MonthTextSpan => _match.Groups["month"].ValueSpan;
-
-        /// <summary>Allocation-free span over the 2-digit day text (hot-path canonical-string assembly).</summary>
-        internal ReadOnlySpan<char> DayTextSpan => _match.Groups["day"].ValueSpan;
-
-        /// <summary>Allocation-free span over the 4-digit unique suffix (hot-path canonical-string assembly).</summary>
-        internal ReadOnlySpan<char> UniqueSpan => _match.Groups["unique"].ValueSpan;
-    }
 }

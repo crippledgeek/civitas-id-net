@@ -3,8 +3,8 @@ namespace Civitas.Id.Sweden.Internal;
 /// <summary>
 ///     Allocation-free value-type result of <see cref="SwedishIdParsing.TryMatchSpan"/>.
 ///     Holds indices/values into the source span and parsed integer components.
-///     Replaces the reference-type <see cref="Core.SwedishOfficialId.SwedishIdMatcher"/>
-///     for hot-path parsing (Match/Group object graph eliminated).
+///     Sole structural-match result type for all Swedish ID parsing (no Match/Group
+///     object graph is allocated).
 /// </summary>
 internal readonly ref struct SwedishIdSpanMatch
 {

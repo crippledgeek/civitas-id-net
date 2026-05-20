@@ -60,41 +60,18 @@ internal static class SwedishIdParsing
 
     /// <summary>
     ///     Defensive upper bound on input length. No valid Swedish ID number representation
-    ///     approaches this length (longest forms are 13 chars). The regex's 1-second match timeout
-    ///     guards against catastrophic backtracking, but a cheap length check rejects pathological
-    ///     inputs (e.g. 1MB of digits) before the regex engine is involved at all.
+    ///     approaches this length (longest forms are 13 chars). A cheap length check rejects
+    ///     pathological inputs (e.g. 1MB of digits) before any per-character work runs.
     ///     Declared here rather than on <c>SwedishOfficialId</c> to keep it co-located with its sole consumer.
     /// </summary>
     private const int MaxInputLength = 100;
 
     /// <summary>
-    ///     Pre-flight: trims and length-checks the input, then matches against the shared regex
-    ///     declared on <see cref="SwedishOfficialId"/>. Returns null when the input is null,
-    ///     empty, too long, or non-matching. Co-located here so person-ID and organisation-ID
-    ///     dispatchers share one entry point. The <c>[GeneratedRegex]</c> partial property
-    ///     itself stays on <see cref="SwedishOfficialId"/> per Roslyn's source-generator
-    ///     co-location requirement (dotnet/runtime#63502).
-    /// </summary>
-    /// <param name="input">The candidate ID string (any supported format), or null.</param>
-    /// <returns>A <see cref="SwedishOfficialId.SwedishIdMatcher"/> when the input matches; otherwise null.</returns>
-    [Pure]
-    internal static SwedishOfficialId.SwedishIdMatcher? TryMatch(string? input)
-    {
-        if (input is null) return null;
-        var trimmed = input.Trim();
-        if (trimmed.Length is 0 or > MaxInputLength) return null;
-
-        var match = SwedishOfficialId.SsnRegex.Match(trimmed);
-        return match.Success ? new SwedishOfficialId.SwedishIdMatcher(match) : null;
-    }
-
-    /// <summary>
-    ///     Allocation-free span-based equivalent of <see cref="TryMatch"/>.
-    ///     Hand-rolled parser for the Swedish ID regular structure:
+    ///     Allocation-free hand-rolled structural parser for the Swedish ID grammar:
     ///     optional "SE" prefix (literal, case-sensitive), optional 2-digit century,
     ///     6 mandatory date digits (YYMMDD), optional '-'/'+' delimiter, 4 mandatory
-    ///     unique/check digits. Equivalent to the <see cref="SwedishOfficialId.SsnRegex"/>
-    ///     pattern but eliminates the Match/Group object graph (~1 KB per parse).
+    ///     unique/check digits. Co-located here so person-ID and organisation-ID
+    ///     dispatchers share one entry point.
     /// </summary>
     /// <param name="input">The candidate input.</param>
     /// <param name="result">The parsed span match on success.</param>
@@ -243,40 +220,16 @@ internal static class SwedishIdParsing
 
     /// <summary>
     ///     Shared leaf atomic: validates calendar-day-within-month plus Luhn-10 over
-    ///     the 10-digit body. Used by both the person-ID dispatcher
-    ///     (Tasks 3, 4, 7) and the Enskild firma branch of OrganisationId parsing
-    ///     (Tasks 5, 11). Caller has already resolved <paramref name="fullYear"/>
-    ///     and <paramref name="realDay"/>.
+    ///     the 10-digit body. Used by both the person-ID dispatcher and the Enskild
+    ///     firma branch of OrganisationId parsing. Caller has already resolved
+    ///     <paramref name="fullYear"/> and <paramref name="realDay"/>.
     /// </summary>
-    /// <param name="matcher">The matcher containing raw year/month/day/unique spans.</param>
+    /// <param name="match">The span match containing raw year/month/day/unique spans.</param>
     /// <param name="fullYear">The 4-digit year (caller-resolved).</param>
     /// <param name="realDay">
     ///     The calendar day (1..31). For samordningsnummer the caller passes
     ///     <c>encodedDay - 60</c>; for personnummer the encoded day directly.
     /// </param>
-    /// <returns><see langword="true"/> if both calendar and Luhn checks pass.</returns>
-    [Pure]
-    internal static bool TryValidatePersonShapedBody(
-        SwedishOfficialId.SwedishIdMatcher matcher, int fullYear, int realDay)
-    {
-        if (realDay < 1 || realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
-
-        Span<char> tenDigits = stackalloc char[10];
-        matcher.YearTextSpan.CopyTo(tenDigits[..2]);
-        matcher.MonthTextSpan.CopyTo(tenDigits[2..4]);
-        matcher.DayTextSpan.CopyTo(tenDigits[4..6]);
-        matcher.UniqueSpan.CopyTo(tenDigits[6..10]);
-        return SwedishLuhnAlgorithm.IsValid(tenDigits);
-    }
-
-    /// <summary>
-    ///     Span-based equivalent of
-    ///     <see cref="TryValidatePersonShapedBody(SwedishOfficialId.SwedishIdMatcher, int, int)"/>.
-    ///     Validates calendar-day-within-month and Luhn-10 over the 10-digit body.
-    /// </summary>
-    /// <param name="match">The span match containing raw year/month/day/unique spans.</param>
-    /// <param name="fullYear">The 4-digit year (caller-resolved).</param>
-    /// <param name="realDay">The calendar day (1..31).</param>
     /// <returns><see langword="true"/> if both calendar and Luhn checks pass.</returns>
     [Pure]
     internal static bool TryValidatePersonShapedBody(
