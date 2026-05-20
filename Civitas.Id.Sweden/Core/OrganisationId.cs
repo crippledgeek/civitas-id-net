@@ -165,6 +165,19 @@ public sealed record OrganisationId : SwedishOfficialId,
     }
 
     /// <summary>
+    ///     Internal factory: constructs an <see cref="OrganisationId"/> from an
+    ///     already-validated 10-digit body and the optional person-century
+    ///     captured during Enskild firma parsing.
+    /// </summary>
+    /// <param name="normalised10">A valid 10-digit canonical body.</param>
+    /// <param name="personCentury">
+    ///     The 2-digit century if the input was parsed as Enskild firma;
+    ///     <see langword="null"/> for legal-person organisation numbers.
+    /// </param>
+    internal static OrganisationId FromValidated(string normalised10, int? personCentury)
+        => new(normalised10, personCentury);
+
+    /// <summary>
     ///     Returns this organisation number as a <see cref="PersonalId" /> or <see cref="CoordinationId" />
     ///     when it represents a physical person (sole proprietor). Returns null for legal persons.
     /// </summary>
@@ -214,77 +227,7 @@ public sealed record OrganisationId : SwedishOfficialId,
         string? s,
         [MaybeNullWhen(false)] out OrganisationId result)
     {
-        result = null;
-        var matcher = SwedishIdParsing.TryMatch(s);
-        // PeOrgNr "16" prefix is for legal-person 12-digit input only — reject for person-shape.
-        // "161212121212" (month 12, day 12, century 16) is not a real birth year (no one born in 1600s).
-        // "16" can only appear as input prefix for legal-person orgnummer (month >= 20).
-        if (matcher is null or { HasCentury: true, CenturyValue: 16, Month: < 20 })
-            return false;
-
-        var month = matcher.Month;
-        var day = matcher.Day;
-        int? personCentury = null;
-        int realDay = day;          // for person branches; legal-person branch ignores
-        bool isEnskildFirma = false;
-
-        switch (month)
-        {
-            case >= 20:
-                // Legal-person orgnummer — month/day are not calendar values.
-                // For 12-digit form, century must be "16" (legacy prefix).
-                if (matcher.HasCentury && matcher.CenturyValue != 16) return false;
-                break;
-            case >= 1 and <= 12 when day is >= 1 and <= 31:
-                {
-                    // Enskild firma — personnummer date shape. Require explicit century.
-                    if (!matcher.HasCentury) return false;
-                    personCentury = matcher.CenturyValue;
-                    isEnskildFirma = true;
-                    realDay = day;
-                    break;
-                }
-            case >= 1 and <= 12 when day is >= 61 and <= 91:
-                {
-                    // Enskild firma — samordningsnummer day-offset shape. Require explicit century.
-                    if (!matcher.HasCentury) return false;
-                    personCentury = matcher.CenturyValue;
-                    isEnskildFirma = true;
-                    realDay = day - 60;
-                    break;
-                }
-            default:
-                // Anything else (e.g. month 13-19) is invalid for any form.
-                return false;
-        }
-
-        if (isEnskildFirma)
-        {
-            var fullYear = personCentury!.Value * 100 + matcher.Year;
-            // Shared leaf atomic — calendar-day + Luhn in one call.
-            if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
-                return false;
-        }
-        else
-        {
-            // Legal-person branch — Luhn only, no calendar-date check.
-            Span<char> tenDigits = stackalloc char[10];
-            matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-            matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-            matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-            matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
-            if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
-        }
-
-        // Build canonical 10-digit form regardless of branch.
-        Span<char> canonical = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(canonical[..2]);
-        matcher.MonthText.AsSpan().CopyTo(canonical[2..4]);
-        matcher.DayText.AsSpan().CopyTo(canonical[4..6]);
-        matcher.Unique.AsSpan().CopyTo(canonical[6..10]);
-
-        result = new OrganisationId(new string(canonical), personCentury);
-        return true;
+        return SwedishIdParsing.TryParseOrganisation(s, out result);
     }
 
     /// <summary>Returns true when <paramref name="s" /> is a valid organisation number.</summary>
