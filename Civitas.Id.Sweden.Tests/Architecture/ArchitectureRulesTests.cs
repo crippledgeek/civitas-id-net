@@ -5,6 +5,8 @@ using ArchUnitNET.Loader;
 using ArchUnitNET.TUnit;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.Core;
+// ReSharper disable once RedundantNameQualifier — PersonalIdConverter is in this namespace;
+// the using is required for unqualified access in typeof() expressions.
 using Civitas.Id.Sweden.EntityFrameworkCore;
 using DataAnnotations;
 using Json;

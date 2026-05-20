@@ -1,9 +1,8 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore;
-
-using System;
 using Civitas.Id.Sweden.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore;
 
 /// <summary>
 ///     Extension methods that register the Civitas.Id.Sweden EF Core value converters

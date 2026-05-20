@@ -1,9 +1,7 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Converters;
-
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.EntityFrameworkCore;
 using Civitas.Id.Sweden.Errors;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Converters;
 
 public class CoordinationIdConverterTests
 {

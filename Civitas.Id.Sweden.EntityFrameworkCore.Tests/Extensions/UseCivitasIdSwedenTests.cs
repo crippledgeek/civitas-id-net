@@ -1,9 +1,8 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Extensions;
-
+using System.Diagnostics.CodeAnalysis;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Extensions;
 
 public class UseCivitasIdSwedenTests
 {
@@ -13,13 +12,13 @@ public class UseCivitasIdSwedenTests
         public async Task UseCivitasIdSweden_NullBuilder_ThrowsArgumentNullException()
         {
             await Assert.That(() => ModelConfigurationBuilderExtensions.UseCivitasIdSweden(null!))
-                .Throws<System.ArgumentNullException>();
+                .Throws<ArgumentNullException>();
         }
 
         [Test]
         public async Task UseCivitasIdSweden_ReturnsSameBuilder_ForFluentChaining()
         {
-            using var ctx = new RegistrationProbeContext();
+            await using var ctx = new RegistrationProbeContext();
             // Side-effect-only: ensures the convention runs without throwing.
             await Assert.That(ctx.Model).IsNotNull();
         }
@@ -30,7 +29,7 @@ public class UseCivitasIdSwedenTests
         [Test]
         public async Task ConfigureConventions_RegistersConverterForPersonalId()
         {
-            using var ctx = new RegistrationProbeContext();
+            await using var ctx = new RegistrationProbeContext();
             var entityType = ctx.Model.FindEntityType(typeof(ProbeEntity))!;
             var personalIdProp = entityType.FindProperty(nameof(ProbeEntity.PersonalId))!;
 
@@ -42,7 +41,7 @@ public class UseCivitasIdSwedenTests
         [Test]
         public async Task ConfigureConventions_RegistersConverterForCoordinationId()
         {
-            using var ctx = new RegistrationProbeContext();
+            await using var ctx = new RegistrationProbeContext();
             var entityType = ctx.Model.FindEntityType(typeof(ProbeEntity))!;
             var coordIdProp = entityType.FindProperty(nameof(ProbeEntity.CoordinationId))!;
 
@@ -54,7 +53,7 @@ public class UseCivitasIdSwedenTests
         [Test]
         public async Task ConfigureConventions_RegistersConverterForOrganisationId()
         {
-            using var ctx = new RegistrationProbeContext();
+            await using var ctx = new RegistrationProbeContext();
             var entityType = ctx.Model.FindEntityType(typeof(ProbeEntity))!;
             var orgIdProp = entityType.FindProperty(nameof(ProbeEntity.OrganisationId))!;
 
@@ -68,7 +67,7 @@ public class UseCivitasIdSwedenTests
         {
             // NRT is compile-time metadata only. EF Core's Properties<PersonalId>()
             // matches the CLR type, so both PersonalId and PersonalId? are caught.
-            using var ctx = new RegistrationProbeContext();
+            await using var ctx = new RegistrationProbeContext();
             var entityType = ctx.Model.FindEntityType(typeof(ProbeEntity))!;
             var nullableProp = entityType.FindProperty(nameof(ProbeEntity.OptionalPersonalId))!;
 
@@ -81,21 +80,25 @@ public class UseCivitasIdSwedenTests
     public sealed class ProbeEntity
     {
         public int Id { get; init; }
-        public PersonalId PersonalId { get; set; } = null!;
-        public PersonalId? OptionalPersonalId { get; set; }
-        public CoordinationId CoordinationId { get; set; } = null!;
-        public OrganisationId OrganisationId { get; set; } = null!;
+        public PersonalId PersonalId { get; init; } = null!;
+        public PersonalId? OptionalPersonalId { get; init; }
+        public CoordinationId CoordinationId { get; init; } = null!;
+        public OrganisationId OrganisationId { get; init; } = null!;
     }
 
-    private sealed class RegistrationProbeContext : DbContext
+    private sealed class RegistrationProbeContext(DbContextOptions<RegistrationProbeContext> options)
+        : DbContext(options)
     {
         public RegistrationProbeContext()
-            : base(new DbContextOptionsBuilder<RegistrationProbeContext>()
-                .UseInMemoryDatabase(databaseName: "probe-" + System.Guid.NewGuid())
+            : this(new DbContextOptionsBuilder<RegistrationProbeContext>()
+                .UseInMemoryDatabase(databaseName: "probe-" + Guid.NewGuid())
                 .Options)
         {
         }
 
+        // DbSet exposes ProbeEntity to the EF Core model; entity registration
+        // is implicit through the DbSet property — keeping this member is required.
+        [SuppressMessage("ReSharper", "UnusedMember.Local", Justification = "DbSet registers ProbeEntity with the EF Core model.")]
         public DbSet<ProbeEntity> Probes => Set<ProbeEntity>();
 
         protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)

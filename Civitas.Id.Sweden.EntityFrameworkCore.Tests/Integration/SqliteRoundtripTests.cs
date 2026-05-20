@@ -1,9 +1,9 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Integration;
-
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.EntityFrameworkCore.Tests.Fixtures;
 using Civitas.Id.Sweden.Format;
 using Microsoft.EntityFrameworkCore;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Integration;
 
 /// <summary>
 ///     End-to-end save/reload integration tests against an in-memory SQLite database.
@@ -43,7 +43,7 @@ public class SqliteRoundtripTests
             ctx.Customers.Add(new Customer
             {
                 TaxpayerId = PersonalId.Parse("189001019802"),
-                OptionalCoordinationId = null,
+                OptionalCoordinationId = null
             });
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
@@ -65,7 +65,7 @@ public class SqliteRoundtripTests
             ctx.Customers.Add(new Customer
             {
                 TaxpayerId = PersonalId.Parse("189001019802"),
-                OptionalCoordinationId = coord,
+                OptionalCoordinationId = coord
             });
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
@@ -164,7 +164,10 @@ public class SqliteRoundtripTests
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
 
-            var search = new[] { a, b };
+            // Cast to IEnumerable<PersonalId> to pin the LINQ Contains overload
+            // and avoid the C# 14 Span<T>.Contains overload-resolution ambiguity
+            // (C# 14 CSharp14OverloadResolutionWithSpanBreakingChange).
+            IEnumerable<PersonalId> search = [a, b];
             var hits = await ctx.Customers
                 .Where(cust => search.Contains(cust.TaxpayerId))
                 .ToListAsync();

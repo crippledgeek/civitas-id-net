@@ -1,8 +1,7 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Fixtures;
-
-using Civitas.Id.Sweden.EntityFrameworkCore;
 using Microsoft.Data.Sqlite;
 using Microsoft.EntityFrameworkCore;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Fixtures;
 
 /// <summary>Minimal <see cref="DbContext"/> used by integration tests.</summary>
 public sealed class TestDbContext : DbContext

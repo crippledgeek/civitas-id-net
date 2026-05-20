@@ -1,8 +1,8 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore;
-
 using Civitas.Id.Sweden.Core;
 using JetBrains.Annotations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore;
 
 /// <summary>
 ///     EF Core <see cref="ValueConverter{TModel,TProvider}"/> mapping

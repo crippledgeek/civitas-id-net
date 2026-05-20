@@ -1,6 +1,6 @@
-namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Integration;
-
 using Civitas.Id.Sweden.EntityFrameworkCore.Tests.Fixtures;
+
+namespace Civitas.Id.Sweden.EntityFrameworkCore.Tests.Integration;
 
 /// <summary>
 ///     Smoke tests that verify EF Core property facets (MaxLength, Unicode, Nullable)
