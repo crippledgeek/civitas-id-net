@@ -23,6 +23,7 @@
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
     <PackageId>Civitas.Id.Sweden.EntityFrameworkCore</PackageId>
     <Description>EF Core 10 ValueConverters for the Civitas.Id.Sweden official ID types (personnummer, samordningsnummer, organisationsnummer).</Description>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
   <ItemGroup>
@@ -35,6 +36,10 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Civitas.Id.Sweden.EntityFrameworkCore.Tests" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
   </ItemGroup>
 
 </Project>

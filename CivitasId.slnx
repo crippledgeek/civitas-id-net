@@ -1,4 +1,7 @@
 <Solution>
+  <Folder Name="/samples/">
+    <Project Path="samples/CivitasIdEfCore/CivitasIdEfCore.csproj" />
+  </Folder>
   <Folder Name="/tests/">
     <!-- AotSmokeTest: AspNetCore-flavored (Microsoft.NET.Sdk.Web); exercises full library family surface. -->
     <Project Path="tests/AotSmokeTest/AotSmokeTest.csproj" />
