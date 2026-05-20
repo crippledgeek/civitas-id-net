@@ -1,5 +1,6 @@
 using System.Diagnostics;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Internal;
@@ -251,7 +252,12 @@ public abstract record PhysicalPersonId : SwedishOfficialId
         if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
             return false;
 
-        var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
+        Span<char> normalisedSpan = stackalloc char[12];
+        fullYear.TryFormat(normalisedSpan[..4], out _, "D4", CultureInfo.InvariantCulture);
+        matcher.MonthTextSpan.CopyTo(normalisedSpan[4..6]);
+        matcher.DayTextSpan.CopyTo(normalisedSpan[6..8]);
+        matcher.UniqueSpan.CopyTo(normalisedSpan[8..12]);
+        var normalised = new string(normalisedSpan);
         result = TSelf.FromValidated(normalised);
         return true;
     }

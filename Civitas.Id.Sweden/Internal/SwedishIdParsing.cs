@@ -109,10 +109,10 @@ internal static class SwedishIdParsing
         if (realDay < 1 || realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
 
         Span<char> tenDigits = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
+        matcher.YearTextSpan.CopyTo(tenDigits[..2]);
+        matcher.MonthTextSpan.CopyTo(tenDigits[2..4]);
+        matcher.DayTextSpan.CopyTo(tenDigits[4..6]);
+        matcher.UniqueSpan.CopyTo(tenDigits[6..10]);
         return SwedishLuhnAlgorithm.IsValid(tenDigits);
     }
 
@@ -181,19 +181,19 @@ internal static class SwedishIdParsing
         {
             // Legal-person branch — Luhn only, no calendar-date check.
             Span<char> tenDigits = stackalloc char[10];
-            matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-            matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-            matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-            matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
+            matcher.YearTextSpan.CopyTo(tenDigits[..2]);
+            matcher.MonthTextSpan.CopyTo(tenDigits[2..4]);
+            matcher.DayTextSpan.CopyTo(tenDigits[4..6]);
+            matcher.UniqueSpan.CopyTo(tenDigits[6..10]);
             if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
         }
 
         // Build canonical 10-digit form regardless of branch.
         Span<char> canonical = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(canonical[..2]);
-        matcher.MonthText.AsSpan().CopyTo(canonical[2..4]);
-        matcher.DayText.AsSpan().CopyTo(canonical[4..6]);
-        matcher.Unique.AsSpan().CopyTo(canonical[6..10]);
+        matcher.YearTextSpan.CopyTo(canonical[..2]);
+        matcher.MonthTextSpan.CopyTo(canonical[2..4]);
+        matcher.DayTextSpan.CopyTo(canonical[4..6]);
+        matcher.UniqueSpan.CopyTo(canonical[6..10]);
 
         result = OrganisationId.FromValidated(new string(canonical), personCentury);
         return true;

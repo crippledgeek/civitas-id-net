@@ -316,31 +316,34 @@ public abstract partial record SwedishOfficialId
         /// <summary>The delimiter character ("" when absent).</summary>
         public string Delimiter => _match.Groups["delimiter"].Value;
 
-        /// <summary>The 2-digit year text.</summary>
-        public string YearText => _match.Groups["year"].Value;
-
-        /// <summary>The 2-digit month text.</summary>
-        public string MonthText => _match.Groups["month"].Value;
-
-        /// <summary>The 2-digit day text.</summary>
-        public string DayText => _match.Groups["day"].Value;
-
         /// <summary>The 4-digit "unique" suffix (last 3 + check digit).</summary>
         public string Unique => _match.Groups["unique"].Value;
 
         /// <summary>Century parsed as int.</summary>
-        public int CenturyValue => int.Parse(_match.Groups["century"].Value, CultureInfo.InvariantCulture);
+        public int CenturyValue => int.Parse(_match.Groups["century"].ValueSpan, CultureInfo.InvariantCulture);
 
         /// <summary>Year parsed as int (0..99).</summary>
-        public int Year => int.Parse(YearText, CultureInfo.InvariantCulture);
+        public int Year => int.Parse(_match.Groups["year"].ValueSpan, CultureInfo.InvariantCulture);
 
         /// <summary>Month parsed as int.</summary>
-        public int Month => int.Parse(MonthText, CultureInfo.InvariantCulture);
+        public int Month => int.Parse(_match.Groups["month"].ValueSpan, CultureInfo.InvariantCulture);
 
         /// <summary>
         ///     Day parsed as int (1..31 for personnummer, 61..91 for samordningsnummer, &gt;=20 for organisationsnummer
         ///     "month").
         /// </summary>
-        public int Day => int.Parse(DayText, CultureInfo.InvariantCulture);
+        public int Day => int.Parse(_match.Groups["day"].ValueSpan, CultureInfo.InvariantCulture);
+
+        /// <summary>Allocation-free span over the 2-digit year text (hot-path canonical-string assembly).</summary>
+        internal ReadOnlySpan<char> YearTextSpan => _match.Groups["year"].ValueSpan;
+
+        /// <summary>Allocation-free span over the 2-digit month text (hot-path canonical-string assembly).</summary>
+        internal ReadOnlySpan<char> MonthTextSpan => _match.Groups["month"].ValueSpan;
+
+        /// <summary>Allocation-free span over the 2-digit day text (hot-path canonical-string assembly).</summary>
+        internal ReadOnlySpan<char> DayTextSpan => _match.Groups["day"].ValueSpan;
+
+        /// <summary>Allocation-free span over the 4-digit unique suffix (hot-path canonical-string assembly).</summary>
+        internal ReadOnlySpan<char> UniqueSpan => _match.Groups["unique"].ValueSpan;
     }
 }
