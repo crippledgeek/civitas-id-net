@@ -149,7 +149,7 @@ public sealed record CoordinationId : PhysicalPersonId,
         string? s,
         [MaybeNullWhen(false)] out CoordinationId result)
     {
-        return TryParseCore(s, SwedenClock.Today().Year, out result);
+        return TryParseCore<CoordinationId>(s, SwedenClock.Today().Year, out result);
     }
 
     /// <summary>
@@ -176,7 +176,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     {
         ArgumentNullException.ThrowIfNull(s);
         var currentYear = SwedenClock.Today(timeProvider).Year;
-        return TryParseCore(s, currentYear, out var result)
+        return TryParseCore<CoordinationId>(s, currentYear, out var result)
             ? result
             : throw new InvalidIdNumberException(s, InvalidIdNumberReason.InvalidFormat);
     }
@@ -206,7 +206,7 @@ public sealed record CoordinationId : PhysicalPersonId,
         [MaybeNullWhen(false)] out CoordinationId result)
     {
         var currentYear = SwedenClock.Today(timeProvider).Year;
-        return TryParseCore(s, currentYear, out result);
+        return TryParseCore<CoordinationId>(s, currentYear, out result);
     }
 
     /// <summary>
@@ -232,7 +232,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     public static CoordinationId Parse(string s, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(s);
-        return TryParseCore(s, today.Year, out var result)
+        return TryParseCore<CoordinationId>(s, today.Year, out var result)
             ? result
             : throw new InvalidIdNumberException(s, InvalidIdNumberReason.InvalidFormat);
     }
@@ -253,7 +253,7 @@ public sealed record CoordinationId : PhysicalPersonId,
         DateOnly today,
         [MaybeNullWhen(false)] out CoordinationId result)
     {
-        return TryParseCore(s, today.Year, out result);
+        return TryParseCore<CoordinationId>(s, today.Year, out result);
     }
 
     /// <summary>Span variant of <see cref="Parse(string, DateOnly)"/>.</summary>
@@ -267,7 +267,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     public static CoordinationId Parse(ReadOnlySpan<char> s, DateOnly today)
     {
         var input = s.ToString();
-        return TryParseCore(input, today.Year, out var result)
+        return TryParseCore<CoordinationId>(input, today.Year, out var result)
             ? result
             : throw new InvalidIdNumberException(input, InvalidIdNumberReason.InvalidFormat);
     }
@@ -283,40 +283,7 @@ public sealed record CoordinationId : PhysicalPersonId,
         ReadOnlySpan<char> s,
         DateOnly today,
         [MaybeNullWhen(false)] out CoordinationId result)
-        => TryParseCore(s.ToString(), today.Year, out result);
-
-    private static bool TryParseCore(
-        string? s,
-        int currentYear,
-        [MaybeNullWhen(false)] out CoordinationId result)
-    {
-        result = null;
-        var matcher = TryMatch(s);
-        if (matcher is null) return false;
-
-        // Coordination constraints: month 1-12 (same as personnummer), encoded day 61-91.
-        if (matcher.Month is < 1 or > 12) return false;
-        if (matcher.Day is < 61 or > 91) return false;
-
-        var realDay = matcher.Day - 60;
-
-        var century = SwedishIdParsing.ResolveCentury(
-            matcher.HasCentury ? matcher.CenturyValue : null,
-            matcher.Year,
-            currentYear,
-            matcher.Delimiter is "+");
-        var fullYear = century * 100 + matcher.Year;
-
-        // Shared leaf atomic: calendar-day + Luhn. Note: matcher carries the ENCODED day
-        // (61..91 for samordningsnummer); the leaf reads it from matcher for the Luhn pack.
-        // The realDay parameter is the CALENDAR day (encoded - 60), used for DaysInMonth.
-        if (!SwedishIdParsing.TryValidatePersonShapedBody(matcher, fullYear, realDay))
-            return false;
-
-        var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
-        result = new CoordinationId(normalised);
-        return true;
-    }
+        => TryParseCore<CoordinationId>(s.ToString(), today.Year, out result);
 
     /// <summary>Returns true when <paramref name="s" /> is a valid samordningsnummer.</summary>
     /// <param name="s">The input string to validate, or null.</param>
