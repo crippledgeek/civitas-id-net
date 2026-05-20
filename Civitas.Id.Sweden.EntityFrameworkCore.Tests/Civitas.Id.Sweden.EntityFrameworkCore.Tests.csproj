@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="TUnit" Version="1.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
     <ProjectReference Include="..\Civitas.Id.Sweden.EntityFrameworkCore\Civitas.Id.Sweden.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Fakers\Civitas.Id.Sweden.Fakers.csproj" />
