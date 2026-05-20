@@ -1,0 +1,23 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>false</IsPackable>
+    <OutputType>Exe</OutputType>
+    <GenerateDocumentationFile>false</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TUnit" Version="1.*" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
+    <ProjectReference Include="..\Civitas.Id.Sweden.EntityFrameworkCore\Civitas.Id.Sweden.EntityFrameworkCore.csproj" />
+  </ItemGroup>
+
+</Project>
