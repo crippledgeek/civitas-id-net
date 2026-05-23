@@ -29,7 +29,7 @@
     <PackageReadmeFile>NuGet-README.md</PackageReadmeFile>
     <!-- Drop "aot" from the inherited global PackageTags — this companion is
          explicitly NOT AOT-compatible (see comment on IsAotCompatible above). -->
-    <PackageTags>$(PackageTags.Replace(' aot', '').Replace('aot ', '').Replace('aot', ''))</PackageTags>
+    <PackageTags>$(PackageTags.Replace(';aot', '').Replace('aot;', '').Replace('aot', ''))</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
@@ -45,7 +45,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Include="NuGet-README.md" Pack="true" PackagePath="\" />
+    <None Include="NuGet-README.md" Pack="true" PackagePath="\"
+          Condition="Exists('$(MSBuildProjectDirectory)/NuGet-README.md')" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Exclude the repo-facing README.md from the nupkg; only NuGet-README.md
+         is shipped to nuget.org via PackageReadmeFile. -->
+    <None Update="README.md" Pack="false" />
   </ItemGroup>
 
 </Project>
