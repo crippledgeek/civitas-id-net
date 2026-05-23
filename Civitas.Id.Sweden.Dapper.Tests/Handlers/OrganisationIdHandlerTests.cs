@@ -9,7 +9,7 @@ using Microsoft.Data.Sqlite;
 public class OrganisationIdHandlerTests
 {
     private const string LegalAktiebolag = "5560360793";
-    private const string EnskildFirma12  = "199001019802";
+    private const string EnskildFirma12 = "199001019802";
 
     // Return type is the interface to mirror how the handler is invoked in production.
 #pragma warning disable CA1859
