@@ -1,10 +1,10 @@
 # Releasing
 
-How to cut a release of the six `Civitas.Id.Sweden*` NuGet packages. Read end-to-end before your first release — the OIDC-trusted-publishing setup has version-specific prerequisites, and a few traps in the NuGet ecosystem differ materially from npm (in particular: provenance attestations do NOT yet work for NuGet consumers — see below).
+How to cut a release of the seven `Civitas.Id.Sweden*` NuGet packages. Read end-to-end before your first release — the OIDC-trusted-publishing setup has version-specific prerequisites, and a few traps in the NuGet ecosystem differ materially from npm (in particular: provenance attestations do NOT yet work for NuGet consumers — see below).
 
 ## Package set
 
-All six packages release in lockstep at the same version. The version is set once in `Directory.Build.targets` (`<Version>` property) and inherited by every csproj with `IsPackable=true`.
+All seven packages release in lockstep at the same version. The version is set once in `Directory.Build.targets` (`<Version>` property) and inherited by every csproj with `IsPackable=true`.
 
 | Package | csproj | Role |
 |---|---|---|
@@ -14,10 +14,11 @@ All six packages release in lockstep at the same version. The version is set onc
 | `Civitas.Id.Sweden.AspNetCore` | `Civitas.Id.Sweden.AspNetCore/Civitas.Id.Sweden.AspNetCore.csproj` | ASP.NET Core 10 integration. |
 | `Civitas.Id.Sweden.Fakers` | `Civitas.Id.Sweden.Fakers/Civitas.Id.Sweden.Fakers.csproj` | Algorithmic fakers. |
 | `Civitas.Id.Sweden.EntityFrameworkCore` | `Civitas.Id.Sweden.EntityFrameworkCore/Civitas.Id.Sweden.EntityFrameworkCore.csproj` | EF Core 10 `ValueConverter`s. |
+| `Civitas.Id.Sweden.Dapper` | `Civitas.Id.Sweden.Dapper/Civitas.Id.Sweden.Dapper.csproj` | Dapper 2.x `SqlMapper.TypeHandler<T>` implementations. |
 
 ## Hard prerequisites
 
-- **NuGet trusted publishing must be configured on nuget.org.** As of 2025-09-22, nuget.org supports GitHub-Actions OIDC trusted publishing in GA ([Microsoft Learn](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing), [.NET blog announcement](https://devblogs.microsoft.com/dotnet/enhanced-security-is-here-with-the-new-trust-publishing-on-nuget-org/)). For each of the six package IDs above, register a trusted publisher policy at `https://www.nuget.org/account/trustedpublishing` with:
+- **NuGet trusted publishing must be configured on nuget.org.** As of 2025-09-22, nuget.org supports GitHub-Actions OIDC trusted publishing in GA ([Microsoft Learn](https://learn.microsoft.com/en-us/nuget/nuget-org/trusted-publishing), [.NET blog announcement](https://devblogs.microsoft.com/dotnet/enhanced-security-is-here-with-the-new-trust-publishing-on-nuget-org/)). For each of the seven package IDs above, register a trusted publisher policy at `https://www.nuget.org/account/trustedpublishing` with:
   - **Owner**: `crippledgeek`
   - **Repository**: `civitas-id-net`
   - **Workflow filename**: `publish.yml`
@@ -51,11 +52,11 @@ spike/*   ──┘
 
 ## Version bumping
 
-All six packages ship at the same version. To bump:
+All seven packages ship at the same version. To bump:
 
 1. Edit `Directory.Build.targets` line `<Version>X.Y.Z</Version>`.
 2. Bump per SemVer:
-   - **PATCH** (`1.0.0` → `1.0.1`): backward-compatible bug fix in any of the six packages.
+   - **PATCH** (`1.0.0` → `1.0.1`): backward-compatible bug fix in any of the seven packages.
    - **MINOR** (`1.0.0` → `1.1.0`): backward-compatible feature addition in any package.
    - **MAJOR** (`1.0.0` → `2.0.0`): any removal / rename / behavior change to the public API of any package.
 
@@ -138,7 +139,7 @@ Release-note format mirrors prior releases — one section per affected package,
 
 ## What the publish workflow does
 
-`release: published` → workflow checks out the tagged commit → `actions/setup-dotnet@v4` → `dotnet pack -c Release` → `NuGet/login@v1` exchanges the GitHub OIDC token for a 1-hour scoped nuget.org API key → `dotnet nuget push *.nupkg` for each of the six packages, with `--skip-duplicate` (safe to re-run) → explicit second loop for `*.snupkg` (symbol packages).
+`release: published` → workflow checks out the tagged commit → `actions/setup-dotnet@v4` → `dotnet pack -c Release` → `NuGet/login@v1` exchanges the GitHub OIDC token for a 1-hour scoped nuget.org API key → `dotnet nuget push *.nupkg` for each of the seven packages, with `--skip-duplicate` (safe to re-run) → explicit second loop for `*.snupkg` (symbol packages).
 
 Successful publish emits these markers in the log:
 
@@ -233,7 +234,7 @@ git checkout v1.0.1
 CI=true dotnet pack CivitasId.slnx -c Release --output ./artifacts
 
 # Generate a scoped, time-limited API key at https://www.nuget.org/account/apikeys
-# Scope: "Push new packages and package versions" for the six Civitas.Id.Sweden* IDs.
+# Scope: "Push new packages and package versions" for the seven Civitas.Id.Sweden* IDs.
 # Expiry: 1 day is plenty for a single release.
 APIKEY=<paste-key-here>
 
@@ -281,9 +282,10 @@ If output is non-empty, the back-merge is incomplete — repeat the merge step.
 The package detail pages on nuget.org are live within seconds; the search index typically updates within 15 minutes, with anomalous delays up to a few hours on heavy-load days (see [status.nuget.org](https://status.nuget.org)).
 
 ```bash
-# All six should report the new version.
+# All seven should report the new version.
 for pkg in Civitas.Id.Sweden Civitas.Id.Sweden.Json Civitas.Id.Sweden.DataAnnotations \
-           Civitas.Id.Sweden.AspNetCore Civitas.Id.Sweden.Fakers Civitas.Id.Sweden.EntityFrameworkCore; do
+           Civitas.Id.Sweden.AspNetCore Civitas.Id.Sweden.Fakers Civitas.Id.Sweden.EntityFrameworkCore \
+           Civitas.Id.Sweden.Dapper; do
   printf "%s: " "$pkg"
   curl -s "https://api.nuget.org/v3-flatcontainer/${pkg,,}/index.json" | jq -r '.versions[-1]'
 done
@@ -297,6 +299,7 @@ Check the package detail pages render the README correctly:
 - https://www.nuget.org/packages/Civitas.Id.Sweden.AspNetCore
 - https://www.nuget.org/packages/Civitas.Id.Sweden.Fakers
 - https://www.nuget.org/packages/Civitas.Id.Sweden.EntityFrameworkCore
+- https://www.nuget.org/packages/Civitas.Id.Sweden.Dapper
 
 Verify Source Link by installing one package into a throwaway console app, setting a breakpoint inside a library call, and stepping into the source in Rider / Visual Studio. The debugger should fetch source from GitHub at the tagged commit. If symbols don't load: confirm the `.snupkg` push succeeded and that `symbols.nuget.org` reports the package indexed (15-min SLA).
 
