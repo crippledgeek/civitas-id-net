@@ -14,10 +14,9 @@ namespace Civitas.Id.Sweden.Dapper.Tests.Integration;
 public class InClauseWorkaroundTests
 {
     // Class-scoped setup so this file is independent of SqliteRoundtripTests's
-    // [Before(TestSession)] ordering. CivitasIdSwedenDapperSetup.Register() is
-    // idempotent (guarded by an Interlocked flag), and SqlMapper.AddTypeHandler
-    // tolerates re-registration, so calling here is safe regardless of which
-    // test class runs first in the session.
+    // [Before(TestSession)] ordering. SqlMapper.AddTypeHandler tolerates
+    // re-registration (overwrites by default), so calling Register() here is
+    // safe regardless of which test class runs first in the session.
     [Before(Class)]
     public static void RegisterHandlers()
     {
