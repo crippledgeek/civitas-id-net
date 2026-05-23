@@ -1,0 +1,45 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <IsPackable>true</IsPackable>
+    <!--
+      IsAotCompatible deliberately omitted.
+      Vanilla Dapper 2.x uses runtime IL generation and reflection that are
+      incompatible with NativeAOT. The official AOT path is the separate
+      Dapper.AOT source-generator package, whose TypeHandlerAttribute surface
+      is not yet wired into the generator (as of v1.0.52, May 2024).
+      Tracked as a follow-up Civitas.Id.Sweden.Dapper.Aot v1.1 package.
+      See spec D7.
+    -->
+    <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <Deterministic>true</Deterministic>
+    <PublishRepositoryUrl>true</PublishRepositoryUrl>
+    <EmbedUntrackedSources>true</EmbedUntrackedSources>
+    <PackageId>Civitas.Id.Sweden.Dapper</PackageId>
+    <Description>Dapper 2.x TypeHandlers for the Civitas.Id.Sweden official ID types (personnummer, samordningsnummer, organisationsnummer).</Description>
+    <!-- Drop "aot" from the inherited global PackageTags — this companion is
+         explicitly NOT AOT-compatible (see comment on IsAotCompatible above).
+         Anchored on ";" delimiter (the actual PackageTags separator). -->
+    <PackageTags>$(PackageTags.Replace(';aot', '').Replace('aot;', '').Replace('aot', ''))</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Dapper" Version="2.1.*" />
+    <PackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.4">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+    <ProjectReference Include="..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Civitas.Id.Sweden.Dapper.Tests" />
+  </ItemGroup>
+
+</Project>

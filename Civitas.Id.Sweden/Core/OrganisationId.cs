@@ -16,7 +16,10 @@ namespace Civitas.Id.Sweden.Core;
 /// </summary>
 [TypeConverter(typeof(OrganisationIdTypeConverter))]
 public sealed record OrganisationId : SwedishOfficialId,
-    ISpanParsable<OrganisationId>
+    ISpanParsable<OrganisationId>,
+    ISpanFormattable,
+    IUtf8SpanFormattable,
+    IUtf8SpanParsable<OrganisationId>
 {
     /// <summary>
     ///     For Enskild firma (sole-proprietor) orgnummer, the century captured at parse time
@@ -165,6 +168,23 @@ public sealed record OrganisationId : SwedishOfficialId,
     }
 
     /// <summary>
+    ///     Internal factory: constructs an <see cref="OrganisationId"/> from an
+    ///     already-validated 10-digit body and the optional person-century
+    ///     captured during Enskild firma parsing.
+    /// </summary>
+    /// <param name="tenDigitsNormalised">A valid 10-digit canonical body.</param>
+    /// <param name="personCentury">
+    ///     The 2-digit century if the input was parsed as Enskild firma;
+    ///     <see langword="null"/> for legal-person organisation numbers.
+    /// </param>
+    internal static OrganisationId FromValidated(string tenDigitsNormalised, int? personCentury)
+    {
+        Debug.Assert(tenDigitsNormalised is not null);
+        Debug.Assert(tenDigitsNormalised.Length == 10);
+        return new OrganisationId(tenDigitsNormalised, personCentury);
+    }
+
+    /// <summary>
     ///     Returns this organisation number as a <see cref="PersonalId" /> or <see cref="CoordinationId" />
     ///     when it represents a physical person (sole proprietor). Returns null for legal persons.
     /// </summary>
@@ -214,59 +234,7 @@ public sealed record OrganisationId : SwedishOfficialId,
         string? s,
         [MaybeNullWhen(false)] out OrganisationId result)
     {
-        result = null;
-        var matcher = TryMatch(s);
-        // PeOrgNr "16" prefix is for legal-person 12-digit input only — reject for person-shape.
-        // "161212121212" (month 12, day 12, century 16) is not a real birth year (no one born in 1600s).
-        // "16" can only appear as input prefix for legal-person orgnummer (month >= 20).
-        if (matcher is null or { HasCentury: true, CenturyValue: 16, Month: < 20 })
-            return false;
-
-        var month = matcher.Month;
-        var day = matcher.Day;
-        int? personCentury = null;
-
-        switch (month)
-        {
-            case >= 20:
-                // Legal-person orgnummer — month/day are not calendar values.
-                // For 12-digit form, century must be "16" (legacy prefix).
-                if (matcher.HasCentury && matcher.CenturyValue != 16) return false;
-                break;
-            case >= 1 and <= 12 when day is >= 1 and <= 31:
-                {
-                    // Enskild firma — personnummer date shape. Require explicit century.
-                    if (!matcher.HasCentury) return false;
-                    var fullYear = matcher.CenturyValue * 100 + matcher.Year;
-                    if (day > DateTime.DaysInMonth(fullYear, month)) return false;
-                    personCentury = matcher.CenturyValue;
-                    break;
-                }
-            case >= 1 and <= 12 when day is >= 61 and <= 91:
-                {
-                    // Enskild firma — samordningsnummer day-offset shape. Require explicit century.
-                    if (!matcher.HasCentury) return false;
-                    var fullYear = matcher.CenturyValue * 100 + matcher.Year;
-                    var realDay = day - 60;
-                    if (realDay > DateTime.DaysInMonth(fullYear, month)) return false;
-                    personCentury = matcher.CenturyValue;
-                    break;
-                }
-            default:
-                // Anything else (e.g. month 13-19) is invalid for any form.
-                return false;
-        }
-
-        // Build 10-digit canonical form for Luhn validation.
-        Span<char> tenDigits = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
-        if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
-
-        result = new OrganisationId(new string(tenDigits), personCentury);
-        return true;
+        return SwedishIdParsing.TryParseOrganisation(s, out result);
     }
 
     /// <summary>Returns true when <paramref name="s" /> is a valid organisation number.</summary>
@@ -417,35 +385,331 @@ public sealed record OrganisationId : SwedishOfficialId,
 
     private string FormatCore(PnrFormat format, DateOnly today)
     {
-        var first6 = _tenDigits.AsSpan(0, 6);
-        var last4 = _tenDigits.AsSpan(6, 4);
+        // The two "bare" formats are the canonical 10-digit form — no allocation.
+        if (format is PnrFormat.LongFormat or PnrFormat.ShortFormat) return _tenDigits;
 
-        // For Enskild firma, the bearer's personnummer/samordningsnummer might have an inferred
-        // '+' separator (centenarian convention). Look this up via the underlying person ID.
-        // Legal-person orgnummer always use '-'.
-        var preservedSeparator = InferOriginalSeparator(today);
-
-        return format switch
-        {
-            PnrFormat.LongFormat => _tenDigits,
-            PnrFormat.ShortFormat => _tenDigits,
-            PnrFormat.LongFormatWithStandardSeparator => $"{first6}-{last4}",
-            PnrFormat.ShortFormatWithStandardSeparator => $"{first6}-{last4}",
-            PnrFormat.LongFormatWithSeparator => $"{first6}{preservedSeparator}{last4}",
-            PnrFormat.ShortFormatWithSeparator => $"{first6}{preservedSeparator}{last4}",
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
-        };
+        var length = FormattedLength(format);
+        return string.Create(
+            length,
+            (self: this, format, today),
+            static (buffer, state) =>
+            {
+                var ok = state.self.TryFormatCore(buffer, state.format, state.today, out _);
+                Debug.Assert(ok);
+            });
     }
 
     /// <summary>
-    ///     Returns the separator to use for "WithSeparator" formats:
-    ///     '+' for centenarian Enskild firma (per Swedish convention), '-' otherwise.
+    ///     Returns a culture-invariant <see cref="string"/> representation using
+    ///     the given format specifier. Recognised values: <c>null</c> / <c>""</c> /
+    ///     <c>"L"</c> = LongFormat (10 digits); <c>"S"</c> = ShortFormat (10
+    ///     digits); <c>"LD"</c>/<c>"SD"</c> = with '-' separator;
+    ///     <c>"LI"</c>/<c>"SI"</c> = with inferred '+'/'-' separator.
     /// </summary>
-    private string InferOriginalSeparator(DateOnly today)
+    /// <param name="format">The format string (see summary).</param>
+    /// <param name="formatProvider">Accepted and ignored — Swedish IDs are culture-invariant.</param>
+    /// <returns>The formatted organisation number.</returns>
+    /// <exception cref="FormatException">When <paramref name="format"/> is not recognised.</exception>
+    [Pure]
+    public string ToString(string? format, IFormatProvider? formatProvider)
     {
-        if (_personCentury is null) return "-"; // Legal-person — always '-'
+        return Format(ParseFormatSpec(format.AsSpan()));
+    }
 
-        // Enskild firma — derive separator from underlying person's age.
-        return ToPhysicalPersonId() is { } p && p.GetAge(today) >= 100 ? "+" : "-";
+    /// <summary>
+    ///     Tries to format the organisation number into <paramref name="destination"/>
+    ///     as a span of characters. Zero allocation when <paramref name="destination"/>
+    ///     is large enough.
+    /// </summary>
+    /// <param name="destination">The destination buffer to write to.</param>
+    /// <param name="charsWritten">The number of characters written on success.</param>
+    /// <param name="format">The format specifier. See <see cref="ToString(string?, IFormatProvider?)"/>.</param>
+    /// <param name="provider">Accepted and ignored — Swedish IDs are culture-invariant.</param>
+    /// <returns>
+    ///     <see langword="true"/> if the formatted value fit in
+    ///     <paramref name="destination"/>; otherwise <see langword="false"/>.
+    /// </returns>
+    public bool TryFormat(
+        Span<char> destination,
+        out int charsWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        var pnrFormat = ParseFormatSpec(format);
+        return TryFormatCore(destination, pnrFormat, SwedenClock.Today(), out charsWritten);
+    }
+
+    /// <summary>
+    ///     Writes the formatted organisation number into <paramref name="destination"/>
+    ///     using <paramref name="today"/> as the reference date for centenarian
+    ///     separator inference. Deterministic — does not read any clock.
+    /// </summary>
+    /// <param name="destination">The destination buffer to write to.</param>
+    /// <param name="format">The desired output format.</param>
+    /// <param name="today">The reference date used for centenarian '+' inference.</param>
+    /// <param name="charsWritten">The number of characters written on success.</param>
+    /// <returns>
+    ///     <see langword="true"/> if the formatted value fit in
+    ///     <paramref name="destination"/>; otherwise <see langword="false"/>.
+    /// </returns>
+    public bool TryFormat(
+        Span<char> destination,
+        PnrFormat format,
+        DateOnly today,
+        out int charsWritten)
+    {
+        return TryFormatCore(destination, format, today, out charsWritten);
+    }
+
+    /// <summary>
+    ///     Maps a textual format specifier to <see cref="PnrFormat"/>. Throws
+    ///     <see cref="FormatException"/> for unrecognised specifiers.
+    /// </summary>
+    private static PnrFormat ParseFormatSpec(ReadOnlySpan<char> format)
+    {
+        return format.Length switch
+        {
+            0 => PnrFormat.LongFormat,
+            1 => format[0] switch
+            {
+                'L' or 'G' or 'g' or 'l' => PnrFormat.LongFormat,
+                'S' or 's' => PnrFormat.ShortFormat,
+                _ => throw UnknownFormatSpec(format)
+            },
+            2 => format[0] switch
+            {
+                'L' or 'l' => format[1] switch
+                {
+                    'D' or 'd' => PnrFormat.LongFormatWithStandardSeparator,
+                    'I' or 'i' => PnrFormat.LongFormatWithSeparator,
+                    _ => throw UnknownFormatSpec(format)
+                },
+                'S' or 's' => format[1] switch
+                {
+                    'D' or 'd' => PnrFormat.ShortFormatWithStandardSeparator,
+                    'I' or 'i' => PnrFormat.ShortFormatWithSeparator,
+                    _ => throw UnknownFormatSpec(format)
+                },
+                _ => throw UnknownFormatSpec(format)
+            },
+            _ => throw UnknownFormatSpec(format)
+        };
+    }
+
+    private static FormatException UnknownFormatSpec(ReadOnlySpan<char> format)
+        => new($"Unrecognised format specifier '{format.ToString()}'. " +
+               "Use \"L\"/\"S\"/\"LD\"/\"SD\"/\"LI\"/\"SI\" or null.");
+
+    /// <summary>Computes the exact output length for a given <see cref="PnrFormat"/>.</summary>
+    private static int FormattedLength(PnrFormat format) => format switch
+    {
+        PnrFormat.LongFormat => 10,
+        PnrFormat.ShortFormat => 10,
+        PnrFormat.LongFormatWithSeparator => 11,
+        PnrFormat.LongFormatWithStandardSeparator => 11,
+        PnrFormat.ShortFormatWithSeparator => 11,
+        PnrFormat.ShortFormatWithStandardSeparator => 11,
+        _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
+    };
+
+    /// <summary>
+    ///     Writes the formatted organisation number into <paramref name="destination"/>
+    ///     without allocation. Returns <see langword="false"/> + zeroed
+    ///     <paramref name="charsWritten"/> if the destination is too small.
+    /// </summary>
+    private bool TryFormatCore(
+        Span<char> destination,
+        PnrFormat format,
+        DateOnly today,
+        out int charsWritten)
+    {
+        var required = FormattedLength(format);
+        if (destination.Length < required)
+        {
+            charsWritten = 0;
+            return false;
+        }
+
+        var src = _tenDigits.AsSpan();
+        switch (format)
+        {
+            case PnrFormat.LongFormat:
+            case PnrFormat.ShortFormat:
+                src.CopyTo(destination);
+                break;
+            case PnrFormat.LongFormatWithStandardSeparator:
+            case PnrFormat.ShortFormatWithStandardSeparator:
+                src[..6].CopyTo(destination);
+                destination[6] = '-';
+                src[6..10].CopyTo(destination[7..]);
+                break;
+            case PnrFormat.LongFormatWithSeparator:
+            case PnrFormat.ShortFormatWithSeparator:
+                src[..6].CopyTo(destination);
+                destination[6] = ComputeInferredSeparator(today);
+                src[6..10].CopyTo(destination[7..]);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(format), format, null);
+        }
+
+        charsWritten = required;
+        return true;
+    }
+
+    /// <summary>
+    ///     Returns '+' for Enskild firma whose bearer is 100 or older on
+    ///     <paramref name="today"/>; '-' otherwise (including all legal-person
+    ///     organisation numbers).
+    /// </summary>
+    private char ComputeInferredSeparator(DateOnly today)
+    {
+        if (_personCentury is null) return '-';
+        return ToPhysicalPersonId() is { } p && p.GetAge(today) >= 100 ? '+' : '-';
+    }
+
+    /// <summary>
+    ///     Returns the canonical 10-digit form. Matches
+    ///     <see cref="LongFormat"/>. Round-trippable through
+    ///     <see cref="Parse(string)"/>.
+    /// </summary>
+    /// <returns>The canonical 10-digit string.</returns>
+    public override string ToString() => _tenDigits;
+
+    // ── IUtf8SpanFormattable ──
+
+    /// <summary>
+    ///     Tries to format the organisation number into <paramref name="utf8Destination"/>
+    ///     as a span of UTF-8 bytes. Swedish IDs are pure ASCII, so encoding is
+    ///     one byte per character; zero allocation when the destination is large
+    ///     enough.
+    /// </summary>
+    /// <param name="utf8Destination">The destination byte buffer.</param>
+    /// <param name="bytesWritten">The number of bytes written on success.</param>
+    /// <param name="format">The format specifier. See <see cref="ToString(string?, IFormatProvider?)"/>.</param>
+    /// <param name="provider">Accepted and ignored — Swedish IDs are culture-invariant.</param>
+    /// <returns>
+    ///     <see langword="true"/> if the formatted value fit; otherwise
+    ///     <see langword="false"/>.
+    /// </returns>
+    public bool TryFormat(
+        Span<byte> utf8Destination,
+        out int bytesWritten,
+        ReadOnlySpan<char> format,
+        IFormatProvider? provider)
+    {
+        var pnrFormat = ParseFormatSpec(format);
+        return TryFormatUtf8Core(utf8Destination, pnrFormat, SwedenClock.Today(), out bytesWritten);
+    }
+
+    /// <summary>
+    ///     Writes the formatted organisation number into <paramref name="utf8Destination"/>
+    ///     as UTF-8 bytes using <paramref name="today"/> as the reference date for
+    ///     centenarian separator inference. Deterministic — does not read any clock.
+    /// </summary>
+    /// <param name="utf8Destination">The destination byte buffer.</param>
+    /// <param name="format">The desired output format.</param>
+    /// <param name="today">The reference date used for the centenarian '+' separator.</param>
+    /// <param name="bytesWritten">The number of bytes written on success.</param>
+    /// <returns>
+    ///     <see langword="true"/> if the formatted value fit; otherwise <see langword="false"/>.
+    /// </returns>
+    public bool TryFormat(
+        Span<byte> utf8Destination,
+        PnrFormat format,
+        DateOnly today,
+        out int bytesWritten)
+    {
+        return TryFormatUtf8Core(utf8Destination, format, today, out bytesWritten);
+    }
+
+    private bool TryFormatUtf8Core(
+        Span<byte> utf8Destination,
+        PnrFormat format,
+        DateOnly today,
+        out int bytesWritten)
+    {
+        var required = FormattedLength(format);
+        if (utf8Destination.Length < required)
+        {
+            bytesWritten = 0;
+            return false;
+        }
+
+        var src = _tenDigits.AsSpan();
+        switch (format)
+        {
+            case PnrFormat.LongFormat:
+            case PnrFormat.ShortFormat:
+                AsciiCharsToBytes(src, utf8Destination);
+                break;
+            case PnrFormat.LongFormatWithStandardSeparator:
+            case PnrFormat.ShortFormatWithStandardSeparator:
+                AsciiCharsToBytes(src[..6], utf8Destination);
+                utf8Destination[6] = (byte)'-';
+                AsciiCharsToBytes(src[6..10], utf8Destination[7..]);
+                break;
+            case PnrFormat.LongFormatWithSeparator:
+            case PnrFormat.ShortFormatWithSeparator:
+                AsciiCharsToBytes(src[..6], utf8Destination);
+                utf8Destination[6] = (byte)ComputeInferredSeparator(today);
+                AsciiCharsToBytes(src[6..10], utf8Destination[7..]);
+                break;
+            default:
+                throw new ArgumentOutOfRangeException(nameof(format), format, null);
+        }
+
+        bytesWritten = required;
+        return true;
+    }
+
+    private static void AsciiCharsToBytes(ReadOnlySpan<char> source, Span<byte> destination)
+    {
+        for (var i = 0; i < source.Length; i++)
+        {
+            destination[i] = (byte)source[i];
+        }
+    }
+
+    // ── IUtf8SpanParsable<OrganisationId> ──
+
+    /// <summary>Parses an organisation number from a UTF-8 byte span. Throws on failure.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <returns>A valid <see cref="OrganisationId"/>.</returns>
+    /// <exception cref="InvalidIdNumberException">When parsing fails.</exception>
+    [Pure]
+    public static OrganisationId Parse(ReadOnlySpan<byte> s, IFormatProvider? provider)
+    {
+        return TryParse(s, provider, out var result)
+            ? result
+            : throw new InvalidIdNumberException(
+                System.Text.Encoding.UTF8.GetString(s),
+                InvalidIdNumberReason.InvalidFormat);
+    }
+
+    /// <summary>Attempts to parse an organisation number from a UTF-8 byte span.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <param name="result">The parsed value on success.</param>
+    /// <returns><see langword="true"/> on success.</returns>
+    [Pure]
+    [ContractAnnotation("=> true, result: notnull; => false, result: null")]
+    public static bool TryParse(
+        ReadOnlySpan<byte> s,
+        IFormatProvider? provider,
+        [MaybeNullWhen(false)] out OrganisationId result)
+    {
+        result = null;
+        if (s.Length is 0 or > 100) return false;
+        Span<char> charBuffer = stackalloc char[s.Length];
+        for (var i = 0; i < s.Length; i++)
+        {
+            var b = s[i];
+            if (b > 127) return false;
+            charBuffer[i] = (char)b;
+        }
+        var input = new string(charBuffer);
+        return TryParse(input, out result);
     }
 }

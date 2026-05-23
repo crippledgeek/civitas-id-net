@@ -21,6 +21,8 @@ See the per-package README on NuGet for usage. See
 remediation design that drove the AspNetCore package's final shape.
 
 ### Added
+- `Civitas.Id.Sweden.Dapper` companion package: Dapper 2.x `TypeHandler<T>` implementations for `PersonalId`, `CoordinationId`, `OrganisationId` with one-call registration via `CivitasIdSwedenDapperSetup.Register()`. Storage is `varchar(12)` ASCII (legal-person organisations: 10 characters; Enskild firma: 12 characters with lossless century-preserving Encode). Sets `DbType.AnsiString` + `Size = 12` in `SetValue` to enable SQL Server index seeks. SQLite-validated round-trip including the Enskild firma regression guard. Known limitation: Dapper `IN @ids` expansion bypasses TypeHandlers ([Dapper #1649](https://github.com/DapperLib/Dapper/issues/1649)) — README documents the canonical workaround.
+- New companion package `Civitas.Id.Sweden.EntityFrameworkCore` — EF Core 10 `ValueConverter`s for `PersonalId`, `CoordinationId`, `OrganisationId`, plus a one-line `UseCivitasIdSweden()` extension on `ModelConfigurationBuilder`. Single-column storage (`varchar(12)` for all three; `OrganisationId` column is variable-width 10/12 chars to support Enskild firma 12-digit canonical roundtrip via `ToPhysicalPersonId()?.LongFormat() ?? LongFormat()`). Polymorphic `SwedishOfficialId` mapping is not in v1.0 — documented as a README pattern using a raw `string` column. Targets `net10.0`. `IsAotCompatible` deliberately omitted while EF Core 10's NativeAOT remains experimental upstream.
 - New companion package `Civitas.Id.Sweden.AspNetCore` — full ASP.NET Core 10 integration:
   - `AddCivitasIdSwedenAspNetCore` extension methods (3 overloads: no-arg, `Action<TOptions>`, `IConfiguration`) following the canonical .NET 10 Options pattern (`AddOptions<T>().Configure/Bind().Validate().ValidateOnStart()` + `TryAddEnumerable` for idempotency).
   - `CivitasIdSwedenAspNetCoreOptions` (sealed, mutable properties) + source-generated `[OptionsValidator]` validator; `JsonFormat` propagates into `CivitasIdSwedenJsonOptions.PersonnummerFormat` via DI-aware cross-options bridge.
@@ -64,6 +66,7 @@ remediation design that drove the AspNetCore package's final shape.
 - All new DateOnly overloads carry `[Pure]` (deterministic, no clock read); the `TryParse*` overloads carry `[ContractAnnotation]` for Rider/ReSharper null-flow analysis alongside `[MaybeNullWhen(false)]` on the `out` parameter for Roslyn.
 
 ### Fixed
+- **Documentation**: `CLAUDE.md` "Critical behavioural rules" — corrected stale claim that `OrganisationId.LongFormat()` returns 12 digits for Enskild firma. It returns 10 digits unconditionally per Lag (1974:174) §4; the 12-digit personnummer view is exposed via `OrganisationId.ToPhysicalPersonId()`.
 - **HIGH (domain correctness)**: `OrganisationId.Form` now correctly returns
   `OrganisationForm.AktiebolagOvriga` for orgnummer with the `556…` (pre-2015)
   and `559…` (post-2015) prefixes — previously misclassified as

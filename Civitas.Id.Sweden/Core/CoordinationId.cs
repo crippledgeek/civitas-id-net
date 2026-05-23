@@ -16,15 +16,26 @@ namespace Civitas.Id.Sweden.Core;
 /// </summary>
 [TypeConverter(typeof(CoordinationIdTypeConverter))]
 public sealed record CoordinationId : PhysicalPersonId,
-    ISpanParsable<CoordinationId>
+    ISwedishPersonIdHooks<CoordinationId>,
+    ISpanParsable<CoordinationId>,
+    IUtf8SpanParsable<CoordinationId>
 {
-    /// <summary>The canonical 12-digit normalised form (YYYYMMDDXXXX) with day still +60-offset.</summary>
-    private readonly string _normalised;
-
-    private CoordinationId(string normalised)
+    private CoordinationId(string normalised) : base(normalised)
     {
-        _normalised = normalised;
     }
+
+    // ─── Explicit-interface static-abstract implementations of ISwedishPersonIdHooks<CoordinationId>.
+    //     Explicit form keeps these off the public API surface; accessible only through
+    //     the generic CRTP constraint on PhysicalPersonId.TryParseCore<TSelf>. ───
+
+    static bool ISwedishPersonIdHooks<CoordinationId>.IsDayValid(int encodedDay)
+        => encodedDay is >= 61 and <= 91;
+
+    static int ISwedishPersonIdHooks<CoordinationId>.CalendarDay(int encodedDay)
+        => encodedDay - 60;
+
+    static CoordinationId ISwedishPersonIdHooks<CoordinationId>.FromValidated(string normalised12)
+        => new(normalised12);
 
     /// <summary>The decoded date of birth (encoded day minus 60).</summary>
     public override DateOnly BirthDate
@@ -162,7 +173,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     {
         ArgumentNullException.ThrowIfNull(s);
         var currentYear = SwedenClock.Today(timeProvider).Year;
-        return TryParseCore(s, currentYear, out var result)
+        return TryParseCore<CoordinationId>(s, currentYear, out var result)
             ? result
             : throw new InvalidIdNumberException(s, InvalidIdNumberReason.InvalidFormat);
     }
@@ -218,7 +229,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     public static CoordinationId Parse(string s, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(s);
-        return TryParseCore(s, today.Year, out var result)
+        return TryParseCore<CoordinationId>(s, today.Year, out var result)
             ? result
             : throw new InvalidIdNumberException(s, InvalidIdNumberReason.InvalidFormat);
     }
@@ -253,7 +264,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     public static CoordinationId Parse(ReadOnlySpan<char> s, DateOnly today)
     {
         var input = s.ToString();
-        return TryParseCore(input, today.Year, out var result)
+        return TryParseCore<CoordinationId>(input, today.Year, out var result)
             ? result
             : throw new InvalidIdNumberException(input, InvalidIdNumberReason.InvalidFormat);
     }
@@ -271,44 +282,6 @@ public sealed record CoordinationId : PhysicalPersonId,
         [MaybeNullWhen(false)] out CoordinationId result)
         => TryParseCore(s.ToString(), today.Year, out result);
 
-    private static bool TryParseCore(
-        string? s,
-        int currentYear,
-        [MaybeNullWhen(false)] out CoordinationId result)
-    {
-        result = null;
-        var matcher = TryMatch(s);
-        if (matcher is null) return false;
-
-        // Coordination constraints: month 1-12 (same as personnummer), encoded day 61-91.
-        if (matcher.Month is < 1 or > 12) return false;
-        if (matcher.Day is < 61 or > 91) return false;
-
-        var realDay = matcher.Day - 60;
-
-        var century = SwedishIdParsing.ResolveCentury(
-            matcher.HasCentury ? matcher.CenturyValue : null,
-            matcher.Year,
-            currentYear,
-            matcher.Delimiter is "+");
-        var fullYear = century * 100 + matcher.Year;
-
-        // Validate calendar date using the REAL day (rejects e.g. February 30).
-        if (realDay > DateTime.DaysInMonth(fullYear, matcher.Month)) return false;
-
-        // Luhn on the 10-digit form (YYMMDDXXXX) — uses the ENCODED day (the on-the-card form).
-        Span<char> tenDigits = stackalloc char[10];
-        matcher.YearText.AsSpan().CopyTo(tenDigits[..2]);
-        matcher.MonthText.AsSpan().CopyTo(tenDigits[2..4]);
-        matcher.DayText.AsSpan().CopyTo(tenDigits[4..6]);
-        matcher.Unique.AsSpan().CopyTo(tenDigits[6..10]);
-        if (!SwedishLuhnAlgorithm.IsValid(tenDigits)) return false;
-
-        var normalised = $"{fullYear:0000}{matcher.MonthText}{matcher.DayText}{matcher.Unique}";
-        result = new CoordinationId(normalised);
-        return true;
-    }
-
     /// <summary>Returns true when <paramref name="s" /> is a valid samordningsnummer.</summary>
     /// <param name="s">The input string to validate, or null.</param>
     [Pure]
@@ -317,83 +290,38 @@ public sealed record CoordinationId : PhysicalPersonId,
         return TryParse(s, out _);
     }
 
-    /// <inheritdoc />
+    /// <inheritdoc cref="PhysicalPersonId.ToString()" />
+    public override string ToString() => LongFormat();
+
+    // ── IUtf8SpanParsable<CoordinationId> ──
+
+    /// <summary>Parses a samordningsnummer from a UTF-8 byte span. Throws on failure.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <returns>A valid <see cref="CoordinationId"/>.</returns>
+    /// <exception cref="InvalidIdNumberException">When parsing fails.</exception>
     [Pure]
-    public override string LongFormat()
+    public static CoordinationId Parse(ReadOnlySpan<byte> s, IFormatProvider? provider)
     {
-        return _normalised;
+        return TryParse(s, provider, out var result)
+            ? result
+            : throw new InvalidIdNumberException(
+                System.Text.Encoding.UTF8.GetString(s),
+                InvalidIdNumberReason.InvalidFormat);
     }
 
-    /// <inheritdoc />
+    /// <summary>Attempts to parse a samordningsnummer from a UTF-8 byte span.</summary>
+    /// <param name="s">The UTF-8 source span.</param>
+    /// <param name="provider">Format provider — accepted and ignored.</param>
+    /// <param name="result">The parsed value on success.</param>
+    /// <returns><see langword="true"/> on success.</returns>
     [Pure]
-    public override string ShortFormat()
+    [ContractAnnotation("=> true, result: notnull; => false, result: null")]
+    public static bool TryParse(
+        ReadOnlySpan<byte> s,
+        IFormatProvider? provider,
+        [MaybeNullWhen(false)] out CoordinationId result)
     {
-        return _normalised[2..];
-    }
-
-    /// <inheritdoc />
-    public override string Format(PnrFormat format)
-    {
-        return FormatCore(format, SwedenClock.Today());
-    }
-
-    /// <summary>
-    ///     Formats the samordningsnummer using <paramref name="timeProvider" /> to
-    ///     determine the centenarian "+" separator (where <paramref name="format" />
-    ///     requests the separator-bearing variant).
-    /// </summary>
-    /// <param name="format">The desired output format.</param>
-    /// <param name="timeProvider">
-    ///     The time provider used to determine the current UTC instant. The library
-    ///     converts the UTC instant to Sweden's civil timezone (<c>Europe/Stockholm</c>);
-    ///     the provider's <see cref="TimeProvider.LocalTimeZone" /> is intentionally
-    ///     ignored to prevent host-timezone drift on cloud containers.
-    /// </param>
-    /// <returns>The formatted samordningsnummer string.</returns>
-    /// <exception cref="ArgumentNullException">
-    ///     Thrown when <paramref name="timeProvider" /> is <see langword="null" />.
-    /// </exception>
-    [Pure]
-    public string Format(PnrFormat format, TimeProvider timeProvider)
-    {
-        return FormatCore(format, SwedenClock.Today(timeProvider));
-    }
-
-    /// <summary>
-    ///     Formats this samordningsnummer using <paramref name="today" /> as the
-    ///     reference date for centenarian-separator inference. Fully
-    ///     deterministic — does not read any clock.
-    /// </summary>
-    /// <param name="format">The desired output format.</param>
-    /// <param name="today">
-    ///     The reference date used to choose between <c>-</c> and <c>+</c>
-    ///     separators in <see cref="PnrFormat.LongFormatWithSeparator" /> and
-    ///     <see cref="PnrFormat.ShortFormatWithSeparator" />: <c>+</c> when
-    ///     the bearer is 100 or more years old as of <paramref name="today" />,
-    ///     <c>-</c> otherwise.
-    /// </param>
-    /// <returns>The formatted samordningsnummer string.</returns>
-    [Pure]
-    public string Format(PnrFormat format, DateOnly today)
-        => FormatCore(format, today);
-
-    private string FormatCore(PnrFormat format, DateOnly today)
-    {
-        var inferredSep = InferSeparator(today);
-        var year12 = _normalised.AsSpan(0, 4);
-        var year10 = _normalised.AsSpan(2, 2);
-        var monthDay = _normalised.AsSpan(4, 4);
-        var unique = _normalised.AsSpan(8, 4);
-
-        return format switch
-        {
-            PnrFormat.LongFormat => _normalised,
-            PnrFormat.ShortFormat => string.Concat(year10, monthDay, unique),
-            PnrFormat.LongFormatWithStandardSeparator => $"{year12}{monthDay}-{unique}",
-            PnrFormat.ShortFormatWithStandardSeparator => $"{year10}{monthDay}-{unique}",
-            PnrFormat.LongFormatWithSeparator => $"{year12}{monthDay}{inferredSep}{unique}",
-            PnrFormat.ShortFormatWithSeparator => $"{year10}{monthDay}{inferredSep}{unique}",
-            _ => throw new ArgumentOutOfRangeException(nameof(format), format, null)
-        };
+        return TryParseUtf8Core(s, SwedenClock.Today().Year, out result);
     }
 }
