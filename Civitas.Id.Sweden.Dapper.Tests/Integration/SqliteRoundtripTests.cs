@@ -1,10 +1,9 @@
-namespace Civitas.Id.Sweden.Dapper.Tests.Integration;
-
-using global::Dapper;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Dapper;
 using Civitas.Id.Sweden.Dapper.Tests.Fixtures;
+using Dapper;
 using Microsoft.Data.Sqlite;
+
+namespace Civitas.Id.Sweden.Dapper.Tests.Integration;
 
 public class SqliteRoundtripTests
 {
@@ -42,13 +41,13 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_PersonalId_RoundTrips()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Customer (Id TEXT PRIMARY KEY, TaxpayerId TEXT NOT NULL, OptionalSecondaryId TEXT NULL);");
 
             var expected = new Customer
             {
                 Id = Guid.NewGuid(),
-                TaxpayerId = PersonalId.Parse("189001019802"),
+                TaxpayerId = PersonalId.Parse("189001019802")
             };
             await c.ExecuteAsync(
                 "INSERT INTO Customer (Id, TaxpayerId, OptionalSecondaryId) VALUES (@Id, @TaxpayerId, @OptionalSecondaryId);",
@@ -63,14 +62,14 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_NullablePersonalId_PreservesNull()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Customer (Id TEXT PRIMARY KEY, TaxpayerId TEXT NOT NULL, OptionalSecondaryId TEXT NULL);");
 
             var expected = new Customer
             {
                 Id = Guid.NewGuid(),
                 TaxpayerId = PersonalId.Parse("189001019802"),
-                OptionalSecondaryId = null,
+                OptionalSecondaryId = null
             };
             await c.ExecuteAsync(
                 "INSERT INTO Customer (Id, TaxpayerId, OptionalSecondaryId) VALUES (@Id, @TaxpayerId, @OptionalSecondaryId);",
@@ -84,14 +83,14 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_NonNullSecondaryPersonalId_RoundTrips()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Customer (Id TEXT PRIMARY KEY, TaxpayerId TEXT NOT NULL, OptionalSecondaryId TEXT NULL);");
 
             var expected = new Customer
             {
                 Id = Guid.NewGuid(),
                 TaxpayerId = PersonalId.Parse("189001019802"),
-                OptionalSecondaryId = PersonalId.Parse("189001029819"),
+                OptionalSecondaryId = PersonalId.Parse("189001029819")
             };
             await c.ExecuteAsync(
                 "INSERT INTO Customer (Id, TaxpayerId, OptionalSecondaryId) VALUES (@Id, @TaxpayerId, @OptionalSecondaryId);",
@@ -108,13 +107,13 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_CoordinationId_RoundTrips()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE CoordinationHolder (Id TEXT PRIMARY KEY, CoordId TEXT NOT NULL, OptionalCoord TEXT NULL);");
 
             var expected = new CoordinationHolder
             {
                 Id = Guid.NewGuid(),
-                CoordId = CoordinationId.Parse("191401682396"),
+                CoordId = CoordinationId.Parse("191401682396")
             };
             await c.ExecuteAsync(
                 "INSERT INTO CoordinationHolder (Id, CoordId, OptionalCoord) VALUES (@Id, @CoordId, @OptionalCoord);",
@@ -128,14 +127,14 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_NullableCoordinationId_PreservesNull()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE CoordinationHolder (Id TEXT PRIMARY KEY, CoordId TEXT NOT NULL, OptionalCoord TEXT NULL);");
 
             var expected = new CoordinationHolder
             {
                 Id = Guid.NewGuid(),
                 CoordId = CoordinationId.Parse("191401682396"),
-                OptionalCoord = null,
+                OptionalCoord = null
             };
             await c.ExecuteAsync(
                 "INSERT INTO CoordinationHolder (Id, CoordId, OptionalCoord) VALUES (@Id, @CoordId, @OptionalCoord);",
@@ -152,13 +151,13 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_LegalPersonOrganisationId_RoundTrips()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Company (Id TEXT PRIMARY KEY, OrgId TEXT NOT NULL, OptionalSubsidiaryOrgId TEXT NULL);");
 
             var expected = new Company
             {
                 Id = Guid.NewGuid(),
-                OrgId = OrganisationId.Parse("5560360793"),
+                OrgId = OrganisationId.Parse("5560360793")
             };
             await c.ExecuteAsync(
                 "INSERT INTO Company (Id, OrgId, OptionalSubsidiaryOrgId) VALUES (@Id, @OrgId, @OptionalSubsidiaryOrgId);",
@@ -176,13 +175,13 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_EnskildFirmaOrganisationId_RoundTripsLosslessly()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Company (Id TEXT PRIMARY KEY, OrgId TEXT NOT NULL, OptionalSubsidiaryOrgId TEXT NULL);");
 
             var expected = new Company
             {
                 Id = Guid.NewGuid(),
-                OrgId = OrganisationId.Parse("199001019802"),
+                OrgId = OrganisationId.Parse("199001019802")
             };
             await c.ExecuteAsync(
                 "INSERT INTO Company (Id, OrgId, OptionalSubsidiaryOrgId) VALUES (@Id, @OrgId, @OptionalSubsidiaryOrgId);",
@@ -196,14 +195,14 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_NullableOrganisationId_PreservesNull()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Company (Id TEXT PRIMARY KEY, OrgId TEXT NOT NULL, OptionalSubsidiaryOrgId TEXT NULL);");
 
             var expected = new Company
             {
                 Id = Guid.NewGuid(),
                 OrgId = OrganisationId.Parse("5560360793"),
-                OptionalSubsidiaryOrgId = null,
+                OptionalSubsidiaryOrgId = null
             };
             await c.ExecuteAsync(
                 "INSERT INTO Company (Id, OrgId, OptionalSubsidiaryOrgId) VALUES (@Id, @OrgId, @OptionalSubsidiaryOrgId);",
@@ -217,7 +216,7 @@ public class SqliteRoundtripTests
         [Test]
         public async Task SaveAndQuery_EqualityPredicate_LegalPerson_ReturnsRow()
         {
-            using var c = OpenInMemory();
+            await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Company (Id TEXT PRIMARY KEY, OrgId TEXT NOT NULL, OptionalSubsidiaryOrgId TEXT NULL);");
 
             var company = new Company { Id = Guid.NewGuid(), OrgId = OrganisationId.Parse("5560360793") };

@@ -1,10 +1,9 @@
-namespace Civitas.Id.Sweden.Dapper.Tests.Integration;
-
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Dapper;
 using Civitas.Id.Sweden.Dapper.Tests.Fixtures;
-using global::Dapper;
+using Dapper;
 using Microsoft.Data.Sqlite;
+
+namespace Civitas.Id.Sweden.Dapper.Tests.Integration;
 
 /// <summary>
 ///     Regression guard for Dapper issue #1649 — TypeHandlers are NOT invoked
@@ -39,7 +38,7 @@ public class InClauseWorkaroundTests
     [Test]
     public async Task InClause_WithPreStringifiedCollection_ReturnsExpectedRows()
     {
-        using var c = new SqliteConnection("Data Source=:memory:");
+        await using var c = new SqliteConnection("Data Source=:memory:");
         await c.OpenAsync();
         await c.ExecuteAsync("CREATE TABLE Customer (Id TEXT PRIMARY KEY, TaxpayerId TEXT NOT NULL, OptionalSecondaryId TEXT NULL);");
 
@@ -47,7 +46,7 @@ public class InClauseWorkaroundTests
         {
             new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001019802") },
             new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001029819") },
-            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001039800") },
+            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001039800") }
         };
         foreach (var cust in customers)
         {
@@ -79,7 +78,7 @@ public class InClauseWorkaroundTests
     [Test]
     public async Task InClause_WithRawIEnumerableOfT_DoesNotInvokeHandler()
     {
-        using var c = new SqliteConnection("Data Source=:memory:");
+        await using var c = new SqliteConnection("Data Source=:memory:");
         await c.OpenAsync();
         await c.ExecuteAsync("CREATE TABLE Customer (Id TEXT PRIMARY KEY, TaxpayerId TEXT NOT NULL, OptionalSecondaryId TEXT NULL);");
         await c.ExecuteAsync(
@@ -88,10 +87,11 @@ public class InClauseWorkaroundTests
 
         var wantedIds = new[] { PersonalId.Parse("189001019802") };
 
-        async Task Act() => _ = await c.QueryAsync<Customer>(
+        // `c` is disposed at method-scope exit, AFTER Throws fully awaits the
+        // lambda below, so the closure capture is safe.
+        // ReSharper disable once AccessToDisposedClosure
+        await Assert.That(async () => _ = await c.QueryAsync<Customer>(
             "SELECT * FROM Customer WHERE TaxpayerId IN @ids;",
-            new { ids = wantedIds });
-
-        await Assert.That(Act).Throws<InvalidOperationException>();
+            new { ids = wantedIds })).Throws<InvalidOperationException>();
     }
 }

@@ -1,7 +1,5 @@
 namespace Civitas.Id.Sweden.Dapper.Tests.Setup;
 
-using Civitas.Id.Sweden.Dapper;
-
 public class CivitasIdSwedenDapperSetupTests
 {
     public class RegisterBehavior

@@ -1,10 +1,9 @@
-namespace Civitas.Id.Sweden.Dapper.Tests.Handlers;
-
 using System.Data;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Dapper;
 using Civitas.Id.Sweden.Errors;
 using Microsoft.Data.Sqlite;
+
+namespace Civitas.Id.Sweden.Dapper.Tests.Handlers;
 
 public class OrganisationIdHandlerTests
 {

@@ -68,12 +68,14 @@ public sealed class PersonalIdHandler : SqlMapper.TypeHandler<PersonalId>
     // Override returns nullable T? to match Dapper 2.x's base signature
     // (public abstract T? Parse(object value)) — avoids CS8765 under NRT.
     // In practice we never return null: we throw on bad input.
+    // ReSharper disable once ReturnTypeCanBeNotNullable
     public override PersonalId? Parse(object value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         if (value is not string s)
         {
             throw new DataException(
-                $"Cannot convert {value?.GetType().FullName ?? "null"} to {nameof(PersonalId)}.");
+                $"Cannot convert {value.GetType().FullName} to {nameof(PersonalId)}.");
         }
         return PersonalId.Parse(s);
     }

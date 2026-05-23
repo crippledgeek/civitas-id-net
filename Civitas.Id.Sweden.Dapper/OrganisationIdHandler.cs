@@ -48,12 +48,14 @@ public sealed class OrganisationIdHandler : SqlMapper.TypeHandler<OrganisationId
     }
 
     /// <inheritdoc cref="PersonalIdHandler.Parse"/>
+    // ReSharper disable once ReturnTypeCanBeNotNullable
     public override OrganisationId? Parse(object value)
     {
+        ArgumentNullException.ThrowIfNull(value);
         if (value is not string s)
         {
             throw new DataException(
-                $"Cannot convert {value?.GetType().FullName ?? "null"} to {nameof(OrganisationId)}.");
+                $"Cannot convert {value.GetType().FullName} to {nameof(OrganisationId)}.");
         }
         return OrganisationId.Parse(s);
     }

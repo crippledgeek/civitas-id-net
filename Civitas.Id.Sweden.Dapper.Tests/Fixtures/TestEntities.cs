@@ -1,6 +1,6 @@
-namespace Civitas.Id.Sweden.Dapper.Tests.Fixtures;
-
 using Civitas.Id.Sweden.Core;
+
+namespace Civitas.Id.Sweden.Dapper.Tests.Fixtures;
 
 public sealed class Customer
 {
