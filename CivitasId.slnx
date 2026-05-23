@@ -10,6 +10,7 @@
   <Project Path="Civitas.Id.Sweden.Benchmarks/Civitas.Id.Sweden.Benchmarks.csproj" />
   <Project Path="Civitas.Id.Sweden.DataAnnotations.Tests/Civitas.Id.Sweden.DataAnnotations.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.DataAnnotations/Civitas.Id.Sweden.DataAnnotations.csproj" />
+  <Project Path="Civitas.Id.Sweden.Dapper/Civitas.Id.Sweden.Dapper.csproj" />
   <Project Path="Civitas.Id.Sweden.EntityFrameworkCore.Tests/Civitas.Id.Sweden.EntityFrameworkCore.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.EntityFrameworkCore/Civitas.Id.Sweden.EntityFrameworkCore.csproj" />
   <Project Path="Civitas.Id.Sweden.Fakers/Civitas.Id.Sweden.Fakers.csproj" />
