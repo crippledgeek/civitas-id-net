@@ -44,14 +44,11 @@ public sealed class PersonalIdHandler : SqlMapper.TypeHandler<PersonalId>
     public override void SetValue(IDbDataParameter parameter, PersonalId? value)
     {
         ArgumentNullException.ThrowIfNull(parameter);
-        if (value is null)
-        {
-            parameter.Value = DBNull.Value;
-            return;
-        }
+        // Type the parameter unconditionally — typed NULLs avoid sql_variant /
+        // implicit-conversion plan instability against indexed varchar(12) columns.
         parameter.DbType = DbType.AnsiString;
         parameter.Size = 12;
-        parameter.Value = value.LongFormat();
+        parameter.Value = value is null ? DBNull.Value : value.LongFormat();
     }
 
     /// <summary>
