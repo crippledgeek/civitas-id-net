@@ -7,6 +7,7 @@ using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.Core;
 // ReSharper disable once RedundantNameQualifier — PersonalIdConverter is in this namespace;
 // the using is required for unqualified access in typeof() expressions.
+using Civitas.Id.Sweden.Dapper;
 using Civitas.Id.Sweden.EntityFrameworkCore;
 using DataAnnotations;
 using Json;
@@ -22,7 +23,8 @@ public class ArchitectureRulesTests
             typeof(CivitasIdSwedenJsonContext).Assembly,
             typeof(ValidPersonalIdAttribute).Assembly,
             typeof(CivitasIdSwedenAspNetCoreServiceCollectionExtensions).Assembly,
-            typeof(PersonalIdConverter).Assembly)
+            typeof(PersonalIdConverter).Assembly,
+            typeof(PersonalIdHandler).Assembly)
         .Build();
 
     public class CorePackage
@@ -46,6 +48,17 @@ public class ArchitectureRulesTests
                 .Should().NotDependOnAnyTypesThat()
                     .ResideInNamespaceMatching(@"^Microsoft\.EntityFrameworkCore(\..*)?$")
                 .Because("Core must not pull EF Core — that belongs in a future companion package")
+                .Check(Arch);
+        }
+
+        [Test]
+        public void DoesNotReference_Dapper()
+        {
+            Types().That()
+                .ResideInAssembly(typeof(PersonalId).Assembly)
+                .Should().NotDependOnAnyTypesThat()
+                    .ResideInNamespaceMatching(@"^Dapper(\..*)?$")
+                .Because("Core must not pull Dapper — that belongs in the Dapper companion package")
                 .Check(Arch);
         }
     }
@@ -133,6 +146,42 @@ public class ArchitectureRulesTests
                 .ImplementInterface(typeof(IOpenApiSchemaTransformer))
                 .Should().ResideInAssembly(typeof(CivitasIdSwedenAspNetCoreServiceCollectionExtensions).Assembly)
                 .Because("OpenAPI schema transformers are ASP.NET Core-specific")
+                .Check(Arch);
+        }
+    }
+
+    public class DapperPackage
+    {
+        [Test]
+        public void DoesNotReference_AspNetCore()
+        {
+            Types().That()
+                .ResideInAssembly(typeof(PersonalIdHandler).Assembly)
+                .Should().NotDependOnAnyTypesThat()
+                    .ResideInNamespaceMatching(@"^Microsoft\.AspNetCore(\..*)?$")
+                .Because(".Dapper must stay consumable standalone — Dapper is host-agnostic")
+                .Check(Arch);
+        }
+
+        [Test]
+        public void DoesNotReference_EntityFrameworkCore()
+        {
+            Types().That()
+                .ResideInAssembly(typeof(PersonalIdHandler).Assembly)
+                .Should().NotDependOnAnyTypesThat()
+                    .ResideInNamespaceMatching(@"^Microsoft\.EntityFrameworkCore(\..*)?$")
+                .Because(".Dapper must not pull EF Core — these are sibling integration packages")
+                .Check(Arch);
+        }
+
+        [Test]
+        public void DoesNotReference_InternalNamespace()
+        {
+            Types().That()
+                .ResideInAssembly(typeof(PersonalIdHandler).Assembly)
+                .Should().NotDependOnAnyTypesThat()
+                    .ResideInNamespaceMatching(@"^Civitas\.Id\.Sweden\.Internal(\..*)?$")
+                .Because(".Dapper must consume only the public API surface of the core library")
                 .Check(Arch);
         }
     }
