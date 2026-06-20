@@ -21,9 +21,9 @@
   <ItemGroup>
     <PackageReference Include="TngTech.ArchUnitNET" Version="0.13.3" />
     <PackageReference Include="TngTech.ArchUnitNET.TUnit" Version="0.13.3" />
-    <PackageReference Include="TUnit" Version="1.*" />
+    <PackageReference Include="TUnit" Version="1.56.18" />
     <PackageReference Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.*" />
-    <PackageReference Include="TUnit.FsCheck" Version="1.43.41" />
+    <PackageReference Include="TUnit.FsCheck" Version="1.56.18" />
     <PackageReference Include="Verify.TUnit" Version="31.16.3" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.*" />
     <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="10.0.*" />

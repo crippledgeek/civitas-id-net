@@ -21,7 +21,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="1.*" />
+    <PackageReference Include="TUnit" Version="1.56.18" />
     <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.*" />
     <!--
       Override the transitive SQLitePCLRaw.lib.e_sqlite3 2.1.11 pulled by
