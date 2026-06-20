@@ -1,0 +1,77 @@
+<Project>
+
+  <!--
+    Central Package Management (CPM).
+    Single source of truth for every NuGet package version across the solution.
+    csprojs declare <PackageReference Include="..." /> WITHOUT a Version; the
+    version is resolved from the matching <PackageVersion> below.
+
+    Why this exists: a floating `TUnit Version="1.*"` once drifted past the
+    pinned TUnit.FsCheck and shipped a CI run where the 51k-test suite silently
+    executed zero tests (TypeLoadException). Centralizing versions makes such
+    drift visible and keeps lockstep-versioned families (TUnit + TUnit.FsCheck)
+    aligned in one place.
+
+    Conventions:
+    - Runtime/library dependencies that ship in the published packages float on
+      the 10.0.* patch line (libraries should accept a range, not over-constrain
+      consumers).
+    - Test/dev tooling is pinned EXACTLY for reproducible CI (TUnit family,
+      Verify, ArchUnitNET, BenchmarkDotNet).
+    - SQLitePCLRaw.bundle_e_sqlite3 is an EXACT security override (see the test
+      csprojs: clears CVE-2025-6965 / NU1903 from the transitive lib.e_sqlite3).
+  -->
+
+  <PropertyGroup>
+    <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
+    <!-- Allow floating PackageVersion ranges (e.g. 10.0.*) under CPM. Required by
+         NU1011 because published-library runtime deps intentionally float on the
+         10.0 patch line rather than over-constraining consumers to an exact patch. -->
+    <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <!-- Published-library runtime dependencies (float on the 10.0 patch line). -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Options" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Options.ConfigurationExtensions" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Options.DataAnnotations" Version="10.0.*" />
+    <PackageVersion Include="Dapper" Version="2.1.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Compile-time-only annotations (PrivateAssets=all in each csproj; zero IL impact). -->
+    <PackageVersion Include="JetBrains.Annotations.Sources" Version="2026.2.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test + benchmark tooling. TUnit and TUnit.FsCheck are released in lockstep
+         and MUST stay at the same version (a drift caused a zero-tests-ran CI run). -->
+    <PackageVersion Include="TUnit" Version="1.56.18" />
+    <PackageVersion Include="TUnit.FsCheck" Version="1.56.18" />
+    <PackageVersion Include="Verify.TUnit" Version="31.20.0" />
+    <PackageVersion Include="TngTech.ArchUnitNET" Version="0.13.3" />
+    <PackageVersion Include="TngTech.ArchUnitNET.TUnit" Version="0.13.3" />
+    <PackageVersion Include="BenchmarkDotNet" Version="0.15.8" />
+    <PackageVersion Include="Microsoft.Extensions.TimeProvider.Testing" Version="9.*" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Test-only infrastructure (config binding, EF/Sqlite integration, MVC test host). -->
+    <PackageVersion Include="Microsoft.Extensions.Configuration" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.Configuration.Json" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Extensions.DependencyInjection" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.Data.Sqlite" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.*" />
+    <PackageVersion Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
+    <!-- Security override for the transitive SQLitePCLRaw.lib.e_sqlite3 2.1.11
+         (CVE-2025-6965 / GHSA-2m69-gcr7-jv3q). Remove once Microsoft.Data.Sqlite /
+         EFCore.Sqlite reference bundle_e_sqlite3 >= 3.0.x themselves. -->
+    <PackageVersion Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+  </ItemGroup>
+
+</Project>

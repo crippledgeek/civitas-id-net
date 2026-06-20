@@ -1,11 +1,19 @@
 <Solution>
   <Folder Name="/tests/">
+    <!-- AotSmokeTest: AspNetCore-flavored (Microsoft.NET.Sdk.Web); exercises full library family surface. -->
     <Project Path="tests/AotSmokeTest/AotSmokeTest.csproj" />
+    <!-- CoreAotSmokeTest: Core-only (Microsoft.NET.Sdk); exercises PersonalId/CoordinationId/OrganisationId. -->
+    <Project Path="tests/CoreAotSmokeTest/CoreAotSmokeTest.csproj" />
   </Folder>
   <Project Path="Civitas.Id.Sweden.AspNetCore.Tests/Civitas.Id.Sweden.AspNetCore.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.AspNetCore/Civitas.Id.Sweden.AspNetCore.csproj" />
+  <Project Path="Civitas.Id.Sweden.Benchmarks/Civitas.Id.Sweden.Benchmarks.csproj" />
   <Project Path="Civitas.Id.Sweden.DataAnnotations.Tests/Civitas.Id.Sweden.DataAnnotations.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.DataAnnotations/Civitas.Id.Sweden.DataAnnotations.csproj" />
+  <Project Path="Civitas.Id.Sweden.Dapper/Civitas.Id.Sweden.Dapper.csproj" />
+  <Project Path="Civitas.Id.Sweden.Dapper.Tests/Civitas.Id.Sweden.Dapper.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden.EntityFrameworkCore.Tests/Civitas.Id.Sweden.EntityFrameworkCore.Tests.csproj" />
+  <Project Path="Civitas.Id.Sweden.EntityFrameworkCore/Civitas.Id.Sweden.EntityFrameworkCore.csproj" />
   <Project Path="Civitas.Id.Sweden.Fakers/Civitas.Id.Sweden.Fakers.csproj" />
   <Project Path="Civitas.Id.Sweden.Json.Tests/Civitas.Id.Sweden.Json.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden.Json/Civitas.Id.Sweden.Json.csproj" />

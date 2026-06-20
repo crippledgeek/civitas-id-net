@@ -1,0 +1,35 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Optimize>true</Optimize>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <IsPackable>false</IsPackable>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
+    <AnalysisMode>All</AnalysisMode>
+    <AnalysisLevel>latest</AnalysisLevel>
+    <!--
+      BDN-required patterns that conflict with default analyzer rules:
+        CA1515 — benchmark classes must be public (BDN discovers via reflection on public types).
+        CA1707 — benchmark method names use underscores by community convention
+                 (matches BDN report parsing and cross-benchmark comparison tooling).
+    -->
+    <NoWarn>$(NoWarn);CA1515;CA1707</NoWarn>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" />
+    <PackageReference Include="JetBrains.Annotations.Sources">
+      <PrivateAssets>all</PrivateAssets>
+    </PackageReference>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Civitas.Id.Sweden\Civitas.Id.Sweden.csproj" />
+  </ItemGroup>
+
+</Project>

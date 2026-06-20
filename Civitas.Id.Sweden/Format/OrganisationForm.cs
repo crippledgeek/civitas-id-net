@@ -46,7 +46,16 @@ public enum OrganisationForm
     /// <summary>Kooperativ Hyresrättsförening (cooperative rental associations).</summary>
     KooperativHyresrattsforening = 54,
 
-    /// <summary>Europakooperativ, EGTS och Eric-konsortier.</summary>
+    /// <summary>Europakooperativ, EGTS och Eric-konsortier (form code 55).</summary>
+    /// <remarks>
+    ///     NOTE: orgnummer in the sub-ranges <c>556…</c> and <c>559…</c> have first
+    ///     two digits <c>55</c> but are <see cref="AktiebolagOvriga" /> (form 49),
+    ///     not Europakooperativ. Bolagsverket announced 2015-01-12 that newly issued
+    ///     Aktiebolag use the <c>559…</c> prefix because the historical <c>556…</c>
+    ///     range was exhausted (last <c>556999-9997</c>, first <c>559000-0005</c>).
+    ///     <see cref="Civitas.Id.Sweden.Core.OrganisationId.Form" /> handles this
+    ///     carve-out automatically.
+    /// </remarks>
     EuropakooperativEgtsEric = 55,
 
     /// <summary>Ideella föreningar (non-profit associations).</summary>

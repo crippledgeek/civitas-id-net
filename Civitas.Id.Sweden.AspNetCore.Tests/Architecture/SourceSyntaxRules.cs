@@ -1,3 +1,4 @@
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Architecture;
@@ -18,13 +19,10 @@ public sealed partial class SourceSyntaxRules
     [Test]
     public async Task No_Csharp14_ExtensionBlock_In_AspNetCore_Source()
     {
-        // AppContext.BaseDirectory points at the test bin/ output during test execution;
-        // walk up to the repo root and reach the AspNetCore source tree from there.
-        var sourceRoot = Path.GetFullPath(Path.Combine(
-            AppContext.BaseDirectory, "..", "..", "..", "..", "Civitas.Id.Sweden.AspNetCore"));
+        var sourceRoot = LocateAspNetCoreSourceRoot();
 
         await Assert.That(Directory.Exists(sourceRoot)).IsTrue()
-            .Because($"AspNetCore source tree must be reachable from test bin/; computed: {sourceRoot}");
+            .Because($"AspNetCore source tree must be reachable from the test file's own location; computed: {sourceRoot}");
 
         var sourceFiles = Directory.GetFiles(sourceRoot, "*.cs", SearchOption.AllDirectories)
             .Where(f => !f.Contains($"{Path.DirectorySeparatorChar}obj{Path.DirectorySeparatorChar}", StringComparison.Ordinal))
@@ -41,5 +39,34 @@ public sealed partial class SourceSyntaxRules
             await Assert.That(hasExtBlock).IsFalse()
                 .Because($"File {file} introduces a C# 14 extension(T) block — reverted to classic 'this T' per Finding 8.");
         }
+    }
+
+    /// <summary>
+    /// Resolves the absolute path to the Civitas.Id.Sweden.AspNetCore source
+    /// tree by anchoring on <see cref="CallerFilePathAttribute"/>, which the
+    /// compiler resolves to the absolute path of THIS source file at compile
+    /// time. This is robust against MSBuild output-directory changes,
+    /// alternative build hosts, and `dotnet test` vs `dotnet run` invocation
+    /// differences — unlike anchoring on <see cref="AppContext.BaseDirectory"/>.
+    /// </summary>
+    private static string LocateAspNetCoreSourceRoot([CallerFilePath] string callerFilePath = "")
+    {
+        // callerFilePath:
+        //   <repo>/Civitas.Id.Sweden.AspNetCore.Tests/Architecture/SourceSyntaxRules.cs
+        // Walk up to the test-project directory, then to repo root, then sibling-jump.
+        var architectureDir = Path.GetDirectoryName(callerFilePath)!;          // .../Architecture
+        var testProjectDir = Path.GetDirectoryName(architectureDir)!;          // .../Civitas.Id.Sweden.AspNetCore.Tests
+        var repoRoot = Path.GetDirectoryName(testProjectDir)!;                 // <repo>
+        var libRoot = Path.Combine(repoRoot, "Civitas.Id.Sweden.AspNetCore");
+
+        if (!Directory.Exists(libRoot))
+        {
+            throw new InvalidOperationException(
+                $"Could not locate Civitas.Id.Sweden.AspNetCore source. "
+                + $"Computed path: '{libRoot}'. "
+                + $"CallerFilePath: '{callerFilePath}'.");
+        }
+
+        return libRoot;
     }
 }
