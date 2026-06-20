@@ -3,7 +3,7 @@
 All notable changes to `Civitas.Id.Sweden` are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.0.0] - 2026-06-20
+## [1.0.0] - 2026-06-21
 
 Initial v1.0.0 release. Highlights:
 
