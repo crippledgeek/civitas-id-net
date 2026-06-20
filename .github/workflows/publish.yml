@@ -20,11 +20,11 @@ jobs:
       id-token: write             # mint OIDC token for NuGet/login@v1
 
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
         with:
           ref: ${{ github.event.inputs.ref || github.ref }}
 
-      - uses: actions/setup-dotnet@v4
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
         with:
           dotnet-version: '10.x'
 
@@ -40,7 +40,7 @@ jobs:
       # Exchange the GitHub OIDC token for a short-lived nuget.org API key.
       # The trusted-publisher policy on nuget.org gates which repo+workflow+ref combinations
       # can mint a key. No NUGET_API_KEY secret is configured.
-      - uses: NuGet/login@v1
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841  # v1.2.0
         id: login
         with:
           user: ${{ secrets.NUGET_USER }}   # nuget.org profile name (NOT email)
@@ -48,20 +48,26 @@ jobs:
       # Core "Civitas.Id.Sweden" sorts first in the glob (digit < letter), so it is
       # pushed before the companions that depend on it. --skip-duplicate makes the loop
       # idempotent: re-running after a partial failure pushes only the missing packages.
+      # The minted key is passed via env (not inline ${{ }}) so it never lands in a
+      # rendered command line / step debug log.
       - name: Push .nupkg files
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           for pkg in ./artifacts/*.nupkg; do
             dotnet nuget push "$pkg" \
-              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --api-key "$NUGET_API_KEY" \
               --source https://api.nuget.org/v3/index.json \
               --skip-duplicate
           done
 
       - name: Push .snupkg files
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
         run: |
           for sym in ./artifacts/*.snupkg; do
             dotnet nuget push "$sym" \
-              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --api-key "$NUGET_API_KEY" \
               --source https://api.nuget.org/v3/index.json \
               --skip-duplicate
           done
