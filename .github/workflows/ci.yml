@@ -24,8 +24,8 @@ jobs:
         with:
           global-json-file: global.json   # pin the exact SDK from global.json (10.0.300, latestFeature)
 
-      - run: dotnet format CivitasId.slnx --verify-no-changes
       - run: dotnet restore CivitasId.slnx
+      - run: dotnet format CivitasId.slnx --verify-no-changes --no-restore
       - run: dotnet build CivitasId.slnx -c Release --no-restore
       - run: dotnet test CivitasId.slnx -c Release --no-build
         env:
