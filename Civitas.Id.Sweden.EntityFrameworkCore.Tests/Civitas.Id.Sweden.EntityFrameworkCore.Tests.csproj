@@ -27,6 +27,17 @@
     <PackageReference Include="TUnit" Version="1.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.*" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Sqlite" Version="10.0.*" />
+    <!--
+      Override the transitive SQLitePCLRaw.lib.e_sqlite3 2.1.11 pulled by
+      Microsoft.EntityFrameworkCore.Sqlite, which carries CVE-2025-6965 /
+      GHSA-2m69-gcr7-jv3q (SQLite < 3.50.2 memory corruption) and fails
+      restore via NU1903 under TreatWarningsAsErrors. The 2.x native package
+      has no patch (deprecated, renamed to SourceGear.sqlite3 in 3.x);
+      bundle_e_sqlite3 3.0.3 pulls SourceGear.sqlite3 (SQLite 3.50.4) instead,
+      removing the vulnerable package from the graph. Remove this pin once
+      Microsoft.EntityFrameworkCore.Sqlite references bundle_e_sqlite3 >= 3.0.x.
+    -->
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
     <ProjectReference Include="..\Civitas.Id.Sweden.EntityFrameworkCore\Civitas.Id.Sweden.EntityFrameworkCore.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Fakers\Civitas.Id.Sweden.Fakers.csproj" />
   </ItemGroup>
