@@ -21,8 +21,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="TUnit" Version="1.56.18" />
-    <PackageReference Include="Microsoft.Data.Sqlite" Version="10.0.*" />
+    <PackageReference Include="TUnit" />
+    <PackageReference Include="Microsoft.Data.Sqlite" />
     <!--
       Override the transitive SQLitePCLRaw.lib.e_sqlite3 2.1.11 pulled by
       Microsoft.Data.Sqlite, which carries CVE-2025-6965 / GHSA-2m69-gcr7-jv3q
@@ -33,7 +33,7 @@
       package from the graph. Remove this pin once Microsoft.Data.Sqlite
       references bundle_e_sqlite3 >= 3.0.x itself.
     -->
-    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="3.0.3" />
+    <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Dapper\Civitas.Id.Sweden.Dapper.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Fakers\Civitas.Id.Sweden.Fakers.csproj" />
   </ItemGroup>

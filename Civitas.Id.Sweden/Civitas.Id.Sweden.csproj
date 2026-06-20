@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.4">
+    <PackageReference Include="JetBrains.Annotations.Sources">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
   </ItemGroup>

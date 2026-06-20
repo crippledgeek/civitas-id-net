@@ -25,10 +25,10 @@
 
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
-    <PackageReference Include="JetBrains.Annotations.Sources" Version="2025.2.4">
+    <PackageReference Include="JetBrains.Annotations.Sources">
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.8" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <ProjectReference Include="..\Civitas.Id.Sweden.Json\Civitas.Id.Sweden.Json.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.DataAnnotations\Civitas.Id.Sweden.DataAnnotations.csproj" />
   </ItemGroup>
