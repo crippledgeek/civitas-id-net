@@ -8,7 +8,7 @@ using Civitas.Id.Sweden.Core;
 // ReSharper disable once RedundantNameQualifier — PersonalIdConverter is in this namespace;
 // the using is required for unqualified access in typeof() expressions.
 using Civitas.Id.Sweden.Dapper;
-using Civitas.Id.Sweden.EntityFrameworkCore;
+using EntityFrameworkCore;
 using DataAnnotations;
 using Json;
 using Microsoft.AspNetCore.Diagnostics;

@@ -1,0 +1,73 @@
+name: Publish to NuGet
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: "Tag or branch to publish from (e.g. v1.0.1)"
+        required: true
+        default: "master"
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release          # matches the nuget.org trusted-publisher policy
+
+    permissions:
+      contents: read              # checkout
+      id-token: write             # mint OIDC token for NuGet/login@v1
+
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+        with:
+          ref: ${{ github.event.inputs.ref || github.ref }}
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
+        with:
+          global-json-file: global.json   # exact SDK from global.json (10.0.300, latestFeature)
+
+      # Build + test before pack so a broken build can't ship.
+      - run: dotnet restore CivitasId.slnx
+      - run: dotnet build CivitasId.slnx -c Release --no-restore
+      - run: dotnet test CivitasId.slnx -c Release --no-build
+
+      - run: dotnet pack CivitasId.slnx -c Release --no-build --output ./artifacts
+        env:
+          CI: true                # triggers ContinuousIntegrationBuild → deterministic pack
+
+      # Exchange the GitHub OIDC token for a short-lived nuget.org API key.
+      # The trusted-publisher policy on nuget.org gates which repo+workflow+ref combinations
+      # can mint a key. No NUGET_API_KEY secret is configured.
+      - uses: NuGet/login@8d196754b4036150537f80ac539e15c2f1028841  # v1.2.0
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}   # nuget.org profile name (NOT email)
+
+      # Core "Civitas.Id.Sweden" sorts first in the glob (digit < letter), so it is
+      # pushed before the companions that depend on it. --skip-duplicate makes the loop
+      # idempotent: re-running after a partial failure pushes only the missing packages.
+      # The minted key is passed via env (not inline ${{ }}) so it never lands in a
+      # rendered command line / step debug log.
+      - name: Push .nupkg files
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          for pkg in ./artifacts/*.nupkg; do
+            dotnet nuget push "$pkg" \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
+
+      - name: Push .snupkg files
+        env:
+          NUGET_API_KEY: ${{ steps.login.outputs.NUGET_API_KEY }}
+        run: |
+          for sym in ./artifacts/*.snupkg; do
+            dotnet nuget push "$sym" \
+              --api-key "$NUGET_API_KEY" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
