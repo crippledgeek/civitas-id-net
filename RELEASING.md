@@ -84,7 +84,7 @@ Before opening the release PR to `master`:
   dotnet test
   jb inspectcode CivitasId.slnx --severity=HINT --no-build  # zero issues
   ```
-- [ ] (When CI is set up) CI green on `develop`.
+- [ ] CI green on `develop` (`ci.yml` runs `dotnet format` + build + full test on every PR/push).
 - [ ] Package validation gate (v1.0.1+): `dotnet pack -c Release` against the bumped version succeeds with no `PKV*` errors. If a binary-breaking change is intentional, document it in the CHANGELOG under `### BREAKING CHANGES` and bump the MAJOR version instead.
 
 ## Cutting the release
@@ -152,9 +152,9 @@ Your package was pushed.
 
 A successful `*.snupkg` push reports the same shape. The repository-signing certificate (Microsoft NuGet repo signing, SHA-256 `1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D` as of the April 2024 rotation) is applied by nuget.org automatically — no action required from the workflow.
 
-### Future workflow (when CI is set up)
+### The publish workflow (live since v1.0.0)
 
-When CI is set up, copy this YAML into `.github/workflows/publish.yml`. Until then, this block is the authoritative template; see "Manual publish (pre-CI)" below for the parallel local procedure.
+The workflow is live at `.github/workflows/publish.yml` (added for the v1.0.0 release) — that committed file is authoritative. It hardens the reference block below in three ways: actions are pinned to commit SHAs (not floating `@v4`/`@v1`), the SDK is resolved via `global-json-file: global.json` (not `dotnet-version: '10.x'`), and the minted key is passed through a step `env:` var rather than inline `${{ }}`. The block below is kept as the annotated reference; the "Manual publish (pre-CI)" section remains a fallback for when OIDC/trusted publishing is unavailable.
 
 ```yaml
 name: Publish to NuGet
@@ -225,9 +225,9 @@ jobs:
 
 `--skip-duplicate` makes the push loop idempotent — re-running the workflow after a partial failure pushes only the missing packages.
 
-## Manual publish (pre-CI)
+## Manual publish (fallback)
 
-Until the workflow above is wired up, run the equivalent locally from a freshly-checked-out tag:
+The CI workflow above is the primary path. Use this manual procedure only as a fallback — e.g. if trusted publishing/OIDC is unavailable for the account. Run the equivalent locally from a freshly-checked-out tag:
 
 ```bash
 git checkout v1.0.1
@@ -358,9 +358,15 @@ Tracking the gap:
 
 **Recommendation: skip provenance attestations until nuget.org changes its upload behaviour.** Re-evaluate before a v2.0 release.
 
+## Shipped releases
+
+| Version | Date | Notes |
+|---|---|---|
+| **v1.0.0** | 2026-06-21 | Initial public release of all seven packages via OIDC trusted publishing. Tag `v1.0.0` on master merge commit `84104cf`; published through `.github/workflows/publish.yml` with the `release` environment manual-approval gate. All seven IDs live on nuget.org; download index resolved ~7 min after the approved push. |
+
 ## Past trips
 
-Documenting failures so we don't repeat them. _(Empty as of v1.0.0 — first ship is pending. Update on every observed failure.)_
+Documenting failures so we don't repeat them. _(No **publish** failures to date. v1.0.0 (2026-06-21) shipped cleanly — though three issues were caught by CI **before** the publish and fixed pre-release: a duplicate-README pack failure (NU5118), the transitive SQLite CVE-2025-6965 (NU1903), and a TUnit/TUnit.FsCheck version drift that made the 51k-test suite silently run zero tests. See git history on the `chore/ci-publish-workflow` and `bugfix/efcore-test-model-race` branches. Update on every observed publish failure.)_
 
 <!--
 Template:
