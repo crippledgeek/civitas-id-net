@@ -75,6 +75,15 @@ public class SwedishOfficialIdTypeConverterTests
             await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, ""))
                 .Throws<InvalidIdNumberException>();
         }
+
+        [Test]
+        public async Task Delegates_ToBase_OnNonStringValue()
+        {
+            // `_ => base.ConvertFrom(...)` arm — base throws NotSupportedException for int.
+            var sut = new SwedishOfficialIdTypeConverter();
+            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, 3.14))
+                .Throws<NotSupportedException>();
+        }
     }
 
     public class ConvertTo
@@ -114,5 +123,15 @@ public class SwedishOfficialIdTypeConverterTests
             var roundTripped = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
             await Assert.That(roundTripped).IsEqualTo("189001019802");
         }
+
+        [Test]
+        public async Task Delegates_ToBase_WhenDestinationTypeIsNotString()
+        {
+            var sut = new SwedishOfficialIdTypeConverter();
+            SwedishOfficialId id = PersonalId.Parse("189001019802");
+            await Assert.That(() => sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(int)))
+                .Throws<NotSupportedException>();
+        }
+
     }
 }

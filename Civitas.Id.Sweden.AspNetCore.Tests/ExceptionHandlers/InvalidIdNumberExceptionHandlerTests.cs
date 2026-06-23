@@ -26,6 +26,20 @@ public class InvalidIdNumberExceptionHandlerTests
         public ValueTask WriteAsync(ProblemDetailsContext context) => ValueTask.CompletedTask;
     }
 
+    /// <summary>
+    /// <see cref="IProblemDetailsService"/> stub that throws
+    /// <see cref="NotSupportedException"/> from <see cref="TryWriteAsync"/>
+    /// — simulating the documented case where <c>ProblemDetails</c> is absent
+    /// from the <c>Http.Json.JsonOptions</c> TypeInfoResolverChain.
+    /// </summary>
+    private sealed class ThrowingProblemDetailsService : IProblemDetailsService
+    {
+        public ValueTask<bool> TryWriteAsync(ProblemDetailsContext context)
+            => throw new NotSupportedException("No ProblemDetails in resolver chain");
+
+        public ValueTask WriteAsync(ProblemDetailsContext context) => ValueTask.CompletedTask;
+    }
+
     private static InvalidIdNumberExceptionHandler Make(Func<string, string>? redact = null)
     {
         var opts = Microsoft.Extensions.Options.Options.Create(
@@ -146,6 +160,29 @@ public class InvalidIdNumberExceptionHandlerTests
             await Assert.That(async () =>
                     await handler.TryHandleAsync(ctx, null!, CancellationToken.None))
                 .Throws<ArgumentNullException>();
+        }
+
+        [Test]
+        public async Task TryWriteAsync_ThrowsNotSupportedException_EngagesFallback_AndReturnsTrue()
+        {
+            // Exercises the `catch (NotSupportedException)` branch in the handler:
+            // when IProblemDetailsService.TryWriteAsync throws, the hand-written
+            // AOT-safe fallback path runs and the handler still returns true with a 400.
+            var opts = Microsoft.Extensions.Options.Options.Create(new CivitasIdSwedenAspNetCoreOptions());
+            var handler = new InvalidIdNumberExceptionHandler(
+                opts,
+                new ThrowingProblemDetailsService(),
+                NullLogger<InvalidIdNumberExceptionHandler>.Instance);
+            var ctx = MakeContext();
+            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidFormat);
+
+            var handled = await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
+
+            await Assert.That(handled).IsTrue();
+            await Assert.That(ctx.Response.StatusCode).IsEqualTo(StatusCodes.Status400BadRequest);
+            ctx.Response.Body.Position = 0;
+            var body = await JsonSerializer.DeserializeAsync<JsonObject>(ctx.Response.Body);
+            await Assert.That(body!["reason"]?.ToString()).IsEqualTo("InvalidFormat");
         }
 
         [Test]
