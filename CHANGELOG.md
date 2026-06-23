@@ -3,7 +3,10 @@
 All notable changes to `Civitas.Id.Sweden` are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
-## [1.0.1] - Unreleased
+## [Unreleased]
+
+_When cut, rename this heading to `## [1.0.1] - YYYY-MM-DD` and add a fresh empty
+`## [Unreleased]` above it (Keep a Changelog convention)._
 
 Maintenance patch — API-compatible with 1.0.0 (no public API changes). The bulk of this
 release is internal test-coverage and CI hardening that does not ship; the only
@@ -112,3 +115,6 @@ remediation design that drove the AspNetCore package's final shape.
 - No public API was removed. Existing zero-arg method signatures are unchanged.
 - The behavior change is only observable for callers running in non-Stockholm host timezones (typically UTC containers) AT the boundary instant of a birthday or year-rollover. Passing `DateOnly.FromDateTime(DateTime.UtcNow)` as the explicit `DateOnly today` argument reproduces the prior behavior.
 - The legal-compliance basis for the Stockholm civil-time anchor is documented in the README and in the XML doc-remarks on the affected methods. Primary statutory sources: Föräldrabalken (1949:381) 9 kap 1 §, Lag (1930:173) §1, Förordning (1979:988) om svensk normaltid, Förordning (2001:127) om sommartid.
+
+[unreleased]: https://github.com/crippledgeek/civitas-id-net/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/crippledgeek/civitas-id-net/releases/tag/v1.0.0
