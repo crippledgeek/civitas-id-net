@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <InternalsVisibleTo Include="Civitas.Id.Time.Tests" />
+    <InternalsVisibleTo Include="Civitas.Id.Sweden" />
   </ItemGroup>
 
 </Project>

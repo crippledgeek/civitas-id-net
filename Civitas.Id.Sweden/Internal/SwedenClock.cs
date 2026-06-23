@@ -27,14 +27,7 @@ internal static class SwedenClock
     internal static TimeZoneInfo ResolveStockholmTimeZone(Func<string, TimeZoneInfo?> find)
     {
         ArgumentNullException.ThrowIfNull(find);
-        return find("Europe/Stockholm")
-            ?? find("W. Europe Standard Time")
-            ?? throw new InvalidOperationException(
-                "Cannot resolve the Europe/Stockholm time zone. Ensure timezone " +
-                "data is available at runtime: on Alpine Linux, install the " +
-                "'tzdata' package ('apk add --no-cache tzdata'); containers with " +
-                "InvariantGlobalization=true or NLS-only Windows are not supported. " +
-                "See https://aka.ms/dotnet-globalization-invariant-mode for details.");
+        return CivilClock.Resolve("Europe/Stockholm", "W. Europe Standard Time", find);
     }
 
     /// <summary>Default production finder: <see cref="TimeZoneInfo.TryFindSystemTimeZoneById(string, out TimeZoneInfo)" /> → null on miss.</summary>
