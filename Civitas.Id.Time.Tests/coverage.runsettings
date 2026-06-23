@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Exclude>
+        <ModulePath>.*\.Tests\.dll$</ModulePath>
+      </Exclude>
+    </ModulePaths>
+    <Functions>
+      <Exclude>
+        <Function>^JetBrains\.Annotations\..*</Function>
+      </Exclude>
+    </Functions>
+    <Attributes>
+      <Exclude>
+        <Attribute>^System\.Diagnostics\.CodeAnalysis\.ExcludeFromCodeCoverageAttribute$</Attribute>
+        <Attribute>^System\.Runtime\.CompilerServices\.CompilerGeneratedAttribute$</Attribute>
+        <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
+      </Exclude>
+    </Attributes>
+  </CodeCoverage>
+</Configuration>
