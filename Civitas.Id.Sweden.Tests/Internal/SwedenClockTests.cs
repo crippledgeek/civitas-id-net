@@ -44,7 +44,7 @@ public class SwedenClockTests
         public async Task Today_NullTimeProvider_ThrowsArgumentNullException()
         {
             var ex = await Assert.That(() => SwedenClock.Today(null!)).Throws<ArgumentNullException>();
-            await Assert.That(ex).IsNotNull();
+            await Assert.That(ex!.ParamName).IsEqualTo("timeProvider");
         }
     }
 
@@ -133,7 +133,7 @@ public class SwedenClockTests
         {
             var ex = await Assert.That(() =>
                 SwedenClock.ResolveStockholmTimeZone(null!)).Throws<ArgumentNullException>();
-            await Assert.That(ex).IsNotNull();
+            await Assert.That(ex!.ParamName).IsEqualTo("find");
         }
     }
 
