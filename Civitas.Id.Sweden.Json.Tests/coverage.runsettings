@@ -13,20 +13,15 @@
         <!-- Compile-time-only attributes embedded via JetBrains.Annotations.Sources.
              Conditional("JETBRAINS_ANNOTATIONS")-erased; metadata-only types. -->
         <Function>^JetBrains\.Annotations\..*</Function>
-        <!-- Source-generated JsonSerializerContext partials. The core test project references
-             both Civitas.Id.Sweden.Json and Civitas.Id.Sweden.AspNetCore, so their
-             source-generated contexts appear here too. Excluded by class name prefix because
-             the coverage tool sees each generated fragment as a separate class entry and the
-             [GeneratedCode] attribute on one partial does not suppress the others. -->
+        <!-- Source-generated JsonSerializerContext partials emitted by System.Text.Json's
+             source generator. The hand-written partial carries [GeneratedCode] but the tool
+             sees each generated fragment as a separate class entry; this pattern removes all
+             of them (including compiler-emitted <>c / <>c__DisplayClass nested types). -->
         <Function>^Civitas\.Id\.Sweden\.Json\.CivitasIdSwedenJsonContext.*</Function>
-        <Function>^Civitas\.Id\.Sweden\.AspNetCore\.Json\.CivitasIdAspNetCoreJsonContext.*</Function>
         <!-- Options-validator static instances emitted by the [OptionsValidator] source
-             generator (Microsoft.Extensions.Options.SourceGeneration). -->
+             generator (Microsoft.Extensions.Options.SourceGeneration). Hash in the name
+             is content-addressed and will change on regeneration. -->
         <Function>^__OptionValidationStaticInstances\..*</Function>
-        <!-- OpenAPI XML-comment support source generator (Microsoft.AspNetCore.OpenApi).
-             The core test project transitively pulls in AspNetCore, which activates the
-             OpenAPI XML-comment source generator. -->
-        <Function>.*OpenApiXmlCommentSupport_generated.*</Function>
       </Exclude>
     </Functions>
 
