@@ -3,6 +3,25 @@
 All notable changes to `Civitas.Id.Sweden` are documented here.
 Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
+## [1.0.1] - Unreleased
+
+Maintenance patch. API-compatible with 1.0.0 — no public API changes.
+
+### Fixed
+- **Civitas.Id.Sweden.Json**: corrected the XML doc comments on
+  `PersonalIdShortFormatJsonConverter` and `CoordinationIdShortFormatJsonConverter`.
+  They wrongly described the `PnrFormat.ShortFormat` wire form as carrying a hyphen or
+  `+` centenarian separator, and attributed an internal Stockholm-civil-time read to the
+  serialize path. In fact `ShortFormat` emits exactly 10 digits with **no** separator, and
+  the Stockholm-civil-time read happens only on **deserialization** (century inference for a
+  2-digit-year input). Visible to consumers via IntelliSense; no behavior change. (#9)
+
+### Changed
+- **Civitas.Id.Sweden** (internal — no public API or behavior change): `SwedenClock`
+  time-zone resolution was refactored to an injectable probe seam to make the fallback
+  branches testable. The resolved zone (`Europe/Stockholm`), the probe order, and the
+  `InvalidOperationException` message are byte-for-byte unchanged. (#7)
+
 ## [1.0.0] - 2026-06-21
 
 Initial v1.0.0 release. Highlights:
