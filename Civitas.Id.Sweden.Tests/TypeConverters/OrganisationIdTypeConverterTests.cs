@@ -77,6 +77,14 @@ public class OrganisationIdTypeConverterTests
             await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, ""))
                 .Throws<InvalidIdNumberException>();
         }
+
+        [Test]
+        public async Task Delegates_ToBase_OnNonStringValue()
+        {
+            var sut = new OrganisationIdTypeConverter();
+            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, 42L))
+                .Throws<NotSupportedException>();
+        }
     }
 
     public class ConvertTo
@@ -110,5 +118,15 @@ public class OrganisationIdTypeConverterTests
             var roundTripped = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
             await Assert.That(roundTripped).IsEqualTo(ValidLegalPerson);
         }
+
+        [Test]
+        public async Task Delegates_ToBase_WhenDestinationTypeIsNotString()
+        {
+            var sut = new OrganisationIdTypeConverter();
+            var id = OrganisationId.Parse(ValidLegalPerson);
+            await Assert.That(() => sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(int)))
+                .Throws<NotSupportedException>();
+        }
+
     }
 }

@@ -62,5 +62,34 @@ public class CivitasIdSwedenAspNetCoreOptionsTests
                 options: new CivitasIdSwedenAspNetCoreOptions { JsonFormat = (PnrFormat)999 });
             await Assert.That(result.Failed).IsTrue();
         }
+
+        [Test]
+        public async Task Rejects_EmptyProblemDetailsTypeBaseUri()
+        {
+            // [Required(AllowEmptyStrings = false)] on ProblemDetailsTypeBaseUri must fire.
+            var v = new ValidateCivitasIdSwedenAspNetCoreOptions();
+            var result = v.Validate(name: null,
+                options: new CivitasIdSwedenAspNetCoreOptions { ProblemDetailsTypeBaseUri = "" });
+            await Assert.That(result.Failed).IsTrue();
+        }
+
+        [Test]
+        public async Task Rejects_NullProblemDetailsTypeBaseUri()
+        {
+            // null is a distinct input from empty; [Required(AllowEmptyStrings = false)] must also reject it.
+            var v = new ValidateCivitasIdSwedenAspNetCoreOptions();
+            var result = v.Validate(name: null,
+                options: new CivitasIdSwedenAspNetCoreOptions { ProblemDetailsTypeBaseUri = null! });
+            await Assert.That(result.Failed).IsTrue();
+        }
+
+        [Test]
+        public async Task Accepts_DefaultProblemDetailsTypeBaseUri()
+        {
+            // The default value "https://civitas-id.dev/errors/" satisfies [Required].
+            var v = new ValidateCivitasIdSwedenAspNetCoreOptions();
+            var result = v.Validate(name: null, options: new CivitasIdSwedenAspNetCoreOptions());
+            await Assert.That(result.Succeeded).IsTrue();
+        }
     }
 }

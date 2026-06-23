@@ -93,6 +93,15 @@ public class CoordinationIdTypeConverterTests
             await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, ""))
                 .Throws<InvalidIdNumberException>();
         }
+
+        [Test]
+        public async Task Delegates_ToBase_OnNonStringValue()
+        {
+            // The `_ => base.ConvertFrom(...)` arm — base throws NotSupportedException.
+            var sut = new CoordinationIdTypeConverter();
+            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, 99))
+                .Throws<NotSupportedException>();
+        }
     }
 
     public class ConvertTo
@@ -114,5 +123,15 @@ public class CoordinationIdTypeConverterTests
             var roundTripped = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
             await Assert.That(roundTripped).IsEqualTo(ValidPin12);
         }
+
+        [Test]
+        public async Task Delegates_ToBase_WhenDestinationTypeIsNotString()
+        {
+            var sut = new CoordinationIdTypeConverter();
+            var id = CoordinationId.Parse(ValidPin12);
+            await Assert.That(() => sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(int)))
+                .Throws<NotSupportedException>();
+        }
+
     }
 }

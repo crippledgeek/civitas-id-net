@@ -1,0 +1,16 @@
+﻿BirthDate=1920-05-08
+  LongFormat (canonical) = 192005686601
+  JSON wire form         = "2005686601"
+
+BirthDate=1955-07-14
+  LongFormat (canonical) = 195507745221
+  JSON wire form         = "5507745221"
+
+BirthDate=1988-02-29
+  LongFormat (canonical) = 198802897218
+  JSON wire form         = "8802897218"
+
+BirthDate=2008-12-31
+  LongFormat (canonical) = 200812917623
+  JSON wire form         = "0812917623"
+

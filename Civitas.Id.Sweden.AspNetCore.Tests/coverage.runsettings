@@ -13,19 +13,25 @@
         <!-- Compile-time-only attributes embedded via JetBrains.Annotations.Sources.
              Conditional("JETBRAINS_ANNOTATIONS")-erased; metadata-only types. -->
         <Function>^JetBrains\.Annotations\..*</Function>
-        <!-- Source-generated JsonSerializerContext partials. The core test project references
-             both Civitas.Id.Sweden.Json and Civitas.Id.Sweden.AspNetCore, so their
-             source-generated contexts appear here too. Excluded by class name prefix because
-             the coverage tool sees each generated fragment as a separate class entry and the
-             [GeneratedCode] attribute on one partial does not suppress the others. -->
+        <!-- Source-generated JsonSerializerContext partials emitted by System.Text.Json's
+             source generator for CivitasIdSwedenJsonContext (Json package) and
+             CivitasIdAspNetCoreJsonContext (AspNetCore package). The tool sees each
+             generated fragment as a separate class entry; this pattern removes all of them
+             including compiler-emitted <>c / <>c__DisplayClass nested types. -->
         <Function>^Civitas\.Id\.Sweden\.Json\.CivitasIdSwedenJsonContext.*</Function>
         <Function>^Civitas\.Id\.Sweden\.AspNetCore\.Json\.CivitasIdAspNetCoreJsonContext.*</Function>
         <!-- Options-validator static instances emitted by the [OptionsValidator] source
-             generator (Microsoft.Extensions.Options.SourceGeneration). -->
+             generator (Microsoft.Extensions.Options.SourceGeneration). Hash in the name
+             is content-addressed and will change on regeneration. -->
         <Function>^__OptionValidationStaticInstances\..*</Function>
         <!-- OpenAPI XML-comment support source generator (Microsoft.AspNetCore.OpenApi).
-             The core test project transitively pulls in AspNetCore, which activates the
-             OpenAPI XML-comment source generator. -->
+             Emits interceptors and XML-comment support types whose class names embed the
+             token "OpenApiXmlCommentSupport_generated" with a content-addressed hash.
+             Covers both the InterceptsLocationAttribute stub in System.Runtime.CompilerServices
+             and all the XmlComment* / XmlCommentOperationTransformer / etc. types in
+             Microsoft.AspNetCore.OpenApi.Generated. Angle-bracket characters in the actual
+             class names are not expressible as Function regex here; the substring match
+             is the safe alternative and does not collide with any hand-written class. -->
         <Function>.*OpenApiXmlCommentSupport_generated.*</Function>
       </Exclude>
     </Functions>

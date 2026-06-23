@@ -125,4 +125,26 @@ public class Utf8RoundTripTests
         await Assert.That(() => PersonalId.Parse(utf8, null))
             .Throws<Civitas.Id.Sweden.Errors.InvalidIdNumberException>();
     }
+
+    // ── CoordinationId empty UTF-8 branches ──
+    // These cover the `if (utf8Source.Length is 0 or > 100) return false;` guard
+    // in PhysicalPersonId.TryParseUtf8Core via the CoordinationId path.
+
+    /// <summary>CoordinationId.TryParse returns false for an empty UTF-8 span.</summary>
+    [Test]
+    public async Task CoordinationId_Utf8TryParse_EmptySpan_ReturnsFalse()
+    {
+        var ok = CoordinationId.TryParse(ReadOnlySpan<byte>.Empty, null, out var result);
+        await Assert.That(ok).IsFalse();
+        await Assert.That(result).IsNull();
+    }
+
+    /// <summary>CoordinationId.Parse throws InvalidIdNumberException for an empty UTF-8 span.</summary>
+    [Test]
+    public async Task CoordinationId_Utf8Parse_EmptySpan_ThrowsInvalidIdNumberException()
+    {
+        var emptyBytes = Array.Empty<byte>();
+        await Assert.That(() => CoordinationId.Parse(emptyBytes.AsSpan(), null))
+            .Throws<Civitas.Id.Sweden.Errors.InvalidIdNumberException>();
+    }
 }

@@ -103,6 +103,16 @@ public class PersonalIdTypeConverterTests
             await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, ""))
                 .Throws<InvalidIdNumberException>();
         }
+
+        [Test]
+        public async Task Delegates_ToBase_OnNonStringValue()
+        {
+            // The `_ => base.ConvertFrom(...)` arm — base.ConvertFrom throws NotSupportedException
+            // when the source type is not supported. This exercises the fallthrough branch.
+            var sut = new PersonalIdTypeConverter();
+            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, 42))
+                .Throws<NotSupportedException>();
+        }
     }
 
     public class ConvertTo
@@ -124,5 +134,16 @@ public class PersonalIdTypeConverterTests
             var roundTripped = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
             await Assert.That(roundTripped).IsEqualTo(ValidPin12);
         }
+
+        [Test]
+        public async Task Delegates_ToBase_WhenDestinationTypeIsNotString()
+        {
+            // `base.ConvertTo` arm — throws NotSupportedException for unsupported dest types.
+            var sut = new PersonalIdTypeConverter();
+            var id = PersonalId.Parse(ValidPin12);
+            await Assert.That(() => sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(int)))
+                .Throws<NotSupportedException>();
+        }
+
     }
 }
