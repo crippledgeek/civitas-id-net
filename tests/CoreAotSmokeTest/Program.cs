@@ -34,5 +34,9 @@ if (roundTrip != pid)
     return 1;
 }
 
+// Exercise the civil-time primitive under AOT to surface any trim/AOT warnings.
+var today = Civitas.Id.Time.Sweden.Stockholm.Today();
+Console.WriteLine($"CivilClock Sweden today: {today:yyyy-MM-dd}");
+
 Console.WriteLine("AOT smoke test OK");
 return 0;
