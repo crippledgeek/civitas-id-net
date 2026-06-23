@@ -46,6 +46,41 @@ public class CivilClockTests
         }
     }
 
+    public class Resolution
+    {
+        private static readonly TimeZoneInfo Sentinel =
+            TimeZoneInfo.CreateCustomTimeZone("Sentinel/Zone", TimeSpan.FromHours(5), "Sentinel", "Sentinel");
+
+        [Test]
+        public async Task IanaFound_ReturnsProbe1_WithoutProbingWindows()
+        {
+            var calls = new List<string>();
+            var result = CivilClock.Resolve("Europe/Stockholm", "W. Europe Standard Time",
+                id => { calls.Add(id); return id == "Europe/Stockholm" ? Sentinel : null; });
+
+            await Assert.That(result).IsEqualTo(Sentinel);
+            await Assert.That(calls.Count).IsEqualTo(1);
+            await Assert.That(calls[0]).IsEqualTo("Europe/Stockholm");
+        }
+
+        [Test]
+        public async Task IanaMissing_FallsBackToWindows()
+        {
+            var result = CivilClock.Resolve("Europe/Stockholm", "W. Europe Standard Time",
+                id => id == "W. Europe Standard Time" ? Sentinel : null);
+
+            await Assert.That(result).IsEqualTo(Sentinel);
+        }
+
+        [Test]
+        public async Task NeitherFound_ThrowsWithDeploymentHint()
+        {
+            var ex = await Assert.That(() => CivilClock.Resolve("X/Y", "Z", _ => null))
+                .Throws<InvalidOperationException>();
+            await Assert.That(ex!.Message).Contains("tzdata");
+        }
+    }
+
     private sealed class FixedTimeProvider(DateTimeOffset now) : TimeProvider
     {
         public override DateTimeOffset GetUtcNow() => now;

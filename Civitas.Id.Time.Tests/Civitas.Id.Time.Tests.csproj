@@ -9,7 +9,7 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
-    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
+    <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052;CA1724</NoWarn>
   </PropertyGroup>
 
   <ItemGroup>
