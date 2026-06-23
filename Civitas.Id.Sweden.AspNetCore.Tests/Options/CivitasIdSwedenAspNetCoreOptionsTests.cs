@@ -74,6 +74,16 @@ public class CivitasIdSwedenAspNetCoreOptionsTests
         }
 
         [Test]
+        public async Task Rejects_NullProblemDetailsTypeBaseUri()
+        {
+            // null is a distinct input from empty; [Required(AllowEmptyStrings = false)] must also reject it.
+            var v = new ValidateCivitasIdSwedenAspNetCoreOptions();
+            var result = v.Validate(name: null,
+                options: new CivitasIdSwedenAspNetCoreOptions { ProblemDetailsTypeBaseUri = null! });
+            await Assert.That(result.Failed).IsTrue();
+        }
+
+        [Test]
         public async Task Accepts_DefaultProblemDetailsTypeBaseUri()
         {
             // The default value "https://civitas-id.dev/errors/" satisfies [Required].
