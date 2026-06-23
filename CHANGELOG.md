@@ -5,7 +5,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [1.0.1] - Unreleased
 
-Maintenance patch. API-compatible with 1.0.0 — no public API changes.
+Maintenance patch — API-compatible with 1.0.0 (no public API changes). The bulk of this
+release is internal test-coverage and CI hardening that does not ship; the only
+consumer-visible change is the doc-comment fix below.
 
 ### Fixed
 - **Civitas.Id.Sweden.Json**: corrected the XML doc comments on
