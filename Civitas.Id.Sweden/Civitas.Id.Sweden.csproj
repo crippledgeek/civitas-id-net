@@ -24,4 +24,8 @@
     </PackageReference>
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Civitas.Id.Time\Civitas.Id.Time.csproj" />
+  </ItemGroup>
+
 </Project>
