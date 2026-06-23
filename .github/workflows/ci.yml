@@ -30,3 +30,31 @@ jobs:
       - run: dotnet test CivitasId.slnx -c Release --no-build
         env:
           CI: true   # ContinuousIntegrationBuild → deterministic
+
+  # Separate from the gate so coverage instrumentation never slows the pass/fail signal.
+  # Intentionally has no `needs: build-test` — it runs in parallel and (via if: always
+  # on the upload) preserves coverage even when the gate is red, so coverage is a signal,
+  # not a merge blocker. Each test project applies its own coverage.runsettings
+  # automatically via the TestingPlatformCommandLineArguments embed in Directory.Build.props
+  # — no per-project --coverage-settings path needed here.
+  coverage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
+
+      - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
+        with:
+          global-json-file: global.json
+
+      - run: dotnet restore CivitasId.slnx
+      - run: dotnet build CivitasId.slnx -c Release --no-restore
+      - run: dotnet test CivitasId.slnx -c Release --no-build --coverage --coverage-output-format cobertura
+        env:
+          CI: true
+
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02  # v4.6.2
+        if: always()
+        with:
+          name: coverage-cobertura
+          path: '**/TestResults/*.cobertura.xml'
+          if-no-files-found: error

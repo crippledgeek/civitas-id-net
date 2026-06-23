@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Configuration>
+  <CodeCoverage>
+    <ModulePaths>
+      <Exclude>
+        <!-- Don't measure the test assembly itself. -->
+        <ModulePath>.*\.Tests\.dll$</ModulePath>
+      </Exclude>
+    </ModulePaths>
+
+    <Functions>
+      <Exclude>
+        <!-- Compile-time-only attributes embedded via JetBrains.Annotations.Sources.
+             Conditional("JETBRAINS_ANNOTATIONS")-erased; metadata-only types. -->
+        <Function>^JetBrains\.Annotations\..*</Function>
+      </Exclude>
+    </Functions>
+
+    <Attributes>
+      <Exclude>
+        <!-- Skip explicit opt-outs and compiler-generated code. -->
+        <Attribute>^System\.Diagnostics\.CodeAnalysis\.ExcludeFromCodeCoverageAttribute$</Attribute>
+        <Attribute>^System\.Runtime\.CompilerServices\.CompilerGeneratedAttribute$</Attribute>
+        <Attribute>^System\.CodeDom\.Compiler\.GeneratedCodeAttribute$</Attribute>
+      </Exclude>
+    </Attributes>
+
+    <Sources>
+      <Exclude>
+        <!-- Generated regex sources from [GeneratedRegex]. -->
+        <Source>.*RegexGenerator_g\.cs$</Source>
+      </Exclude>
+    </Sources>
+  </CodeCoverage>
+</Configuration>

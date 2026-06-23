@@ -1,0 +1,28 @@
+<Project>
+  <!-- Apply each test project's own coverage.runsettings by default, so coverage runs do not
+       need a fragile per-invocation coverage-settings path on the command line.
+
+       Why this shape:
+       * $(MSBuildProjectDirectory) expands at BUILD time to an absolute path, so it is immune to
+         the test host's runtime working directory. Microsoft.AspNetCore.Mvc.Testing sets
+         RunWorkingDirectory to the project dir, which made a repo-root-relative settings path fail
+         with "Provided settings file doesn't exist or is invalid" on AspNetCore.Tests while working
+         on the others. An absolute, build-time path resolves correctly everywhere.
+       * The argument is INERT unless coverage is also requested, so the normal `dotnet test` gate
+         (no coverage) is unaffected; it only takes effect when coverage is turned on.
+       * MTP has no VSTest-style RunSettingsFilePath / .runsettings auto-discovery;
+         TestingPlatformCommandLineArguments is the supported default-injection mechanism. -->
+  <PropertyGroup Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverage-settings "$(MSBuildProjectDirectory)/coverage.runsettings"</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+
+  <!-- Make the convention self-enforcing: a new .Tests project without a coverage.runsettings
+       would otherwise fail only at coverage-run time, with a cryptic settings-path error.
+       Fail at build time instead, with a message that names the fix. -->
+  <Target Name="ValidateCoverageRunsettingsPresent"
+          BeforeTargets="Build"
+          Condition="$(MSBuildProjectName.EndsWith('.Tests'))">
+    <Error Condition="!Exists('$(MSBuildProjectDirectory)/coverage.runsettings')"
+           Text="[Civitas.Id] '$(MSBuildProjectName)' is a test project but has no coverage.runsettings. Add one (mirror an existing test project's) so the default --coverage-settings embed in Directory.Build.props resolves." />
+  </Target>
+</Project>
