@@ -37,8 +37,11 @@ public class CoordinationIdShortFormatJsonConverterTests
         [Test]
         public async Task ParsesShortFormatString()
         {
+            // "1401682396" short-form: century inferred by sliding window from today.
+            // Year "14" is within the last 100 years from 2026, so resolves to 2014.
             var id = JsonSerializer.Deserialize<CoordinationId>("\"1401682396\"", Opts);
             await Assert.That(id).IsNotNull();
+            await Assert.That(id!.LongFormat()).IsEqualTo("201401682396");
         }
 
         [Test]

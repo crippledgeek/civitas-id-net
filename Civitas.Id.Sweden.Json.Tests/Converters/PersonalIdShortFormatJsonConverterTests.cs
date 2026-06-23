@@ -48,6 +48,7 @@ public class PersonalIdShortFormatJsonConverterTests
         {
             var id = JsonSerializer.Deserialize<PersonalId>("\"8112189876\"", Opts);
             await Assert.That(id).IsNotNull();
+            await Assert.That(id!.LongFormat()).IsEqualTo("198112189876");
         }
 
         [Test]

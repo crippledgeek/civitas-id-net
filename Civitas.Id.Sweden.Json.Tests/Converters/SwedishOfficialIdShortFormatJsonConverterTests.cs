@@ -79,7 +79,7 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
             var original = SwedishOfficialId.ParseAny(input);
             var json = JsonSerializer.Serialize(original, Opts);
             var roundTripped = JsonSerializer.Deserialize<SwedishOfficialId>(json, Opts);
-            await Assert.That(roundTripped?.GetType()).IsEqualTo(original.GetType());
+            await Assert.That(roundTripped).IsEqualTo(original);
         }
     }
 }
