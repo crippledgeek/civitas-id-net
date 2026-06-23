@@ -14,6 +14,10 @@ concurrency:
 permissions:
   contents: read
 
+# Restore NuGet packages into the workspace so actions/cache can persist them between runs.
+env:
+  NUGET_PACKAGES: ${{ github.workspace }}/.nuget/packages
+
 jobs:
   build-test:
     runs-on: ubuntu-latest
@@ -23,6 +27,15 @@ jobs:
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
         with:
           global-json-file: global.json   # pin the exact SDK from global.json (10.0.300, latestFeature)
+
+      # NuGet restore cache. CPM here uses floating 10.0.* ranges, so packages.lock.json
+      # (and setup-dotnet's built-in cache, which requires it) is not usable; this manual
+      # cache keys on the version inputs and falls back via restore-keys on a partial change.
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', 'Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - run: dotnet restore CivitasId.slnx
       - run: dotnet format CivitasId.slnx --verify-no-changes --no-restore
@@ -39,12 +52,21 @@ jobs:
   # — no per-project --coverage-settings path needed here.
   coverage:
     runs-on: ubuntu-latest
+    # Run coverage only on pushes to protected branches (post-merge), not on every PR —
+    # coverage is trend data, not a merge gate. On a PR, github.ref is refs/pull/N/merge.
+    if: github.ref == 'refs/heads/develop' || github.ref == 'refs/heads/master'
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5  # v4.3.1
 
       - uses: actions/setup-dotnet@67a3573c9a986a3f9c594539f4ab511d57bb3ce9  # v4.3.1
         with:
           global-json-file: global.json
+
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830  # v4.3.0
+        with:
+          path: ${{ github.workspace }}/.nuget/packages
+          key: ${{ runner.os }}-nuget-${{ hashFiles('global.json', 'Directory.Packages.props', '**/*.csproj') }}
+          restore-keys: ${{ runner.os }}-nuget-
 
       - run: dotnet restore CivitasId.slnx
       - run: dotnet build CivitasId.slnx -c Release --no-restore
