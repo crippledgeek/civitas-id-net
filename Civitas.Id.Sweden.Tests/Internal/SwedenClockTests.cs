@@ -28,6 +28,24 @@ public class SwedenClockTests
             var today = SwedenClock.Today();
             await Assert.That(today.Year).IsGreaterThanOrEqualTo(2026);
         }
+
+        [Test]
+        public async Task Today_TimeProvider_ReturnsExpectedDate()
+        {
+            // A fixed UTC instant that is midnight Stockholm time (UTC+2 in summer):
+            // 2026-07-15 22:00:00 UTC  →  2026-07-16 00:00:00 CEST.
+            var fixedUtc = new DateTimeOffset(2026, 7, 15, 22, 0, 0, TimeSpan.Zero);
+            var provider = new FixedTimeProvider(fixedUtc);
+            var result = SwedenClock.Today(provider);
+            await Assert.That(result).IsEqualTo(new DateOnly(2026, 7, 16));
+        }
+
+        [Test]
+        public async Task Today_NullTimeProvider_ThrowsArgumentNullException()
+        {
+            var ex = await Assert.That(() => SwedenClock.Today(null!)).Throws<ArgumentNullException>();
+            await Assert.That(ex).IsNotNull();
+        }
     }
 
     public class TimeZoneResolution
@@ -68,5 +86,83 @@ public class SwedenClockTests
             var offset = SwedenClock.TimeZone.GetUtcOffset(winterInstant);
             await Assert.That(offset).IsEqualTo(TimeSpan.FromHours(1));
         }
+    }
+
+    /// <summary>
+    /// Tests for the injectable <c>ResolveStockholmTimeZone(Func&lt;string, TimeZoneInfo?&gt;)</c>
+    /// seam. Each test controls exactly which probes succeed or fail, making the
+    /// Probe-2 and throw branches test-reachable without modifying the host's tzdata.
+    /// </summary>
+    public class ResolveStockholmTimeZoneSeam
+    {
+        private static readonly TimeZoneInfo SentinelZone =
+            TimeZoneInfo.CreateCustomTimeZone("Sentinel/Zone", TimeSpan.FromHours(5), "Sentinel", "Sentinel");
+
+        [Test]
+        public async Task Probe1_FindReturnsNonNull_ReturnsImmediately()
+        {
+            // Probe 1: find("Europe/Stockholm") succeeds → sentinel returned.
+            TimeZoneInfo? Find(string id) => id == "Europe/Stockholm" ? SentinelZone : null;
+            var result = SwedenClock.ResolveStockholmTimeZone(Find);
+            await Assert.That(result).IsEqualTo(SentinelZone);
+        }
+
+        [Test]
+        public async Task Probe2_Probe1NullProbe2NonNull_ReturnsProbe2Result()
+        {
+            // Probe 2: find("Europe/Stockholm") → null; find("W. Europe Standard Time") → sentinel.
+            // This branch was previously unreachable without a modified tzdata environment.
+            TimeZoneInfo? Find(string id) => id == "W. Europe Standard Time" ? SentinelZone : null;
+            var result = SwedenClock.ResolveStockholmTimeZone(Find);
+            await Assert.That(result).IsEqualTo(SentinelZone);
+        }
+
+        [Test]
+        public async Task BothProbesNull_ThrowsInvalidOperationException_WithDeploymentGuidance()
+        {
+            // Both probes return null → InvalidOperationException.
+            // Assert the message still contains "tzdata" so a future reword cannot
+            // silently drop the deployment fix guidance.
+            var ex = await Assert.That(() =>
+                SwedenClock.ResolveStockholmTimeZone(_ => null)).Throws<InvalidOperationException>();
+            await Assert.That(ex!.Message).Contains("tzdata");
+        }
+
+        [Test]
+        public async Task NullFinder_ThrowsArgumentNullException()
+        {
+            var ex = await Assert.That(() =>
+                SwedenClock.ResolveStockholmTimeZone(null!)).Throws<ArgumentNullException>();
+            await Assert.That(ex).IsNotNull();
+        }
+    }
+
+    /// <summary>
+    /// Tests for <c>DefaultFind</c> — the production <see cref="TimeZoneInfo"/> lookup
+    /// wrapper that converts "not found" from a thrown exception to <see langword="null"/>.
+    /// </summary>
+    public class DefaultFindMethod
+    {
+        [Test]
+        public async Task DefaultFind_KnownIdentifier_ReturnsNonNull()
+        {
+            // "Europe/Stockholm" is present on the test runner host (Linux with tzdata).
+            var result = SwedenClock.DefaultFind("Europe/Stockholm");
+            await Assert.That(result).IsNotNull();
+        }
+
+        [Test]
+        public async Task DefaultFind_UnknownIdentifier_ReturnsNull()
+        {
+            // An identifier that cannot exist in any real tzdata/Windows registry.
+            var result = SwedenClock.DefaultFind("Definitely/NotAZone");
+            await Assert.That(result).IsNull();
+        }
+    }
+
+    /// <summary>Minimal deterministic <see cref="TimeProvider"/> for testing.</summary>
+    private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+    {
+        public override DateTimeOffset GetUtcNow() => utcNow;
     }
 }
