@@ -8,10 +8,10 @@ namespace Civitas.Id.Sweden.Json.Converters;
 
 /// <summary>
 /// Serializes <see cref="PersonalId"/> values using the
-/// <see cref="PnrFormat.ShortFormat"/> 10-digit wire form (with hyphen, or
-/// "+" separator for centenarians) and deserializes any canonical Swedish
-/// PersonalId string. The centenarian "+" path requires reading Stockholm
-/// civil time internally to determine whether the bearer is &gt;=100 years old.
+/// <see cref="PnrFormat.ShortFormat"/> 10-digit wire form (digits only, no
+/// separator) and deserializes any canonical Swedish PersonalId string.
+/// Deserializing a short (2-digit-year) form infers the century from Stockholm
+/// civil time; the long (12-digit) form carries the century explicitly.
 /// </summary>
 [PublicAPI]
 public sealed class PersonalIdShortFormatJsonConverter : JsonConverter<PersonalId>
