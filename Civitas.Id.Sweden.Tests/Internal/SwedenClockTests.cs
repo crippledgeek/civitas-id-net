@@ -102,8 +102,8 @@ public class SwedenClockTests
         public async Task Probe1_FindReturnsNonNull_ReturnsImmediately()
         {
             // Probe 1: find("Europe/Stockholm") succeeds → sentinel returned.
-            TimeZoneInfo? Find(string id) => id == "Europe/Stockholm" ? SentinelZone : null;
-            var result = SwedenClock.ResolveStockholmTimeZone(Find);
+            var result = SwedenClock.ResolveStockholmTimeZone(
+                id => id == "Europe/Stockholm" ? SentinelZone : null);
             await Assert.That(result).IsEqualTo(SentinelZone);
         }
 
@@ -112,8 +112,8 @@ public class SwedenClockTests
         {
             // Probe 2: find("Europe/Stockholm") → null; find("W. Europe Standard Time") → sentinel.
             // This branch was previously unreachable without a modified tzdata environment.
-            TimeZoneInfo? Find(string id) => id == "W. Europe Standard Time" ? SentinelZone : null;
-            var result = SwedenClock.ResolveStockholmTimeZone(Find);
+            var result = SwedenClock.ResolveStockholmTimeZone(
+                id => id == "W. Europe Standard Time" ? SentinelZone : null);
             await Assert.That(result).IsEqualTo(SentinelZone);
         }
 
