@@ -11,5 +11,5 @@ public static class Sweden
     ///     Sweden — <c>Europe/Stockholm</c> (CET/CEST). Windows fallback
     ///     <c>W. Europe Standard Time</c> validated against CLDR windowsZones.xml.
     /// </summary>
-    public static readonly CivilClock Stockholm = new("Europe/Stockholm", "W. Europe Standard Time");
+    public static readonly CivilClock Stockholm = new(new TimeZoneIds("Europe/Stockholm", "W. Europe Standard Time"));
 }

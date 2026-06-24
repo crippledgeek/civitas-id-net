@@ -17,17 +17,15 @@ public sealed class CivilClock
     private readonly Lazy<TimeZoneInfo> _lazyZone;
 
     /// <summary>
-    ///     Creates a civil-time clock. <paramref name="ianaId" /> is probed first; on hosts
-    ///     without IANA tzdata the <paramref name="windowsId" /> is probed as a fallback.
+    ///     Creates a civil-time clock. <see cref="TimeZoneIds.Iana" /> is probed first; on hosts
+    ///     without IANA tzdata the <see cref="TimeZoneIds.Windows" /> fallback is probed.
     /// </summary>
-    /// <param name="ianaId">The IANA timezone identifier (e.g. <c>Europe/Stockholm</c>).</param>
-    /// <param name="windowsId">The Windows-CLDR fallback identifier (e.g. <c>W. Europe Standard Time</c>).</param>
-    /// <exception cref="System.ArgumentException">Thrown when either id is null or empty.</exception>
-    public CivilClock(string ianaId, string windowsId)
+    /// <param name="ids">The IANA/Windows timezone identifiers for this jurisdiction's civil zone.</param>
+    /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="ids" /> is null.</exception>
+    public CivilClock(TimeZoneIds ids)
     {
-        ArgumentException.ThrowIfNullOrEmpty(ianaId);
-        ArgumentException.ThrowIfNullOrEmpty(windowsId);
-        _lazyZone = new Lazy<TimeZoneInfo>(() => Resolve(ianaId, windowsId));
+        ArgumentNullException.ThrowIfNull(ids);
+        _lazyZone = new Lazy<TimeZoneInfo>(() => Resolve(ids));
     }
 
     /// <summary>The legally-mandated civil timezone for this jurisdiction.</summary>
@@ -52,18 +50,18 @@ public sealed class CivilClock
     }
 
     /// <summary>
-    ///     Two-probe timezone resolver: tries <paramref name="ianaId" />, then
-    ///     <paramref name="windowsId" />, then throws. <paramref name="find" /> is an injectable
+    ///     Two-probe timezone resolver: tries <see cref="TimeZoneIds.Iana" />, then
+    ///     <see cref="TimeZoneIds.Windows" />, then throws. <paramref name="find" /> is an injectable
     ///     seam for testing the fallback/throw branches without altering the host.
     /// </summary>
     /// <exception cref="System.InvalidOperationException">Thrown when neither id resolves.</exception>
-    internal static TimeZoneInfo Resolve(string ianaId, string windowsId, Func<string, TimeZoneInfo?>? find = null)
+    internal static TimeZoneInfo Resolve(TimeZoneIds ids, Func<string, TimeZoneInfo?>? find = null)
     {
         find ??= static id => TimeZoneInfo.TryFindSystemTimeZoneById(id, out var tz) ? tz : null;
-        return find(ianaId)
-            ?? find(windowsId)
+        return find(ids.Iana)
+            ?? find(ids.Windows)
             ?? throw new InvalidOperationException(
-                $"Cannot resolve the '{ianaId}' / '{windowsId}' time zone. Ensure timezone data " +
+                $"Cannot resolve the '{ids.Iana}' / '{ids.Windows}' time zone. Ensure timezone data " +
                 "is available at runtime (on Alpine: 'apk add --no-cache tzdata'); " +
                 "InvariantGlobalization=true is not supported. " +
                 "See https://aka.ms/dotnet-globalization-invariant-mode.");
