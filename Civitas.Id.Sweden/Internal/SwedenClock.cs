@@ -1,5 +1,3 @@
-using Civitas.Id.Time; // NOT redundant — Civitas.Id.Time is a different root namespace.
-
 namespace Civitas.Id.Sweden.Internal;
 
 /// <summary>
@@ -12,25 +10,12 @@ namespace Civitas.Id.Sweden.Internal;
 internal static class SwedenClock
 {
     /// <summary>The <c>Europe/Stockholm</c> civil timezone.</summary>
-    public static TimeZoneInfo TimeZone => Civitas.Id.Time.Sweden.Stockholm.TimeZone;
+    public static TimeZoneInfo TimeZone => Time.Sweden.Stockholm.TimeZone;
 
     /// <summary>Current calendar date in Sweden's civil timezone.</summary>
-    public static DateOnly Today() => Civitas.Id.Time.Sweden.Stockholm.Today();
+    public static DateOnly Today() => Time.Sweden.Stockholm.Today();
 
     /// <summary>Current calendar date in Sweden's civil timezone, using <paramref name="timeProvider" /> for the instant.</summary>
     /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="timeProvider" /> is null.</exception>
-    public static DateOnly Today(TimeProvider timeProvider) => Civitas.Id.Time.Sweden.Stockholm.Today(timeProvider);
-
-    /// <summary>Resolves the Stockholm timezone via the shared two-probe resolver. Test seam.</summary>
-    /// <exception cref="System.ArgumentNullException">Thrown when <paramref name="find" /> is null.</exception>
-    /// <exception cref="System.InvalidOperationException">Thrown when neither probe id resolves.</exception>
-    internal static TimeZoneInfo ResolveStockholmTimeZone(Func<string, TimeZoneInfo?> find)
-    {
-        ArgumentNullException.ThrowIfNull(find);
-        return CivilClock.Resolve("Europe/Stockholm", "W. Europe Standard Time", find);
-    }
-
-    /// <summary>Default production finder: <see cref="TimeZoneInfo.TryFindSystemTimeZoneById(string, out TimeZoneInfo)" /> → null on miss.</summary>
-    internal static TimeZoneInfo? DefaultFind(string id)
-        => TimeZoneInfo.TryFindSystemTimeZoneById(id, out var tz) ? tz : null;
+    public static DateOnly Today(TimeProvider timeProvider) => Time.Sweden.Stockholm.Today(timeProvider);
 }
