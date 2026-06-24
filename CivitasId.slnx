@@ -19,4 +19,6 @@
   <Project Path="Civitas.Id.Sweden.Json/Civitas.Id.Sweden.Json.csproj" />
   <Project Path="Civitas.Id.Sweden.Tests/Civitas.Id.Sweden.Tests.csproj" />
   <Project Path="Civitas.Id.Sweden/Civitas.Id.Sweden.csproj" />
+  <Project Path="Civitas.Id.Time.Tests/Civitas.Id.Time.Tests.csproj" />
+  <Project Path="Civitas.Id.Time/Civitas.Id.Time.csproj" />
 </Solution>

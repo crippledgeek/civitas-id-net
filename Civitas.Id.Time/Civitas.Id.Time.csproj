@@ -1,4 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
@@ -14,8 +14,8 @@
     <Deterministic>true</Deterministic>
     <PublishRepositoryUrl>true</PublishRepositoryUrl>
     <EmbedUntrackedSources>true</EmbedUntrackedSources>
-    <PackageId>Civitas.Id.Sweden</PackageId>
-    <Description>AOT-native .NET library for parsing, validating, and formatting Swedish official ID numbers (personnummer, samordningsnummer, organisationsnummer). Zero third-party runtime dependencies.</Description>
+    <PackageId>Civitas.Id.Time</PackageId>
+    <Description>ID-agnostic civil-time anchor (CivilClock) for the Civitas.Id family. NativeAOT-compatible; zero third-party runtime dependencies.</Description>
   </PropertyGroup>
 
   <ItemGroup>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Civitas.Id.Time\Civitas.Id.Time.csproj" />
+    <InternalsVisibleTo Include="Civitas.Id.Time.Tests" />
   </ItemGroup>
 
 </Project>
