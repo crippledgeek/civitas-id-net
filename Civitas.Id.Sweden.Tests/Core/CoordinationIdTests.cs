@@ -614,7 +614,7 @@ public class CoordinationIdTests
         public static IEnumerable<(string Pin, bool Female, bool Male, int Age, bool Adult, bool Child, bool Valid)>
             Samordningsnummer()
         {
-            var rows = CsvLoader.Load("Testsamordningsnummer_2019_corrected.csv").Skip(1);
+            var rows = CsvLoader.Rows(Fixtures.SamordningsnummerCorrected).Select(row => row.Cells);
             foreach (var r in rows)
                 yield return (
                     r[0],

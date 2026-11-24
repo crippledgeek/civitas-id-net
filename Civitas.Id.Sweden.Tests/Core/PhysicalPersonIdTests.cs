@@ -29,7 +29,7 @@ public class PhysicalPersonIdTests
         public static IEnumerable<(string Pin, bool Female, bool Male, bool Adult, bool Child, int Age, bool Valid)>
             PersonnummerFinal()
         {
-            var rows = CsvLoader.Load("testpersonnummer_final.csv").Skip(1);
+            var rows = CsvLoader.Rows(Fixtures.PersonnummerFinal).Select(row => row.Cells);
             foreach (var r in rows)
                 yield return (
                     r[0],

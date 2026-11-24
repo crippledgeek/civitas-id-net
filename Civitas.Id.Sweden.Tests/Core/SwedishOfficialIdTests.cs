@@ -330,29 +330,27 @@ public class SwedishOfficialIdTests
 
         public static IEnumerable<string> Personnummer1890S()
         {
-            return CsvLoader.LoadColumn("Testpersonnummer 1890-1899.csv");
+            return CsvLoader.Column(Fixtures.Personnummer1890S);
         }
 
         public static IEnumerable<string> PersonnummerFinal()
         {
-            var rows = CsvLoader.Load("testpersonnummer_final.csv").Skip(1);
-            foreach (var r in rows) yield return r[0];
+            return CsvLoader.Column(Fixtures.PersonnummerFinal);
         }
 
         public static IEnumerable<string> Samordningsnummer()
         {
-            var rows = CsvLoader.Load("Testsamordningsnummer_2019_corrected.csv").Skip(1);
-            foreach (var r in rows) yield return r[0];
+            return CsvLoader.Column(Fixtures.SamordningsnummerCorrected);
         }
 
         public static IEnumerable<string> OrganisationsnummerTextual()
         {
-            return CsvLoader.LoadColumn("testorganisationsnummer.txt");
+            return CsvLoader.Column(Fixtures.OrganisationsnummerTextual);
         }
 
         public static IEnumerable<string> InvalidIds()
         {
-            return CsvLoader.LoadColumn("invalid_swedish_ids.csv");
+            return CsvLoader.Column(Fixtures.InvalidIds);
         }
 
         // ── IsValid fan-out ─────────────────────────────────────────────

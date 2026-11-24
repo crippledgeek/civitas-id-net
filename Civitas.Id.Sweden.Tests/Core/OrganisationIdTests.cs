@@ -533,8 +533,7 @@ public class OrganisationIdTests
     {
         public static IEnumerable<string> PersonnummerFinal()
         {
-            var rows = CsvLoader.Load("testpersonnummer_final.csv").Skip(1);
-            foreach (var r in rows) yield return r[0];
+            return CsvLoader.Column(Fixtures.PersonnummerFinal);
         }
 
         [Test]
