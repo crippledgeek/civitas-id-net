@@ -11,10 +11,10 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class SwedishOfficialIdTests
 {
-    // Skatteverket-published valid samples — one of each subtype.
-    private const string ValidPersonalId = "189001019802"; // 1890s personnummer (female)
-    private const string ValidCoordinationId = "191401682396"; // 1914 samordningsnummer (male)
-    private const string ValidOrganisationId = "5560160680"; // EuropakooperativEgtsEric
+    // One valid number of each subtype; THIRD-PARTY-DATA.md says where the fixture files come from.
+    private const string ValidPersonalId = "189001019802"; // 1890s personnummer (female), Skatteverket
+    private const string ValidCoordinationId = "191401682396"; // 1914 samordningsnummer (male), Skatteverket
+    private const string ValidOrganisationId = "5560160680"; // aktiebolag, in testorganisationsnummer_extended.csv
 
     public class TryParseAny
     {

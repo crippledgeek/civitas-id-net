@@ -10,9 +10,9 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class PhysicalPersonIdEqualityTests
 {
-    // Known-valid pins from Skatteverket fixtures.
+    // Known-valid pins; only ValidPersonal is in a fixture file (number from Skatteverket).
     // ValidPersonal: from testpersonnummer_final.csv (body 9001019802 -> check 2, verified).
-    // ValidCoordination: Luhn-valid coordination number (body 9001610006 -> check 6, verified).
+    // ValidCoordination: Luhn-valid coordination number, not from a fixture file (body 9001610006 -> check 6, verified).
     private const string ValidPersonal = "189001019802";
     private const string ValidCoordination = "189001610006";
 

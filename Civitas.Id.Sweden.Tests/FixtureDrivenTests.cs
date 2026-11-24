@@ -6,7 +6,8 @@ using Civitas.Id.Sweden.Tests.Helpers;
 namespace Civitas.Id.Sweden.Tests;
 
 /// <summary>
-///     Fixture-driven tests over the test data files read below.
+///     Fixture-driven tests over the test data files read below. THIRD-PARTY-DATA.md says which of them
+///     come from Skatteverket. The official 2019 samordningsnummer file is not asserted here.
 /// </summary>
 public class FixtureDrivenTests
 {
@@ -14,8 +15,8 @@ public class FixtureDrivenTests
     ///     Reference "today" for personnummer age assertions. Calibrated empirically
     ///     by intersecting (yyyy+age, mm, dd) bounds across every valid row of
     ///     testpersonnummer_final.csv: the unique date satisfying every row is
-    ///     2025-04-23. The two Skatteverket-published CSVs unfortunately use
-    ///     slightly different reference dates, so each gets its own constant.
+    ///     2025-04-23. The two derived CSVs (numbers from Skatteverket, other
+    ///     columns added) use different reference dates, so each has its own.
     /// </summary>
     private static readonly DateOnly PersonnummerFixtureToday = new(2025, 4, 23);
 

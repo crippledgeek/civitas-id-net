@@ -25,7 +25,7 @@ public class OrganisationIdConverterTests
         [Test]
         public async Task ConvertToProvider_LegalPerson_ReturnsTenDigitString()
         {
-            // Skatteverket Aktiebolag fixture
+            // An aktiebolag number; not from a fixture file.
             var sut = new OrganisationIdConverter();
             var id = OrganisationId.Parse("5560360793");
 

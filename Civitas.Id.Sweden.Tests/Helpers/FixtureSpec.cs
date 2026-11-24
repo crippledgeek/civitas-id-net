@@ -68,9 +68,18 @@ internal static class Fixtures
         HasHeader = false
     };
 
+    /// <summary>Skatteverket's published 2019 samordningsnummer set, byte for byte (CRLF).</summary>
+    public static readonly FixtureSpec SamordningsnummerOfficial = new()
+    {
+        FileName = "Testsamordningsnummer_2019_official.csv",
+        DataRows = 1498,
+        Sha256 = "54e3fe8b4bc9d6f51b67139266fb284f251af0003b9e3a152873c6ca570af838",
+        HasHeader = true
+    };
+
     public static readonly IReadOnlyList<FixtureSpec> All =
     [
         Personnummer1890S, PersonnummerFinal, SamordningsnummerCorrected, OrganisationsnummerExtended,
-        OrganisationsnummerTextual, InvalidIds
+        OrganisationsnummerTextual, InvalidIds, SamordningsnummerOfficial
     ];
 }

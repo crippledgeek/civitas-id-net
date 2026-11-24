@@ -16,6 +16,42 @@ public class CsvLoaderTests
         yield return (Fixtures.OrganisationsnummerExtended, 22);
         yield return (Fixtures.OrganisationsnummerTextual, 10);
         yield return (Fixtures.InvalidIds, 9);
+        yield return (Fixtures.SamordningsnummerOfficial, 1498);
+    }
+
+    private const int FirstColumn = 0;
+    private const int SecondColumn = 1;
+
+    // Column indexes of testorganisationsnummer_extended.csv; a header test keeps them honest.
+    private const int InputColumn = FirstColumn;
+    private const int LongFormatColumn = 1;
+    private const int ShortFormatColumn = 2;
+    private const int VatNumberColumn = 5;
+
+    private const int ExtendedIdColumnCount = 4;
+
+    public static IEnumerable<(int Column, string HeaderName)> ExtendedIdColumns()
+    {
+        yield return (InputColumn, "input");
+        yield return (LongFormatColumn, "long_format");
+        yield return (ShortFormatColumn, "short_format");
+        yield return (VatNumberColumn, "vat_number");
+    }
+
+    public static IEnumerable<(FixtureSpec Spec, int Column, int ExpectedDuplicates)> IdColumnDuplicates()
+    {
+        // Pinned from the current files. Only the extended organisation file repeats values in its
+        // derived columns (long_format, short_format, vat_number); its input column is unique.
+        yield return (Fixtures.Personnummer1890S, FirstColumn, 0);
+        yield return (Fixtures.PersonnummerFinal, FirstColumn, 0);
+        yield return (Fixtures.SamordningsnummerCorrected, FirstColumn, 0);
+        yield return (Fixtures.OrganisationsnummerExtended, InputColumn, 0);
+        yield return (Fixtures.OrganisationsnummerExtended, LongFormatColumn, 5);
+        yield return (Fixtures.OrganisationsnummerExtended, ShortFormatColumn, 5);
+        yield return (Fixtures.OrganisationsnummerExtended, VatNumberColumn, 5);
+        yield return (Fixtures.OrganisationsnummerTextual, FirstColumn, 0);
+        yield return (Fixtures.InvalidIds, FirstColumn, 0);
+        yield return (Fixtures.SamordningsnummerOfficial, FirstColumn, 0);
     }
 
     // The one comparison used by every "this list covers every fixture" test: non-empty, same set as All.
@@ -49,6 +85,31 @@ public class CsvLoaderTests
         }
 
         [Test]
+        public async Task IdColumnDuplicatesList_CoversExactlyTheSpecsInAll()
+        {
+            await Assert.That(CoversExactlyAll(IdColumnDuplicates().Select(e => e.Spec))).IsTrue();
+        }
+
+        [Test]
+        [MethodDataSource(typeof(CsvLoaderTests), nameof(ExtendedIdColumns))]
+        public async Task ExtendedIdColumnConstant_MatchesTheHeaderName(int column, string headerName)
+        {
+            await Assert.That(HeaderCells(Fixtures.OrganisationsnummerExtended)[column]).IsEqualTo(headerName);
+        }
+
+        [Test]
+        public async Task ExtendedFile_ListsExactlyItsFourIdColumns()
+        {
+            var header = HeaderCells(Fixtures.OrganisationsnummerExtended);
+            var listed = IdColumnDuplicates()
+                .Where(e => e.Spec == Fixtures.OrganisationsnummerExtended)
+                .Select(e => header[e.Column])
+                .ToHashSet();
+            await Assert.That(listed.Count).IsEqualTo(ExtendedIdColumnCount);
+            await Assert.That(listed.SetEquals(ExtendedIdColumns().Select(c => c.HeaderName))).IsTrue();
+        }
+
+        [Test]
         public async Task FixturesOnDisk_AreExactlyTheSpecs()
         {
             // A stale file left in the output Fixtures directory (for example one deleted from the source
@@ -58,6 +119,14 @@ public class CsvLoaderTests
                 .ToHashSet();
             await Assert.That(onDisk.Count).IsGreaterThan(0);
             await Assert.That(onDisk.SetEquals(Fixtures.All.Select(s => s.FileName))).IsTrue();
+        }
+
+        [Test]
+        [MethodDataSource(typeof(CsvLoaderTests), nameof(IdColumnDuplicates))]
+        public async Task IdColumn_HasThePinnedNumberOfDuplicates(FixtureSpec spec, int column, int expectedDuplicates)
+        {
+            var values = CsvLoader.Column(spec, column);
+            await Assert.That(values.Count - values.Distinct().Count()).IsEqualTo(expectedDuplicates);
         }
     }
 
@@ -150,12 +219,43 @@ public class CsvLoaderTests
         }
 
         [Test]
+        public async Task CrlfFile_YieldsCellsWithoutCarriageReturns()
+        {
+            var rows = CsvLoader.Rows(Fixtures.SamordningsnummerOfficial);
+            await Assert.That(rows.Any(r => r.Cells.Any(c => c.Contains('\r', StringComparison.Ordinal)))).IsFalse();
+        }
+
+        [Test]
+        public async Task Column_WithIndex_ReturnsThatCellOfEveryRow()
+        {
+            var column = CsvLoader.Column(Fixtures.PersonnummerFinal, SecondColumn);
+            var cells = CsvLoader.Rows(Fixtures.PersonnummerFinal).Select(r => r.Cells[SecondColumn]);
+            await Assert.That(column.SequenceEqual(cells)).IsTrue();
+        }
+
+        [Test]
+        public async Task Column_BeyondLastCell_Throws()
+        {
+            var tooFar = CsvLoader.Rows(Fixtures.PersonnummerFinal)[0].Cells.Count;
+            await Assert.That(() => CsvLoader.Column(Fixtures.PersonnummerFinal, tooFar))
+                .ThrowsExactly<ArgumentOutOfRangeException>();
+        }
+
+        [Test]
         public async Task Column_ReturnsFirstCellOfEveryRow()
         {
             var column = CsvLoader.Column(Fixtures.PersonnummerFinal);
             var firstCells = CsvLoader.Rows(Fixtures.PersonnummerFinal).Select(r => r.Cells[0]);
             await Assert.That(column.SequenceEqual(firstCells)).IsTrue();
         }
+    }
+
+    // The header line is file structure, not an ID number. Loading first proves the file is the pinned one.
+    private static string[] HeaderCells(FixtureSpec spec)
+    {
+        _ = CsvLoader.Rows(spec);
+        var header = File.ReadLines(Path.Combine(FixtureFiles.Directory, spec.FileName)).First();
+        return [.. header.Split(',').Select(c => c.Trim())];
     }
 
     private static async Task AssertCopyRejected(FixtureSpec spec, Func<byte[], byte[]> mutate)
