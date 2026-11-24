@@ -23,7 +23,7 @@ All seven packages release in lockstep at the same version. The version is set o
   - **Repository**: `civitas-id-net`
   - **Workflow filename**: `publish.yml`
   - **Environment** (optional but recommended): `release`
-- **GitHub Actions runner must use .NET 10 SDK** (`actions/setup-dotnet@v4` with `dotnet-version: '10.x'`). The `NuGet/login@v1` action requires a recent SDK to exchange OIDC tokens.
+- **GitHub Actions runner must use the SDK in `global.json`** (`actions/setup-dotnet` with `global-json-file: global.json`). The `NuGet/login@v1` action requires a recent SDK to exchange OIDC tokens.
 - **Workflow permissions must include `id-token: write`** and `contents: read`. OIDC token mint requires the former; checkout requires the latter.
 - **No `NUGET_API_KEY` secret is needed** with OIDC. If one exists, delete it — `NuGet/login@v1` mints a short-lived (1-hour, single-use) key per workflow run.
 - **Gradual rollout caveat**: if the "Trusted Publishing" tab is not visible on the nuget.org profile, the feature has not yet rolled out to the account. Fall back to a scoped API key for the affected packages; retry OIDC setup after the rollout reaches the account.
@@ -185,7 +185,7 @@ jobs:
 
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.x'
+          global-json-file: global.json
 
       # Build + test before pack so a broken build can't ship.
       - run: dotnet restore CivitasId.slnx
