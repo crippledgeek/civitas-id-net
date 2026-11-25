@@ -225,8 +225,7 @@ public class OrganisationIdTests
             // Orgnummer don't have age semantics — separator is always '-'.
             var id = OrganisationId.Parse(ValidShort);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
-            await Assert.That(formatted).Contains("-");
-            await Assert.That(formatted).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(formatted, '-').ConfigureAwait(false);
         }
 
         [Test]
@@ -307,7 +306,7 @@ public class OrganisationIdTests
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.PhysicalPerson);
             await Assert.That(id.Form).IsEqualTo(OrganisationForm.None);
-            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
+            await UnprintedAssert.AreEqual(id.ShortFormat(), OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
         }
 
         [Test]
@@ -355,7 +354,7 @@ public class OrganisationIdTests
             // Per Lag (1974:174) §4, organisationsnummer is always 10 digits.
             // The 12-digit personnummer view of Enskild firma is available via ToPhysicalPersonId().
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
-            await Assert.That(id.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
+            await UnprintedAssert.AreEqual(id.LongFormat(), OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
         }
 
         [Test]
@@ -390,15 +389,15 @@ public class OrganisationIdTests
         public async Task ShortFormat_DropsCentury()
         {
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
-            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
+            await UnprintedAssert.AreEqual(id.ShortFormat(), OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
         }
 
         [Test]
         public async Task Format_LongFormatWithStandardSeparator_TenDigitsHyphenated()
         {
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
-            await Assert.That(id.Format(PnrFormat.LongFormatWithStandardSeparator))
-                .IsEqualTo(OfficialNumbers.Centenarian.ShortWithHyphen);
+            await UnprintedAssert.AreEqual(id.Format(PnrFormat.LongFormatWithStandardSeparator), OfficialNumbers.Centenarian.ShortWithHyphen)
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -407,7 +406,7 @@ public class OrganisationIdTests
             // Born 1890, age 136+ today → '+' separator (Swedish convention)
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
-            await Assert.That(formatted).IsEqualTo(OfficialNumbers.Centenarian.ShortWithPlus);
+            await UnprintedAssert.AreEqual(formatted, OfficialNumbers.Centenarian.ShortWithPlus).ConfigureAwait(false);
         }
 
         [Test]
@@ -438,8 +437,7 @@ public class OrganisationIdTests
             var id = OrganisationId.Parse(EnskildFirmaHundredIn1995);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("-");
-            await Assert.That(formatted).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(formatted, '-').ConfigureAwait(false);
         }
 
         [Test]
@@ -451,7 +449,7 @@ public class OrganisationIdTests
             var id = OrganisationId.Parse(EnskildFirmaHundredIn1995);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("+");
+            await UnprintedAssert.HasSeparator(formatted, '+').ConfigureAwait(false);
         }
 
         [Test]
@@ -471,8 +469,7 @@ public class OrganisationIdTests
             var id = OrganisationId.Parse(ValidShort);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("-");
-            await Assert.That(formatted).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(formatted, '-').ConfigureAwait(false);
         }
     }
 
@@ -525,7 +522,7 @@ public class OrganisationIdTests
             var legal = OrganisationId.Parse(ValidShort);
             var farFuture = legal.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2099, 1, 1));
             var farPast = legal.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(1900, 1, 1));
-            await Assert.That(farFuture).Contains("-");
+            await UnprintedAssert.HasSeparator(farFuture, '-').ConfigureAwait(false);
             await Assert.That(farFuture).IsEqualTo(farPast);
         }
 
@@ -537,8 +534,8 @@ public class OrganisationIdTests
             var dayBefore = enskild.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(1995, 5, 31));
             var birthday = enskild.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(1995, 6, 1));
 
-            await Assert.That(dayBefore).Contains("-");
-            await Assert.That(birthday).Contains("+");
+            await UnprintedAssert.HasSeparator(dayBefore, '-').ConfigureAwait(false);
+            await UnprintedAssert.HasSeparator(birthday, '+').ConfigureAwait(false);
         }
     }
 

@@ -12,7 +12,7 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 public class CoordinationIdTypeConverterTests
 {
     private static readonly string ValidPin12 = OfficialNumbers.CentenarianSamordningsnummer.Long;
-    private static readonly string ValidPinWithHyphen = OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen;
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.ModernSamordningsnummer.ShortWithHyphen;
 
     public class CanConvertFrom
     {

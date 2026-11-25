@@ -113,7 +113,7 @@ public class OrganisationIdTypeConverterTests
             var sut = new OrganisationIdTypeConverter();
             var id = OrganisationId.Parse(ValidEnskildFirma);
             var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(result).IsEqualTo(OfficialNumbers.Centenarian.Short);
+            await UnprintedAssert.AreEqual(result, OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
         }
 
         [Test]

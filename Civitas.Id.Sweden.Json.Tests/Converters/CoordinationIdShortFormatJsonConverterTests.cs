@@ -20,7 +20,8 @@ public class CoordinationIdShortFormatJsonConverterTests
             // ShortFormat = YYMMDDXXXX (10 digits, no separator).
             var id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.CentenarianSamordningsnummer.Short}\"");
+            await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.CentenarianSamordningsnummer.Short}\"")
+                .ConfigureAwait(false);
         }
     }
 

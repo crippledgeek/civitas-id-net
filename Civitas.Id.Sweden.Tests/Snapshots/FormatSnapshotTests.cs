@@ -126,8 +126,8 @@ public sealed class FormatSnapshotTests
             var shortSep = id.Format(PnrFormat.ShortFormatWithSeparator, tp);
             sb.AppendLine(CultureInfo.InvariantCulture, $"today={anchor:yyyy-MM-dd}");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormatWithSeparator   = {longSep}");
-            await Assert.That(shortSep)
-                .IsEqualTo(anchor < birthDate.AddYears(100) ? number.ShortWithHyphen : number.ShortWithPlus);
+            await UnprintedAssert.AreEqual(shortSep, anchor < birthDate.AddYears(100) ? number.ShortWithHyphen : number.ShortWithPlus)
+                .ConfigureAwait(false);
         }
 
         await Verify(sb.ToString());
@@ -138,14 +138,15 @@ public sealed class FormatSnapshotTests
     public async Task Centenarian_ShortForms()
     {
         var person = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
-        await Assert.That(person.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
-        await Assert.That(person.Format(PnrFormat.ShortFormatWithStandardSeparator))
-            .IsEqualTo(OfficialNumbers.Centenarian.ShortWithHyphen);
+        await UnprintedAssert.AreEqual(person.ShortFormat(), OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
+        await UnprintedAssert.AreEqual(person.Format(PnrFormat.ShortFormatWithStandardSeparator), OfficialNumbers.Centenarian.ShortWithHyphen)
+            .ConfigureAwait(false);
 
         var coordination = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
-        await Assert.That(coordination.ShortFormat()).IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.Short);
-        await Assert.That(coordination.Format(PnrFormat.ShortFormatWithStandardSeparator))
-            .IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen);
+        await UnprintedAssert.AreEqual(coordination.ShortFormat(), OfficialNumbers.CentenarianSamordningsnummer.Short)
+            .ConfigureAwait(false);
+        await UnprintedAssert.AreEqual(coordination.Format(PnrFormat.ShortFormatWithStandardSeparator), OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen)
+            .ConfigureAwait(false);
     }
 
     private static SettingsTask Verify(string target)

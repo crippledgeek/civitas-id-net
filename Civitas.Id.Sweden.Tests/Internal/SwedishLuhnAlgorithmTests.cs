@@ -8,7 +8,7 @@ public class SwedishLuhnAlgorithmTests
     public static IEnumerable<(string NineDigits, int Expected)> OfficialInputs()
     {
         yield return (OfficialNumbers.Modern.Body, OfficialNumbers.Modern.CheckDigit);
-        yield return (OfficialNumbers.Centenarian.Body, OfficialNumbers.Centenarian.CheckDigit);
+        yield return (OfficialNumbers.ModernSamordningsnummer.Body, OfficialNumbers.ModernSamordningsnummer.CheckDigit);
     }
 
     [Test]

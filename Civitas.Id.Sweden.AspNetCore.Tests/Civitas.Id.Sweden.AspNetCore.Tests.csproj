@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\RepositoryRoot.cs" Link="OfficialTestData\RepositoryRoot.cs" />
+    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\UnprintedAssert.cs" Link="OfficialTestData\UnprintedAssert.cs" />
   </ItemGroup>
 
   <ItemGroup>

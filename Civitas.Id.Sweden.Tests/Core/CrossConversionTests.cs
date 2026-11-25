@@ -13,7 +13,7 @@ public class CrossConversionTests
     // (today >= 2026, sliding window resolves "00" → 2000, "00" coord → 2000).
     private static readonly string ValidPersonalId = OfficialNumbers.Modern.Long;
     private static readonly string ValidCoordinationId = OfficialNumbers.ModernSamordningsnummer.Long;
-    private static readonly string ValidOrganisationId = LegalPersonNumbers.Aktiebolag.Digits; // legal person — EuropakooperativEgtsEric
+    private static readonly string ValidOrganisationId = LegalPersonNumbers.Aktiebolag.Digits; // an aktiebolag
 
     public class PersonalToOrganisation
     {

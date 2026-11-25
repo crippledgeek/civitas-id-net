@@ -18,8 +18,6 @@ public class PersonalIdTests
     private static readonly string ValidPin12 = OfficialNumbers.Centenarian.Long;
     private static readonly string ValidPin10 = OfficialNumbers.Centenarian.Short;
 
-    private static readonly string ValidPinWithHyphen = OfficialNumbers.Centenarian.ShortWithHyphen;
-
     // '+' separator means 100+ years old, so YY=90 resolves to 1890 (same as ValidPin12).
     private static readonly string ValidPin10WithPlus = OfficialNumbers.Centenarian.ShortWithPlus;
     private static readonly string ValidPinMale = OfficialNumbers.CentenarianMale.Long;
@@ -29,8 +27,8 @@ public class PersonalIdTests
         public static IEnumerable<string> IsValidAcceptsKnownValidInputs()
         {
             yield return ValidPin12;
-            yield return ValidPin10;
-            yield return ValidPinWithHyphen;
+            yield return OfficialNumbers.Modern.Short;
+            yield return OfficialNumbers.Modern.ShortWithHyphen;
         }
 
         [Test]
@@ -102,7 +100,7 @@ public class PersonalIdTests
             // resolves to the same 1890 century via the >100-year-old '+' rule.
             var a = PersonalId.Parse(ValidPin12);
             var b = PersonalId.Parse(ValidPin10WithPlus);
-            await Assert.That(a).IsEqualTo(b);
+            await UnprintedAssert.AreEqual(a, b).ConfigureAwait(false);
             await Assert.That(a.GetHashCode()).IsEqualTo(b.GetHashCode());
         }
 
@@ -133,7 +131,7 @@ public class PersonalIdTests
             // '+' separator means "100+ years old" — century inference shifts back.
             // Year 90 with the current year 2026 would otherwise infer 1990; '+' shifts to 1890.
             var id = PersonalId.Parse(ValidPin10WithPlus);
-            await Assert.That(id.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Long);
+            await UnprintedAssert.AreEqual(id.LongFormat(), OfficialNumbers.Centenarian.Long).ConfigureAwait(false);
         }
     }
 
@@ -197,8 +195,7 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(Born19250601Pin);
             var dayBefore = id.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2025, 5, 31));
-            await Assert.That(dayBefore).Contains("-");
-            await Assert.That(dayBefore).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(dayBefore, '-').ConfigureAwait(false);
         }
 
         [Test]
@@ -206,7 +203,7 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(Born19250601Pin);
             var birthday = id.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2025, 6, 1));
-            await Assert.That(birthday).Contains("+");
+            await UnprintedAssert.HasSeparator(birthday, '+').ConfigureAwait(false);
         }
 
         [Test]
@@ -382,7 +379,7 @@ public class PersonalIdTests
         public async Task ShortFormat_TenDigits()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
+            await UnprintedAssert.AreEqual(id.ShortFormat(), OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
         }
 
         [Test]
@@ -396,7 +393,8 @@ public class PersonalIdTests
         public async Task Format_ShortFormat()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.Format(PnrFormat.ShortFormat)).IsEqualTo(OfficialNumbers.Centenarian.Short);
+            await UnprintedAssert.AreEqual(id.Format(PnrFormat.ShortFormat), OfficialNumbers.Centenarian.Short)
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -411,8 +409,8 @@ public class PersonalIdTests
         public async Task Format_ShortFormatWithStandardSeparator_AlwaysHyphen()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.Format(PnrFormat.ShortFormatWithStandardSeparator))
-                .IsEqualTo(OfficialNumbers.Centenarian.ShortWithHyphen);
+            await UnprintedAssert.AreEqual(id.Format(PnrFormat.ShortFormatWithStandardSeparator), OfficialNumbers.Centenarian.ShortWithHyphen)
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -428,7 +426,7 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(ValidPin12);
             var formatted = id.Format(PnrFormat.ShortFormatWithSeparator);
-            await Assert.That(formatted).IsEqualTo(OfficialNumbers.Centenarian.ShortWithPlus);
+            await UnprintedAssert.AreEqual(formatted, OfficialNumbers.Centenarian.ShortWithPlus).ConfigureAwait(false);
         }
 
         [Test]
@@ -438,8 +436,8 @@ public class PersonalIdTests
             var id = PersonalId.Parse(ValidPin10);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
             await Assert.That(id.BirthDate).IsEqualTo(new DateOnly(1990, 1, 1));
-            await Assert.That(formatted).IsEqualTo($"19900101-{OfficialNumbers.Centenarian.Serial}");
-            await Assert.That(formatted).DoesNotContain("+");
+            await UnprintedAssert.AreEqual(formatted, $"19900101-{OfficialNumbers.Centenarian.Serial}")
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -611,8 +609,7 @@ public class PersonalIdTests
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("-");
-            await Assert.That(formatted).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(formatted, '-').ConfigureAwait(false);
         }
 
         [Test]
@@ -625,7 +622,7 @@ public class PersonalIdTests
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("+");
+            await UnprintedAssert.HasSeparator(formatted, '+').ConfigureAwait(false);
         }
 
         [Test]
@@ -677,7 +674,7 @@ public class PersonalIdTests
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
 
-            await Assert.That(formatted).Contains("+");
+            await UnprintedAssert.HasSeparator(formatted, '+').ConfigureAwait(false);
         }
 
         [Test]

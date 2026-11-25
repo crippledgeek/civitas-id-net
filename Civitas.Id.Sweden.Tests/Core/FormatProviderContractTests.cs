@@ -3,6 +3,7 @@ using System.Text;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Fakers;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
 
@@ -27,14 +28,14 @@ public class FormatProviderContractTests
     [MethodDataSource(nameof(Providers))]
     public async Task PersonalId_AcceptsProvider(IFormatProvider? provider)
     {
-        await AssertContracts(PersonalIdFaker.WithSeed(FakerSeed).Generate(), provider).ConfigureAwait(false);
+        await AssertContracts(PersonalId.Parse(OfficialNumbers.Modern.Long), provider).ConfigureAwait(false);
     }
 
     [Test]
     [MethodDataSource(nameof(Providers))]
     public async Task CoordinationId_AcceptsProvider(IFormatProvider? provider)
     {
-        await AssertContracts(CoordinationIdFaker.WithSeed(FakerSeed).Generate(), provider).ConfigureAwait(false);
+        await AssertContracts(CoordinationId.Parse(OfficialNumbers.ModernSamordningsnummer.Long), provider).ConfigureAwait(false);
     }
 
     [Test]

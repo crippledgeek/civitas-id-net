@@ -16,6 +16,10 @@
   <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
 
   <ItemGroup>
+    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\UnprintedAssert.cs" Link="OfficialTestData\UnprintedAssert.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="TUnit" />
     <PackageReference Include="TUnit.FsCheck" />
     <PackageReference Include="Verify.TUnit" />

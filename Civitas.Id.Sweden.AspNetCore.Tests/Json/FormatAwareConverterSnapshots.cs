@@ -37,7 +37,7 @@ public sealed class FormatAwareConverterSnapshots
         // Born 1890-01-01, age >100 -> centenarian.
         var pid = PersonalId.Parse(OfficialNumbers.Centenarian.Long, new DateOnly(2026, 5, 19));
         var json = SerializeWith(PnrFormat.ShortFormat, pid);
-        await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Centenarian.Short}\"");
+        await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.Centenarian.Short}\"").ConfigureAwait(false);
     }
 
     private static string SerializeWith<T>(PnrFormat format, T value) where T : notnull

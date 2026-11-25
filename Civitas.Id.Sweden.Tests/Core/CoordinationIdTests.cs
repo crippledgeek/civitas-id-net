@@ -18,7 +18,6 @@ public class CoordinationIdTests
     // Male, born 1914-01-08 (encoded day 68).
     private static readonly string ValidPin12 = OfficialNumbers.CentenarianSamordningsnummer.Long;
     private static readonly string ValidPin10 = OfficialNumbers.CentenarianSamordningsnummer.Short;
-    private static readonly string ValidPinWithHyphen = OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen;
 
     // Female, born 1914-06-05 (encoded day 65)
     private static readonly string ValidPinFemale = OfficialNumbers.CentenarianFemaleSamordningsnummer.Long;
@@ -28,7 +27,7 @@ public class CoordinationIdTests
         public static IEnumerable<string> IsValidAcceptsKnownValidInputs()
         {
             yield return ValidPin12;
-            yield return ValidPinWithHyphen;
+            yield return OfficialNumbers.ModernSamordningsnummer.ShortWithHyphen;
         }
 
         [Test]
@@ -160,8 +159,7 @@ public class CoordinationIdTests
         {
             var id = CoordinationId.Parse(Born19250601Sn);
             var dayBefore = id.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2025, 5, 31));
-            await Assert.That(dayBefore).Contains("-");
-            await Assert.That(dayBefore).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(dayBefore, '-').ConfigureAwait(false);
         }
 
         [Test]
@@ -169,7 +167,7 @@ public class CoordinationIdTests
         {
             var id = CoordinationId.Parse(Born19250601Sn);
             var birthday = id.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2025, 6, 1));
-            await Assert.That(birthday).Contains("+");
+            await UnprintedAssert.HasSeparator(birthday, '+').ConfigureAwait(false);
         }
 
         [Test]
@@ -178,8 +176,8 @@ public class CoordinationIdTests
             var id = CoordinationId.Parse(Born19250601Sn);
             var dayBefore = id.Format(PnrFormat.ShortFormatWithSeparator, new DateOnly(2025, 5, 31));
             var birthday = id.Format(PnrFormat.ShortFormatWithSeparator, new DateOnly(2025, 6, 1));
-            await Assert.That(dayBefore).Contains("-");
-            await Assert.That(birthday).Contains("+");
+            await UnprintedAssert.HasSeparator(dayBefore, '-').ConfigureAwait(false);
+            await UnprintedAssert.HasSeparator(birthday, '+').ConfigureAwait(false);
         }
 
         [Test]
@@ -301,7 +299,7 @@ public class CoordinationIdTests
         public async Task ShortFormat_TenDigitsWithEncodedDay()
         {
             var id = CoordinationId.Parse(ValidPin12);
-            await Assert.That(id.ShortFormat()).IsEqualTo(ValidPin10);
+            await UnprintedAssert.AreEqual(id.ShortFormat(), ValidPin10).ConfigureAwait(false);
         }
 
         [Test]
@@ -316,8 +314,8 @@ public class CoordinationIdTests
         public async Task Format_ShortFormatWithStandardSeparator()
         {
             var id = CoordinationId.Parse(ValidPin12);
-            await Assert.That(id.Format(PnrFormat.ShortFormatWithStandardSeparator))
-                .IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen);
+            await UnprintedAssert.AreEqual(id.Format(PnrFormat.ShortFormatWithStandardSeparator), OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen)
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -454,8 +452,7 @@ public class CoordinationIdTests
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("-");
-            await Assert.That(formatted).DoesNotContain("+");
+            await UnprintedAssert.HasSeparator(formatted, '-').ConfigureAwait(false);
         }
 
         [Test]
@@ -467,7 +464,7 @@ public class CoordinationIdTests
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
-            await Assert.That(formatted).Contains("+");
+            await UnprintedAssert.HasSeparator(formatted, '+').ConfigureAwait(false);
         }
 
         [Test]
@@ -518,7 +515,7 @@ public class CoordinationIdTests
             var id = CoordinationId.Parse(CoordinationIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
 
-            await Assert.That(formatted).Contains("+");
+            await UnprintedAssert.HasSeparator(formatted, '+').ConfigureAwait(false);
         }
 
         [Test]

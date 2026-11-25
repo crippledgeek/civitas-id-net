@@ -12,8 +12,8 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 public class PersonalIdTypeConverterTests
 {
     private static readonly string ValidPin12 = OfficialNumbers.Centenarian.Long;
-    private static readonly string ValidPin10 = OfficialNumbers.Centenarian.Short;
-    private static readonly string ValidPinWithHyphen = OfficialNumbers.Centenarian.ShortWithHyphen;
+    private static readonly string ValidPin10 = OfficialNumbers.Modern.Short;
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.Modern.ShortWithHyphen;
 
     public class CanConvertFrom
     {

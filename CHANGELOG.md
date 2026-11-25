@@ -21,7 +21,7 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
   examples of the person ID types are now numbers from Skatteverket's published test sets. (#23)
 
 - **Civitas.Id.Sweden**: the README example called `ShortFormat` with a format, which does not compile, and
-  now calls `Format`. Its numbers are from published test data. (#23)
+  now calls `Format`. Its valid numbers are from published test data. (#23)
 
 - **Civitas.Id.Sweden.AspNetCore**: a malformed value for a typed ID parameter now gives the
   documented 400 in Development too with `UseExceptionHandler()`, where ASP.NET Core answered 500. (#41)

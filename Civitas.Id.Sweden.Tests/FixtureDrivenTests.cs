@@ -141,32 +141,42 @@ public class FixtureDrivenTests
 
     private const int OrganisationLength = 10;
 
-    /// <summary>The expected cells of one organisation row, raw text as the files hold it.</summary>
+    /// <summary>
+    ///     The expected cells of one organisation row, raw text as the files hold it; the VAT number is null when the
+    ///     file has no such column.
+    /// </summary>
     public sealed record OrganisationRow
     {
+        public required int Index { get; init; }
         public required string Input { get; init; }
         public required string LongFormat { get; init; }
         public required string ShortFormat { get; init; }
-        public required string VatNumber { get; init; }
+        public string? VatNumber { get; init; }
         public required bool Valid { get; init; }
         public required string Type { get; init; }
+
+        /// <summary>The index of the row, because a short form can read as another person's number.</summary>
+        public override string ToString()
+        {
+            return $"row {Index}";
+        }
     }
 
     public static IEnumerable<OrganisationRow> OrganisationsnummerRows()
     {
         return
         [
-            .. CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells).Select(r =>
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells).Select((r, i) =>
                 new OrganisationRow
                 {
-                    Input = r[0], LongFormat = r[1], ShortFormat = r[2], Valid = bool.Parse(r[3]), Type = r[4],
+                    Index = i, Input = r[0], LongFormat = r[1], ShortFormat = r[2], Valid = bool.Parse(r[3]), Type = r[4],
                     VatNumber = r[5]
                 }),
-            .. CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma).Select(row => row.Cells).Select(r =>
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma).Select(row => row.Cells).Select((r, i) =>
                 new OrganisationRow
                 {
-                    Input = r[0], LongFormat = r[1], ShortFormat = LastTenDigits(r[0]), Valid = bool.Parse(r[2]),
-                    Type = r[3], VatNumber = $"SE{LastTenDigits(r[0])}01"
+                    Index = i, Input = r[0], LongFormat = r[1], ShortFormat = LastTenDigits(r[0]), Valid = bool.Parse(r[2]),
+                    Type = r[3]
                 })
         ];
     }
@@ -185,11 +195,13 @@ public class FixtureDrivenTests
         if (!row.Valid) return;
 
         var id = OrganisationId.Parse(row.Input);
-        await Assert.That(id.ShortFormat()).IsEqualTo(row.ShortFormat);
-        await Assert.That($"SE{id.ShortFormat()}01").IsEqualTo(row.VatNumber);
+        await UnprintedAssert.AreEqual(id.ShortFormat(), row.ShortFormat).ConfigureAwait(false);
+        if (row.VatNumber is not null)
+            await UnprintedAssert.AreEqual($"SE{id.ShortFormat()}01", row.VatNumber).ConfigureAwait(false);
         // The files' "long_format" column is the short form with a separator: "-", or "+" for an Enskild firma
         // whose bearer is 100 or older. ShortFormatWithSeparator infers the same separator.
-        await Assert.That(id.Format(PnrFormat.ShortFormatWithSeparator)).IsEqualTo(row.LongFormat);
+        await UnprintedAssert.AreEqual(id.Format(PnrFormat.ShortFormatWithSeparator), row.LongFormat)
+            .ConfigureAwait(false);
 
         // The files' "type" column is the layperson entity name ("Aktiebolag"
         // for legal persons, "Enskild firma" for physical persons). Map and assert.

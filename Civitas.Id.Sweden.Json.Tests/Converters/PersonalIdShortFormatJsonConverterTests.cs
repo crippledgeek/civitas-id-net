@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Json.Converters;
 
 namespace Civitas.Id.Sweden.Json.Tests.Converters;
@@ -11,14 +10,6 @@ public class PersonalIdShortFormatJsonConverterTests
     {
         Converters = { new PersonalIdShortFormatJsonConverter() }
     };
-
-    // No pinned set holds a personnummer of 1926-1999, the years whose short form resolves to the 1900s.
-    private static readonly DateOnly BornInTheNineteenHundreds = new(1981, 12, 18);
-
-    private static PersonalId TwentiethCenturyPerson()
-    {
-        return PersonalIdFaker.WithSeed(1).Generate(BornInTheNineteenHundreds);
-    }
 
     public class Serialize
     {
@@ -38,7 +29,7 @@ public class PersonalIdShortFormatJsonConverterTests
             // (PnrFormat.ShortFormat strips chars[2..] of the canonical 12-digit form).
             var id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Centenarian.Short}\"");
+            await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.Centenarian.Short}\"").ConfigureAwait(false);
         }
     }
 
@@ -63,10 +54,10 @@ public class PersonalIdShortFormatJsonConverterTests
         [Test]
         public async Task ParsesShortFormatString_OfTheNineteenHundreds()
         {
-            var person = TwentiethCenturyPerson();
+            var person = TwentiethCenturyPerson.Create();
             var id = JsonSerializer.Deserialize<PersonalId>($"\"{person.LongFormat()[2..]}\"", Opts);
-            await Assert.That(id).IsEqualTo(person);
-            await Assert.That(id!.BirthDate).IsEqualTo(BornInTheNineteenHundreds);
+            await UnprintedAssert.AreEqual(id, person).ConfigureAwait(false);
+            await Assert.That(id!.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
         }
 
         [Test]
@@ -90,7 +81,6 @@ public class PersonalIdShortFormatJsonConverterTests
         {
             yield return OfficialNumbers.Modern.Long;
             yield return OfficialNumbers.EighteenIn2026.Long;
-            yield return TwentiethCenturyPerson().LongFormat();
         }
 
         [Test]
@@ -106,6 +96,16 @@ public class PersonalIdShortFormatJsonConverterTests
             var roundTripped = JsonSerializer.Deserialize<PersonalId>(json, Opts);
             await Assert.That(roundTripped).IsEqualTo(original);
             await Assert.That(roundTripped!.BirthDate).IsEqualTo(original.BirthDate);
+        }
+
+        [Test]
+        public async Task RoundTrips_PersonOfTheNineteenHundreds()
+        {
+            var original = TwentiethCenturyPerson.Create();
+            var json = JsonSerializer.Serialize(original, Opts);
+            var roundTripped = JsonSerializer.Deserialize<PersonalId>(json, Opts);
+            await UnprintedAssert.AreEqual(roundTripped, original).ConfigureAwait(false);
+            await Assert.That(roundTripped!.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
         }
     }
 }

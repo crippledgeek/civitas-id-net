@@ -1,6 +1,5 @@
 using System.Text.Json;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Json.Converters;
 
 namespace Civitas.Id.Sweden.Json.Tests.Converters;
@@ -61,7 +60,8 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
             // CoordinationId is also written as 10-digit no-separator short form.
             SwedishOfficialId id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.CentenarianSamordningsnummer.Short}\"");
+            await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.CentenarianSamordningsnummer.Short}\"")
+                .ConfigureAwait(false);
         }
 
         [Test]
@@ -80,7 +80,6 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
         {
             yield return OfficialNumbers.Modern.Long; // PersonalId — modern, round-trips via 10-digit ShortFormat
             yield return OfficialNumbers.TwentiethCenturySamordningsnummer.Long;
-            yield return PersonalIdFaker.WithSeed(1).Generate(new DateOnly(1981, 12, 18)).LongFormat();
             yield return OfficialNumbers.ModernSamordningsnummer.Long; // CoordinationId — modern, round-trips
             yield return LegalPersonNumbers.Aktiebolag.Digits; // OrganisationId — always 10-digit LongFormat, always round-trips
         }
@@ -93,6 +92,16 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
             var json = JsonSerializer.Serialize(original, Opts);
             var roundTripped = JsonSerializer.Deserialize<SwedishOfficialId>(json, Opts);
             await Assert.That(roundTripped).IsEqualTo(original);
+        }
+
+        [Test]
+        public async Task RoundTrips_PersonOfTheNineteenHundreds()
+        {
+            SwedishOfficialId original = TwentiethCenturyPerson.Create();
+            var json = JsonSerializer.Serialize(original, Opts);
+            var roundTripped = JsonSerializer.Deserialize<SwedishOfficialId>(json, Opts);
+            await UnprintedAssert.AreEqual(roundTripped, original).ConfigureAwait(false);
+            await Assert.That((roundTripped as PersonalId)?.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
         }
     }
 }
