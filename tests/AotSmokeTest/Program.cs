@@ -14,22 +14,22 @@ using Civitas.Id.Sweden.Json.Converters;
 Console.WriteLine("=== Civitas.Id.Sweden AOT smoke test ===");
 
 // ── 1. Core: parse + format ─────────────────────────────────────────────────
-var pid = PersonalId.Parse("189001019802");
-Assert.Equal(pid.LongFormat(), "189001019802", "PersonalId.LongFormat");
+var pid = PersonalId.Parse(SmokeNumbers.Personnummer);
+Assert.Equal(pid.LongFormat(), SmokeNumbers.Personnummer, "PersonalId.LongFormat");
 
-var cid = CoordinationId.Parse("191401682396");
-Assert.Equal(cid.LongFormat(), "191401682396", "CoordinationId.LongFormat");
+var cid = CoordinationId.Parse(SmokeNumbers.Samordningsnummer);
+Assert.Equal(cid.LongFormat(), SmokeNumbers.Samordningsnummer, "CoordinationId.LongFormat");
 
 var oid = OrganisationId.Parse("5560160680");
 Assert.Equal(oid.LongFormat(), "5560160680", "OrganisationId.LongFormat (legal-person 10-digit)");
 
-var any = SwedishOfficialId.ParseAny("189001019802");
+var any = SwedishOfficialId.ParseAny(SmokeNumbers.Personnummer);
 Assert.Equal(any.GetType().Name, "PersonalId", "SwedishOfficialId.ParseAny dispatch");
 Console.WriteLine("  ✓ Core parse + format + polymorphic dispatch");
 
 // ── 2. TypeConverter discovery ──────────────────────────────────────────────
-var parsedViaTypeConverter = TypeConverterProbe.RoundTrip("189001019802");
-Assert.Equal(parsedViaTypeConverter.LongFormat(), "189001019802", "TypeConverter round-trip");
+var parsedViaTypeConverter = TypeConverterProbe.RoundTrip(SmokeNumbers.Personnummer);
+Assert.Equal(parsedViaTypeConverter.LongFormat(), SmokeNumbers.Personnummer, "TypeConverter round-trip");
 Console.WriteLine("  ✓ TypeConverter discovery + round-trip");
 
 // ── 3. STJ source-gen ───────────────────────────────────────────────────────
@@ -41,10 +41,10 @@ var stjOptions = new JsonSerializerOptions
 var pidTypeInfo = (System.Text.Json.Serialization.Metadata.JsonTypeInfo<PersonalId>)stjOptions.GetTypeInfo(typeof(PersonalId));
 
 var stjJson = JsonSerializer.Serialize(pid, pidTypeInfo);
-Assert.Equal(stjJson, "\"189001019802\"", "STJ source-gen Serialize");
+Assert.Equal(stjJson, $"\"{SmokeNumbers.Personnummer}\"", "STJ source-gen Serialize");
 
 var stjRound = JsonSerializer.Deserialize(stjJson, pidTypeInfo)!;
-Assert.Equal(stjRound.LongFormat(), "189001019802", "STJ source-gen Deserialize round-trip");
+Assert.Equal(stjRound.LongFormat(), SmokeNumbers.Personnummer, "STJ source-gen Deserialize round-trip");
 Console.WriteLine("  ✓ STJ source-gen Serialize + Deserialize");
 
 // ── 4. DataAnnotations attribute ────────────────────────────────────────────
@@ -75,7 +75,7 @@ await Task.Delay(2000);
 using var http = new HttpClient();
 http.BaseAddress = new Uri(testBaseUrl);
 
-var validResp = await http.GetAsync(new Uri("/customers/189001019802", UriKind.Relative));
+var validResp = await http.GetAsync(new Uri($"/customers/{SmokeNumbers.Personnummer}", UriKind.Relative));
 if (!validResp.IsSuccessStatusCode)
     throw new InvalidOperationException($"Expected 200, got {(int)validResp.StatusCode}");
 Console.WriteLine("  ✓ Valid PersonalId route → 200");
@@ -119,6 +119,13 @@ Console.WriteLine("  ✓ Mvc.JsonOptions setup registered (Caveat 3 — AOT-clea
 Console.WriteLine("=== AOT smoke test PASS ===");
 return 0;
 
+// Numbers from Skatteverket's published test sets.
+internal static class SmokeNumbers
+{
+    public const string Personnummer = "189001019802";
+    public const string Samordningsnummer = "191401682396";
+}
+
 internal static class DataAnnotationsProbe
 {
     [UnconditionalSuppressMessage(
@@ -130,7 +137,7 @@ internal static class DataAnnotationsProbe
         var attr = new ValidPersonalIdAttribute();
         var ctx = new ValidationContext(new object());
 
-        var ok = attr.GetValidationResult("189001019802", ctx);
+        var ok = attr.GetValidationResult(SmokeNumbers.Personnummer, ctx);
         if (ok != ValidationResult.Success)
             throw new InvalidOperationException($"Expected success, got: {ok?.ErrorMessage}");
 

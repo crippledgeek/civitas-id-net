@@ -18,16 +18,16 @@ using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
 
 // Parse and validate
-var person = PersonalId.Parse("198112189876");
+var person = PersonalId.Parse("189001019802");
 
 // Read core facts
 DateOnly birth = person.BirthDate;
 bool adult = person.IsAdult();
 
 // Format
-string long12 = person.LongFormat();              // "198112189876"
-string short10 = person.ShortFormat(PnrFormat.ShortFormat);            // "8112189876"
-string short11 = person.ShortFormat(PnrFormat.ShortFormatWithSeparator); // "811218-9876"
+string long12 = person.LongFormat();              // "189001019802"
+string short10 = person.ShortFormat(PnrFormat.ShortFormat);            // "9001019802"
+string short11 = person.ShortFormat(PnrFormat.ShortFormatWithSeparator); // "900101+9802"
 
 // TryParse never throws
 if (PersonalId.TryParse("198112180000", out var maybe))

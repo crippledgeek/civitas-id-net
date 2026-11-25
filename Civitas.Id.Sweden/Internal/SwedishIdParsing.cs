@@ -26,7 +26,7 @@ internal static class SwedishIdParsing
     ///     further adjustment for the <c>'+'</c> separator (person is 100+ years old).
     /// </summary>
     /// <param name="explicitCentury">
-    ///     The 2-digit explicit century if the input had one (e.g. 19 from "192506010004"); null if
+    ///     The 2-digit explicit century if the input had one (e.g. 19 for a birth year of 1925); null if
     ///     absent.
     /// </param>
     /// <param name="twoDigitYear">The 2-digit short year from the input.</param>
@@ -266,7 +266,7 @@ internal static class SwedishIdParsing
         if (!TryMatchSpan(s.AsSpan(), out var match)) return false;
 
         // PeOrgNr "16" prefix is for legal-person 12-digit input only — reject for person-shape.
-        // "161212121212" (month 12, day 12, century 16) is not a real birth year (no one born in 1600s).
+        // Century 16 with a calendar month and day is not a real birth year (no one born in 1600s).
         // "16" can only appear as input prefix for legal-person orgnummer (month >= 20).
         if (match is { HasCentury: true, CenturyValue: 16, Month: < 20 })
             return false;

@@ -19,6 +19,11 @@ internal sealed class SwedishIdSchemaTransformer : IOpenApiSchemaTransformer
     private const string OrganisationIdPattern = @"^\d{10}$";
     private const string SwedishOfficialIdPattern = @"^\d{6,12}[-+]?\d{4}?$";
 
+    // Numbers from Skatteverket's published test sets, so no example can belong to a real person.
+    private const string PersonalIdExample = "189001019802";
+    private const string CoordinationIdExample = "191401682396";
+    private const string OrganisationIdExample = "5560160680";
+
     /// <summary>
     /// Inspects the JSON type bound to the schema and, if it matches one of
     /// the Civitas.Id.Sweden ID types, sets the schema's string format,
@@ -47,22 +52,22 @@ internal sealed class SwedishIdSchemaTransformer : IOpenApiSchemaTransformer
         if (type == typeof(PersonalId))
         {
             Apply(schema, "personnummer", PersonalIdPattern,
-                "198112189876", "Swedish personal ID (personnummer).");
+                PersonalIdExample, "Swedish personal ID (personnummer).");
         }
         else if (type == typeof(CoordinationId))
         {
             Apply(schema, "samordningsnummer", CoordinationIdPattern,
-                "198112789876", "Swedish coordination number (samordningsnummer).");
+                CoordinationIdExample, "Swedish coordination number (samordningsnummer).");
         }
         else if (type == typeof(OrganisationId))
         {
             Apply(schema, "organisationsnummer", OrganisationIdPattern,
-                "5560160680", "Swedish organisation number (organisationsnummer).");
+                OrganisationIdExample, "Swedish organisation number (organisationsnummer).");
         }
         else if (type == typeof(SwedishOfficialId))
         {
             Apply(schema, "swedish-official-id", SwedishOfficialIdPattern,
-                "198112189876", "Swedish official ID — any of personnummer, samordningsnummer, or organisationsnummer.");
+                PersonalIdExample, "Swedish official ID — any of personnummer, samordningsnummer, or organisationsnummer.");
         }
     }
 

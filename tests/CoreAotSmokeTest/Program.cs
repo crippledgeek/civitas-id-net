@@ -5,14 +5,18 @@ using Civitas.Id.Sweden.Format;
 // forces full ILC analysis of Civitas.Id.Sweden regardless of what is called
 // here, so this is a smoke check rather than a coverage check.
 
-if (!PersonalId.TryParse("189001019802", out var pid))
+// Numbers from Skatteverket's published test sets.
+const string personnummer = "189001019802";
+const string samordningsnummer = "191401682396";
+
+if (!PersonalId.TryParse(personnummer, out var pid))
 {
     Console.Error.WriteLine("PersonalId.TryParse smoke test failed");
     return 1;
 }
 Console.WriteLine($"PersonalId: {pid.Format(PnrFormat.LongFormat)} BirthDate={pid.BirthDate} IsAdult={pid.IsAdult(new DateOnly(2026, 5, 20))}");
 
-if (!CoordinationId.TryParse("189001610006", out var cid))
+if (!CoordinationId.TryParse(samordningsnummer, out var cid))
 {
     Console.Error.WriteLine("CoordinationId.TryParse smoke test failed");
     return 1;
