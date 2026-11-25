@@ -142,7 +142,9 @@ public class FixtureDrivenTests
     public static IEnumerable<(string Input, string LongFormatHyphenated, string ShortFormat, bool Valid, string Type)>
         OrganisationsnummerExtended()
     {
-        var rows = CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells);
+        var rows = CsvLoader.Rows(Fixtures.OrganisationsnummerExtended)
+            .Concat(CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma))
+            .Select(row => row.Cells);
         foreach (var r in rows)
             yield return (
                 r[0],
@@ -163,7 +165,7 @@ public class FixtureDrivenTests
         var id = OrganisationId.Parse(input);
         await Assert.That(id.ShortFormat()).IsEqualTo(shortFormat);
         // The fixture's "long_format" column is the short-form-with-separator (e.g. "556016-0680",
-        // or "121212+1212" for centenarian Enskild firma). Assert against ShortFormatWithSeparator,
+        // or the same with "+" for centenarian Enskild firma). Assert against ShortFormatWithSeparator,
         // which preserves the inferred separator ('+' for centenarians, '-' otherwise).
         await Assert.That(id.Format(PnrFormat.ShortFormatWithSeparator))
             .IsEqualTo(longFormatHyphenated);

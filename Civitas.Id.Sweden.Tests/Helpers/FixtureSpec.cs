@@ -47,16 +47,25 @@ internal static class Fixtures
     public static readonly FixtureSpec OrganisationsnummerExtended = new()
     {
         FileName = "testorganisationsnummer_extended.csv",
-        DataRows = 22,
-        Sha256 = "b6b2560cab4e5d183435669c4f82e72942c8c8428e81a69ea08526bb70f0011f",
+        DataRows = 10,
+        Sha256 = "6019d7905c294a45e7f3a91865a7653c703b8fb9af04cdbe2835c58dc4bb3ba8",
+        HasHeader = true
+    };
+
+    /// <summary>Official person numbers written as sole-trader organisation numbers, with the extended file's columns.</summary>
+    public static readonly FixtureSpec OrganisationsnummerEnskildFirma = new()
+    {
+        FileName = "testorganisationsnummer_enskild_firma.csv",
+        DataRows = 16,
+        Sha256 = "4729b2ca084db192b952edcbfdf32c86e6e223f7cb4450b4a76b2048917b066a",
         HasHeader = true
     };
 
     public static readonly FixtureSpec OrganisationsnummerTextual = new()
     {
         FileName = "testorganisationsnummer.txt",
-        DataRows = 10,
-        Sha256 = "0e4f3796883d3b18224ef1b71e352a5676a7ca5539fbbcf03bcfac990fdcaa54",
+        DataRows = 6,
+        Sha256 = "17fe314c5a642c3aabc4774e325e233d174c2306d70ac9b1461b2a3e1999085d",
         HasHeader = false
     };
 
@@ -98,6 +107,7 @@ internal static class Fixtures
     public static readonly IReadOnlyList<FixtureSpec> All =
     [
         Personnummer1890S, PersonnummerFinal, SamordningsnummerCorrected, OrganisationsnummerExtended,
-        OrganisationsnummerTextual, InvalidIds, SamordningsnummerOfficial, Personnummer2000S, Samordningsnummer2020
+        OrganisationsnummerEnskildFirma, OrganisationsnummerTextual, InvalidIds, SamordningsnummerOfficial,
+        Personnummer2000S, Samordningsnummer2020
     ];
 }

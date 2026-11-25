@@ -58,10 +58,17 @@ Retrieval and comparison below were done on 2026-11-24, and on 2026-11-25 for th
 - Its 1306 numbers (first column) are 1306 of the 1498 numbers in the official 2019 file above, in the same
   order. The file adds the columns `Female`, `Male`, `Age`, `Adult`, `Child` and `Valid`.
 
+## testorganisationsnummer_enskild_firma.csv
+
+- File: `Civitas.Id.Sweden.Tests/Fixtures/testorganisationsnummer_enskild_firma.csv`
+- Its 16 numbers are numbers of the official files above: 3 from the 1890-1899 file, 3 from the 2000-2009 file and 10
+  from the 2019 samordningsnummer file. Every column is those digits rewritten: with or without century, separator,
+  `SE` prefix and VAT suffix.
+
 ## testorganisationsnummer_extended.csv
 
 - File: `Civitas.Id.Sweden.Tests/Fixtures/testorganisationsnummer_extended.csv`
-- Source: organisationsnummer/meta, `testdata/list.json`, <https://github.com/organisationsnummer/meta>. All 22 input
+- Source: organisationsnummer/meta, `testdata/list.json`, <https://github.com/organisationsnummer/meta>. All 10 input
   values occur there.
 - Licence: MIT
 
@@ -94,5 +101,5 @@ OTHER DEALINGS IN THE SOFTWARE.
 
 ## Files of unknown origin
 
-- `testorganisationsnummer.txt` (10 rows): origin not documented; none of its rows is in organisationsnummer/meta.
+- `testorganisationsnummer.txt` (6 rows): origin not documented; none of its rows is in organisationsnummer/meta.
 - `invalid_swedish_ids.csv` (9 rows): origin not documented; none of its rows is in organisationsnummer/meta.

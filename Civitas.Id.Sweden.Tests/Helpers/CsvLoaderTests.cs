@@ -13,8 +13,9 @@ public class CsvLoaderTests
         yield return (Fixtures.Personnummer1890S, 3653);
         yield return (Fixtures.PersonnummerFinal, 3653);
         yield return (Fixtures.SamordningsnummerCorrected, 1306);
-        yield return (Fixtures.OrganisationsnummerExtended, 22);
-        yield return (Fixtures.OrganisationsnummerTextual, 10);
+        yield return (Fixtures.OrganisationsnummerExtended, 10);
+        yield return (Fixtures.OrganisationsnummerEnskildFirma, 16);
+        yield return (Fixtures.OrganisationsnummerTextual, 6);
         yield return (Fixtures.InvalidIds, 9);
         yield return (Fixtures.SamordningsnummerOfficial, 1498);
         yield return (Fixtures.Personnummer2000S, 7323);
@@ -24,7 +25,7 @@ public class CsvLoaderTests
     private const int FirstColumn = 0;
     private const int SecondColumn = 1;
 
-    // Column indexes of testorganisationsnummer_extended.csv; a header test keeps them honest.
+    // Column indexes of testorganisationsnummer_extended.csv and testorganisationsnummer_enskild_firma.csv; a header test keeps them honest.
     private const int InputColumn = FirstColumn;
     private const int LongFormatColumn = 1;
     private const int ShortFormatColumn = 2;
@@ -51,6 +52,10 @@ public class CsvLoaderTests
         yield return (Fixtures.OrganisationsnummerExtended, LongFormatColumn, 5);
         yield return (Fixtures.OrganisationsnummerExtended, ShortFormatColumn, 5);
         yield return (Fixtures.OrganisationsnummerExtended, VatNumberColumn, 5);
+        yield return (Fixtures.OrganisationsnummerEnskildFirma, InputColumn, 0);
+        yield return (Fixtures.OrganisationsnummerEnskildFirma, LongFormatColumn, 0);
+        yield return (Fixtures.OrganisationsnummerEnskildFirma, ShortFormatColumn, 0);
+        yield return (Fixtures.OrganisationsnummerEnskildFirma, VatNumberColumn, 0);
         yield return (Fixtures.OrganisationsnummerTextual, FirstColumn, 0);
         yield return (Fixtures.InvalidIds, FirstColumn, 0);
         yield return (Fixtures.SamordningsnummerOfficial, FirstColumn, 0);
@@ -111,6 +116,13 @@ public class CsvLoaderTests
                 .ToHashSet();
             await Assert.That(listed.Count).IsEqualTo(ExtendedIdColumnCount);
             await Assert.That(listed.SetEquals(ExtendedIdColumns().Select(c => c.HeaderName))).IsTrue();
+        }
+
+        [Test]
+        public async Task EnskildFirmaFile_HasTheHeaderOfTheExtendedFile()
+        {
+            var header = HeaderCells(Fixtures.OrganisationsnummerEnskildFirma);
+            await Assert.That(header.SequenceEqual(HeaderCells(Fixtures.OrganisationsnummerExtended))).IsTrue();
         }
 
         [Test]
