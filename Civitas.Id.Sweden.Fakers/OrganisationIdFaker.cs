@@ -4,7 +4,6 @@ using System.Security.Cryptography;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Fakers.Internal;
 using Civitas.Id.Sweden.Format;
-using Civitas.Id.Sweden.Internal;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Fakers;
@@ -18,6 +17,16 @@ namespace Civitas.Id.Sweden.Fakers;
 [PublicAPI]
 public sealed class OrganisationIdFaker : IOrganisationIdFaker
 {
+    /// <summary>
+    ///     Added to the month, because the parser takes a month group of 20 or more for a legal person's number.
+    /// </summary>
+    private const int LegalPersonMonthOffset = 20;
+
+    private const int MonthsPerYear = 12;
+
+    /// <summary>How many values three serial digits have.</summary>
+    private const int SerialCount = 1000;
+
     private static readonly OrganisationForm[] NamedForms =
         [.. Enum.GetValues<OrganisationForm>().Where(f => f != OrganisationForm.None)];
 
@@ -63,6 +72,9 @@ public sealed class OrganisationIdFaker : IOrganisationIdFaker
     /// <summary>The default thread-safe non-deterministic faker (uses <see cref="RandomNumberGenerator" />).</summary>
     public static OrganisationIdFaker Default { get; } = new();
 
+    /// <summary>The defects a legal person's number can have, in a stable order.</summary>
+    internal IReadOnlyList<IdDefect> SupportedDefects { get; } = DefectCatalog.LegalPerson.Supported;
+
     /// <inheritdoc />
     public string CountryCode => "SE";
 
@@ -87,8 +99,7 @@ public sealed class OrganisationIdFaker : IOrganisationIdFaker
     /// <inheritdoc />
     public OrganisationId GenerateLegalPerson()
     {
-        var form = NamedForms[_next(0, NamedForms.Length)];
-        return Generate(form);
+        return OrganisationId.FromValidated(DrawLegalPerson(DrawForm()).Render());
     }
 
     /// <inheritdoc />
@@ -129,22 +140,7 @@ public sealed class OrganisationIdFaker : IOrganisationIdFaker
             throw new ArgumentOutOfRangeException(nameof(form),
                 "Use GeneratePhysicalPerson() for Enskild firma (OrganisationForm.None).");
 
-        // Build a 10-digit body: form code (2) + encoded month (2) + year (2) + serial (3) + Luhn (1).
-        // Per the regex layout (year-month-day-unique), positions 2-3 of the 10-digit form
-        // are the "month" group; OrganisationId.TryParse requires this group to be >= 20
-        // to identify legal-person orgnummer. Encoded month is randomised in [21, 32].
-        var formCode = (int)form; // 2-digit Bolagsverket code
-        var encodedMonth = _next(1, 13) + 20; // 21–32, sibling-parity encoding
-        var year = _next(0, 100);
-        var serial = _next(0, 1000);
-
-        var body9 =
-            $"{formCode:D2}" +
-            $"{encodedMonth:D2}{year:D2}" +
-            $"{serial:D3}"; // 9 digits: form(2) + encodedMonth(2) + year(2) + serial(3)
-        var check = SwedishLuhnAlgorithm.ComputeCheckDigit(body9);
-        var ten = $"{body9}{check}";
-        return OrganisationId.FromValidated(ten);
+        return OrganisationId.FromValidated(DrawLegalPerson(form).Render());
     }
 
     /// <summary>
@@ -166,18 +162,57 @@ public sealed class OrganisationIdFaker : IOrganisationIdFaker
         };
     }
 
+    /// <summary>Generates a legal person's number, valid or with a random defect.</summary>
+    /// <param name="validity">Whether the number is valid.</param>
+    /// <returns>The number.</returns>
+    /// <exception cref="ArgumentOutOfRangeException"><paramref name="validity" /> is not defined.</exception>
+    internal GeneratedId Generate(IdValidity validity)
+    {
+        return validity.Match(
+            () => new ValidGeneratedId(DrawLegalPerson(DrawForm())),
+            () => Generate(DefectCatalog.LegalPerson.Pick(null, _next)));
+    }
+
+    /// <summary>Generates a legal person's number with one defect.</summary>
+    /// <param name="defect">The rule to break.</param>
+    /// <returns>The invalid number.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <paramref name="defect" /> is not defined, or breaks a date, which a legal person's number has none of.
+    /// </exception>
+    internal InvalidGeneratedId Generate(IdDefect defect)
+    {
+        return DefectCatalog.LegalPerson.Corrupt(defect, DrawLegalPerson(DrawForm()), _next);
+    }
+
     private OrganisationId GenerateLegalPersonForRegistration(DateOnly registrationDate)
     {
-        var form = NamedForms[_next(0, NamedForms.Length)];
-        var formCode = (int)form;
-        var encodedMonth = registrationDate.Month + 20; // sibling-parity: 21–32
-        var year2 = registrationDate.Year % 100;
-        var serial = _next(0, 1000);
-        var body9 =
-            $"{formCode:D2}" +
-            $"{encodedMonth:D2}{year2:D2}" +
-            $"{serial:D3}";
-        var check = SwedishLuhnAlgorithm.ComputeCheckDigit(body9);
-        return OrganisationId.FromValidated($"{body9}{check}");
+        var draft = DrawSerial(DrawForm(), registrationDate.Month, registrationDate.Year % IdDraft.YearsPerCentury);
+        return OrganisationId.FromValidated(draft.Render());
+    }
+
+    private OrganisationForm DrawForm()
+    {
+        return NamedForms[_next(0, NamedForms.Length)];
+    }
+
+    /// <summary>Draws month, year and serial. Seeded output depends on the order of these draws.</summary>
+    private IdDraft DrawLegalPerson(OrganisationForm form)
+    {
+        var month = _next(1, MonthsPerYear + 1);
+        var year = _next(0, IdDraft.YearsPerCentury);
+        return DrawSerial(form, month, year);
+    }
+
+    /// <summary>The form digits stand where a person's number has the year, the year where it has the day.</summary>
+    private IdDraft DrawSerial(OrganisationForm form, int month, int year)
+    {
+        return new IdDraft
+        {
+            Century = null,
+            Year = (int)form,
+            Month = month + LegalPersonMonthOffset,
+            Day = year,
+            Serial = _next(0, SerialCount)
+        };
     }
 }
