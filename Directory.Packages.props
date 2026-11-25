@@ -15,7 +15,7 @@
     Conventions:
     - Runtime/library dependencies that ship in the published packages float on
       the 10.0.* patch line (libraries should accept a range, not over-constrain
-      consumers).
+      consumers). Exception: Microsoft.AspNetCore.OpenApi, pinned below.
     - Test/dev tooling is pinned EXACTLY for reproducible CI (TUnit family,
       Verify, ArchUnitNET, BenchmarkDotNet).
     - SQLitePCLRaw.bundle_e_sqlite3 is an EXACT security override (see the test
@@ -25,14 +25,20 @@
   <PropertyGroup>
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
     <!-- Allow floating PackageVersion ranges (e.g. 10.0.*) under CPM. Required by
-         NU1011 because published-library runtime deps intentionally float on the
+         NU1011 because most published-library runtime deps intentionally float on the
          10.0 patch line rather than over-constraining consumers to an exact patch. -->
     <CentralPackageFloatingVersionsEnabled>true</CentralPackageFloatingVersionsEnabled>
   </PropertyGroup>
 
   <ItemGroup>
-    <!-- Published-library runtime dependencies (float on the 10.0 patch line). -->
-    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.*" />
+    <!-- Published-library runtime dependencies (float on the 10.0 patch line,
+         except Microsoft.AspNetCore.OpenApi). -->
+    <!-- 10.0.11: exact for this build, a minimum for consumers. It is the last version that
+         permits Microsoft.OpenApi below 2.12.0, which obsoleted OpenApiSchema.Example
+         (microsoft/OpenAPI.NET #2984). Resolves Microsoft.OpenApi 2.7.5. Do not use 10.0.10:
+         it resolves Microsoft.OpenApi 2.0.0, affected by GHSA-v5pm-xwqc-g5wc (High).
+         Drop the pin when SwedishIdSchemaTransformer uses OpenApiSchema.Examples. -->
+    <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="10.0.11" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore" Version="10.0.*" />
     <PackageVersion Include="Microsoft.Extensions.Configuration.Binder" Version="10.0.*" />
     <PackageVersion Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.*" />

@@ -235,7 +235,7 @@ public class PersonalIdTests
         [Test]
         public async Task ISpanParsable_TryParse_AcceptsSpan()
         {
-            var ok = PersonalId.TryParse(ValidPin12.AsSpan(), null, out var id);
+            var ok = PersonalId.TryParse(ValidPin12.AsSpan(), CultureInfo.InvariantCulture, out var id);
             await Assert.That(ok).IsTrue();
             await Assert.That(id).IsNotNull();
         }
@@ -243,14 +243,14 @@ public class PersonalIdTests
         [Test]
         public async Task ISpanParsable_Parse_ThrowsOnInvalidSpan()
         {
-            await Assert.That(() => PersonalId.Parse("garbage".AsSpan(), null))
+            await Assert.That(() => PersonalId.Parse("garbage".AsSpan(), CultureInfo.InvariantCulture))
                 .Throws<InvalidIdNumberException>();
         }
 
         [Test]
         public async Task ISpanParsable_TryParse_ReturnsFalseOnInvalid()
         {
-            var ok = PersonalId.TryParse("nonsense".AsSpan(), null, out var id);
+            var ok = PersonalId.TryParse("nonsense".AsSpan(), CultureInfo.InvariantCulture, out var id);
             await Assert.That(ok).IsFalse();
             await Assert.That(id).IsNull();
         }
@@ -258,7 +258,7 @@ public class PersonalIdTests
         [Test]
         public async Task ISpanParsable_Parse_AcceptsValidSpan()
         {
-            var id = PersonalId.Parse(ValidPin12.AsSpan(), null);
+            var id = PersonalId.Parse(ValidPin12.AsSpan(), CultureInfo.InvariantCulture);
             await Assert.That(id).IsNotNull();
         }
 

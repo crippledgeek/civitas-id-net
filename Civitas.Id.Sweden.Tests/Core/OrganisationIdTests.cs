@@ -1,3 +1,4 @@
+using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Format;
@@ -113,7 +114,7 @@ public class OrganisationIdTests
         [Test]
         public async Task ISpanParsable_TryParse_AcceptsSpan()
         {
-            var ok = OrganisationId.TryParse(ValidShort.AsSpan(), null, out var id);
+            var ok = OrganisationId.TryParse(ValidShort.AsSpan(), CultureInfo.InvariantCulture, out var id);
             await Assert.That(ok).IsTrue();
             await Assert.That(id).IsNotNull();
         }
@@ -121,7 +122,7 @@ public class OrganisationIdTests
         [Test]
         public async Task ISpanParsable_Parse_ThrowsOnInvalidSpan()
         {
-            await Assert.That(() => OrganisationId.Parse("garbage".AsSpan(), null))
+            await Assert.That(() => OrganisationId.Parse("garbage".AsSpan(), CultureInfo.InvariantCulture))
                 .Throws<InvalidIdNumberException>();
         }
 
@@ -265,7 +266,7 @@ public class OrganisationIdTests
             // satisfy the legal-person month >= 20 check. Compute checksum to make Luhn-valid.
             const string nineDigits = "552000000";
             var check = Civitas.Id.Sweden.Internal.SwedishLuhnAlgorithm.ComputeCheckDigit(nineDigits);
-            var tenDigits = nineDigits + check.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            var tenDigits = nineDigits + check.ToString(CultureInfo.InvariantCulture);
 
             var id = OrganisationId.Parse(tenDigits);
             await Assert.That(id.Form).IsEqualTo(OrganisationForm.EuropakooperativEgtsEric);

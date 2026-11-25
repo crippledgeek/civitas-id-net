@@ -1,3 +1,4 @@
+using System.Globalization;
 using System.Text;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
@@ -21,11 +22,11 @@ public class Utf8RoundTripTests
     public async Task PersonalId_Utf8RoundTrip_BitForBit()
     {
         var utf8 = Encoding.UTF8.GetBytes(ValidPersonal);
-        var ok = PersonalId.TryParse(utf8, null, out var pid);
+        var ok = PersonalId.TryParse(utf8, CultureInfo.InvariantCulture, out var pid);
         await Assert.That(ok).IsTrue();
 
         var buffer = new byte[16];
-        var fmtOk = pid!.TryFormat(buffer, out var written, "L", null);
+        var fmtOk = pid!.TryFormat(buffer, out var written, "L", CultureInfo.InvariantCulture);
         await Assert.That(fmtOk).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(buffer, 0, written)).IsEqualTo(ValidPersonal);
     }
@@ -35,11 +36,11 @@ public class Utf8RoundTripTests
     public async Task CoordinationId_Utf8RoundTrip_BitForBit()
     {
         var utf8 = Encoding.UTF8.GetBytes(ValidCoordination);
-        var ok = CoordinationId.TryParse(utf8, null, out var cid);
+        var ok = CoordinationId.TryParse(utf8, CultureInfo.InvariantCulture, out var cid);
         await Assert.That(ok).IsTrue();
 
         var buffer = new byte[16];
-        var fmtOk = cid!.TryFormat(buffer, out var written, "L", null);
+        var fmtOk = cid!.TryFormat(buffer, out var written, "L", CultureInfo.InvariantCulture);
         await Assert.That(fmtOk).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(buffer, 0, written)).IsEqualTo(ValidCoordination);
     }
@@ -49,11 +50,11 @@ public class Utf8RoundTripTests
     public async Task OrganisationId_Utf8RoundTrip_BitForBit()
     {
         var utf8 = Encoding.UTF8.GetBytes(ValidOrg);
-        var ok = OrganisationId.TryParse(utf8, null, out var oid);
+        var ok = OrganisationId.TryParse(utf8, CultureInfo.InvariantCulture, out var oid);
         await Assert.That(ok).IsTrue();
 
         var buffer = new byte[16];
-        var fmtOk = oid!.TryFormat(buffer, out var written, "L", null);
+        var fmtOk = oid!.TryFormat(buffer, out var written, "L", CultureInfo.InvariantCulture);
         await Assert.That(fmtOk).IsTrue();
         await Assert.That(Encoding.UTF8.GetString(buffer, 0, written)).IsEqualTo(ValidOrg);
     }
@@ -64,7 +65,7 @@ public class Utf8RoundTripTests
     {
         var utf8 = Encoding.UTF8.GetBytes(ValidPersonal);
         var utf16Ok = PersonalId.TryParse(ValidPersonal, out var utf16);
-        var utf8Ok = PersonalId.TryParse(utf8, null, out var utf8Parsed);
+        var utf8Ok = PersonalId.TryParse(utf8, CultureInfo.InvariantCulture, out var utf8Parsed);
         await Assert.That(utf16Ok).IsTrue();
         await Assert.That(utf8Ok).IsTrue();
         await Assert.That(utf16).IsEqualTo(utf8Parsed);
@@ -77,7 +78,7 @@ public class Utf8RoundTripTests
         // Replace one ASCII byte with a UTF-8 lead byte > 127 → invalid for Swedish ID.
         var utf8 = Encoding.UTF8.GetBytes(ValidPersonal);
         utf8[0] = 0xC3; // start of a 2-byte UTF-8 sequence
-        var ok = PersonalId.TryParse(utf8, null, out var pid);
+        var ok = PersonalId.TryParse(utf8, CultureInfo.InvariantCulture, out var pid);
         await Assert.That(ok).IsFalse();
         await Assert.That(pid).IsNull();
     }
@@ -88,7 +89,7 @@ public class Utf8RoundTripTests
     {
         var utf8 = Encoding.UTF8.GetBytes(ValidOrg);
         utf8[1] = 0xE2; // start of a 3-byte UTF-8 sequence
-        var ok = OrganisationId.TryParse(utf8, null, out var oid);
+        var ok = OrganisationId.TryParse(utf8, CultureInfo.InvariantCulture, out var oid);
         await Assert.That(ok).IsFalse();
         await Assert.That(oid).IsNull();
     }
@@ -99,7 +100,7 @@ public class Utf8RoundTripTests
     {
         var pid = PersonalId.Parse(ValidPersonal);
         var buffer = new byte[4];
-        var ok = pid.TryFormat(buffer, out var written, "L", null);
+        var ok = pid.TryFormat(buffer, out var written, "L", CultureInfo.InvariantCulture);
         await Assert.That(ok).IsFalse();
         await Assert.That(written).IsEqualTo(0);
     }
@@ -122,7 +123,7 @@ public class Utf8RoundTripTests
     public async Task PersonalId_Utf8Parse_InvalidInput_Throws()
     {
         var utf8 = "0000000000"u8.ToArray();
-        await Assert.That(() => PersonalId.Parse(utf8, null))
+        await Assert.That(() => PersonalId.Parse(utf8, CultureInfo.InvariantCulture))
             .Throws<Civitas.Id.Sweden.Errors.InvalidIdNumberException>();
     }
 
@@ -134,7 +135,7 @@ public class Utf8RoundTripTests
     [Test]
     public async Task CoordinationId_Utf8TryParse_EmptySpan_ReturnsFalse()
     {
-        var ok = CoordinationId.TryParse(ReadOnlySpan<byte>.Empty, null, out var result);
+        var ok = CoordinationId.TryParse(ReadOnlySpan<byte>.Empty, CultureInfo.InvariantCulture, out var result);
         await Assert.That(ok).IsFalse();
         await Assert.That(result).IsNull();
     }
@@ -144,7 +145,7 @@ public class Utf8RoundTripTests
     public async Task CoordinationId_Utf8Parse_EmptySpan_ThrowsInvalidIdNumberException()
     {
         var emptyBytes = Array.Empty<byte>();
-        await Assert.That(() => CoordinationId.Parse(emptyBytes.AsSpan(), null))
+        await Assert.That(() => CoordinationId.Parse(emptyBytes.AsSpan(), CultureInfo.InvariantCulture))
             .Throws<Civitas.Id.Sweden.Errors.InvalidIdNumberException>();
     }
 }

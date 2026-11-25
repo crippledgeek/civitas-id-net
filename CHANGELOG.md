@@ -5,12 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## [Unreleased]
 
-_When cut, rename this heading to `## [1.0.1] - YYYY-MM-DD` and add a fresh empty
+_When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empty
 `## [Unreleased]` above it (Keep a Changelog convention)._
-
-Maintenance patch — API-compatible with 1.0.0 (no public API changes). The bulk of this
-release is internal test-coverage and CI hardening that does not ship; the only
-consumer-visible change is the doc-comment fix below.
 
 ### Fixed
 - **Civitas.Id.Sweden.Json**: corrected the XML doc comments on
@@ -26,6 +22,10 @@ consumer-visible change is the doc-comment fix below.
   time-zone resolution was refactored to an injectable probe seam to make the fallback
   branches testable. The resolved zone (`Europe/Stockholm`), the probe order, and the
   `InvalidOperationException` message are byte-for-byte unchanged. (#7)
+
+### Security
+- **Civitas.Id.Sweden.AspNetCore**: the minimum `Microsoft.AspNetCore.OpenApi` is now 10.0.11,
+  which brings Microsoft.OpenApi 2.7.5 and clears GHSA-v5pm-xwqc-g5wc. (#22)
 
 ## [1.0.0] - 2026-06-21
 
