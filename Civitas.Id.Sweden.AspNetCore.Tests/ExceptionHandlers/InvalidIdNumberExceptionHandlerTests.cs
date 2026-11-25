@@ -6,6 +6,7 @@ using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.Options;
 using Civitas.Id.Sweden.Errors;
 using Microsoft.AspNetCore.Diagnostics;
+using Microsoft.AspNetCore.Http.Json;
 using Microsoft.Extensions.Logging.Abstractions;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.ExceptionHandlers;
@@ -26,27 +27,26 @@ public class InvalidIdNumberExceptionHandlerTests
         public ValueTask WriteAsync(ProblemDetailsContext context) => ValueTask.CompletedTask;
     }
 
-    /// <summary>
-    /// <see cref="IProblemDetailsService"/> stub that throws
-    /// <see cref="NotSupportedException"/> from <see cref="TryWriteAsync"/>
-    /// — simulating the documented case where <c>ProblemDetails</c> is absent
-    /// from the <c>Http.Json.JsonOptions</c> TypeInfoResolverChain.
-    /// </summary>
+    /// <summary><see cref="IProblemDetailsService"/> stub whose <see cref="TryWriteAsync"/> throws.</summary>
     private sealed class ThrowingProblemDetailsService : IProblemDetailsService
     {
-        public ValueTask<bool> TryWriteAsync(ProblemDetailsContext context)
-            => throw new NotSupportedException("No ProblemDetails in resolver chain");
+        public ValueTask<bool> TryWriteAsync(ProblemDetailsContext context) => throw new NotSupportedException();
 
         public ValueTask WriteAsync(ProblemDetailsContext context) => ValueTask.CompletedTask;
     }
 
-    private static InvalidIdNumberExceptionHandler Make(Func<string, string>? redact = null)
+    private static InvalidIdNumberExceptionHandler Make(
+        Func<string, string>? redact = null,
+        IProblemDetailsService? service = null)
     {
         var opts = Microsoft.Extensions.Options.Options.Create(
             new CivitasIdSwedenAspNetCoreOptions { RedactInput = redact });
         return new InvalidIdNumberExceptionHandler(
             opts,
-            new FallbackOnlyProblemDetailsService(),
+            new InvalidIdProblemWriter(
+                service ?? new FallbackOnlyProblemDetailsService(),
+                Microsoft.Extensions.Options.Options.Create(new ProblemDetailsOptions()),
+                Microsoft.Extensions.Options.Options.Create(new JsonOptions())),
             NullLogger<InvalidIdNumberExceptionHandler>.Instance);
     }
 
@@ -163,26 +163,15 @@ public class InvalidIdNumberExceptionHandlerTests
         }
 
         [Test]
-        public async Task TryWriteAsync_ThrowsNotSupportedException_EngagesFallback_AndReturnsTrue()
+        public async Task TryWriteAsync_Throws_PropagatesAndWritesNothing()
         {
-            // Exercises the `catch (NotSupportedException)` branch in the handler:
-            // when IProblemDetailsService.TryWriteAsync throws, the hand-written
-            // AOT-safe fallback path runs and the handler still returns true with a 400.
-            var opts = Microsoft.Extensions.Options.Options.Create(new CivitasIdSwedenAspNetCoreOptions());
-            var handler = new InvalidIdNumberExceptionHandler(
-                opts,
-                new ThrowingProblemDetailsService(),
-                NullLogger<InvalidIdNumberExceptionHandler>.Instance);
+            var handler = Make(service: new ThrowingProblemDetailsService());
             var ctx = MakeContext();
-            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidFormat);
+            var ex = new InvalidIdNumberException("not-an-id", InvalidIdNumberReason.InvalidFormat);
 
-            var handled = await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
-
-            await Assert.That(handled).IsTrue();
-            await Assert.That(ctx.Response.StatusCode).IsEqualTo(StatusCodes.Status400BadRequest);
-            ctx.Response.Body.Position = 0;
-            var body = await JsonSerializer.DeserializeAsync<JsonObject>(ctx.Response.Body);
-            await Assert.That(body!["reason"]?.ToString()).IsEqualTo("InvalidFormat");
+            await Assert.That(async () => await handler.TryHandleAsync(ctx, ex, CancellationToken.None))
+                .ThrowsExactly<NotSupportedException>();
+            await Assert.That(ctx.Response.Body.Length).IsEqualTo(0);
         }
 
         [Test]

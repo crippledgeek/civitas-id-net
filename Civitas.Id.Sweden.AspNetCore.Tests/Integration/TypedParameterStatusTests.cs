@@ -1,7 +1,6 @@
 using System.Net;
 using System.Net.Mime;
 using System.Text;
-using System.Text.Json.Nodes;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.Core;
@@ -9,6 +8,8 @@ using Civitas.Id.Sweden.Fakers;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
+using static Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp.ProblemProbeHost;
+using static Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp.ProblemTestConstants;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration;
 
@@ -19,12 +20,9 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration;
 public class TypedParameterStatusTests
 {
     private const int FakerSeed = 1;
-    private const string NotAnId = "not-an-id";
     private const string AppErrorBody = "app-error";
     private const string AppErrorPath = "/app-error";
-    private const string TraceIdKey = "traceId";
     private const string BodyPath = "/body";
-    private const string BadRequestType = "https://civitas-id.dev/errors/bad-request";
 
     public static IEnumerable<string> EnvironmentNames() => [Environments.Development, Environments.Production];
 
@@ -50,7 +48,7 @@ public class TypedParameterStatusTests
         await Assert.That(development.Status).IsEqualTo(HttpStatusCode.BadRequest);
         await Assert.That(development.MediaType).IsEqualTo(MediaTypeNames.Application.ProblemJson);
         await Assert.That(development.Body).DoesNotContain(NotAnId);
-        await Assert.That(development.Json["type"]?.GetValue<string>()).IsEqualTo(BadRequestType);
+        await Assert.That(development.Json[TypeKey]?.GetValue<string>()).IsEqualTo(LibraryBadRequestType);
         await Assert.That(development.Json.ContainsKey(TraceIdKey)).IsTrue();
 
         await Assert.That(production.Status).IsEqualTo(HttpStatusCode.BadRequest);
@@ -210,27 +208,27 @@ public class TypedParameterStatusTests
 
     private static string ValidId() => PersonalIdFaker.WithSeed(FakerSeed).Generate().LongFormat();
 
-    private static Task<Response> GetAsync(
+    private static Task<ProbeResponse> GetAsync(
         string environment, string path, Action<IServiceCollection>? configure = null)
         => GetAsync(new TestHostSetup(environment) { Configure = configure }, path);
 
-    private static Task<Response> GetAsync(string environment, string path, Action<WebApplication> use)
+    private static Task<ProbeResponse> GetAsync(string environment, string path, Action<WebApplication> use)
         => GetAsync(new TestHostSetup(environment) { Use = use }, path);
 
-    private static async Task<Response> GetAsync(TestHostSetup setup, string path)
+    private static async Task<ProbeResponse> GetAsync(TestHostSetup setup, string path)
     {
         using var request = new HttpRequestMessage(HttpMethod.Get, new Uri(path, UriKind.Relative));
         return await SendAsync(setup, request);
     }
 
-    private static async Task<Response> PostMalformedBodyAsync(string environment)
+    private static async Task<ProbeResponse> PostMalformedBodyAsync(string environment)
     {
         using var request = new HttpRequestMessage(HttpMethod.Post, new Uri(BodyPath, UriKind.Relative));
         request.Content = new StringContent($"\"{NotAnId}\"", Encoding.UTF8, MediaTypeNames.Application.Json);
         return await SendAsync(new TestHostSetup(environment), request);
     }
 
-    private static async Task<Response> SendAsync(TestHostSetup setup, HttpRequestMessage request)
+    private static async Task<ProbeResponse> SendAsync(TestHostSetup setup, HttpRequestMessage request)
     {
         var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = setup.Environment });
         builder.WebHost.UseTestServer();
@@ -243,10 +241,10 @@ public class TypedParameterStatusTests
 
         using var client = app.GetTestClient();
         using var response = await client.SendAsync(request);
-        return new Response(
-            response.StatusCode,
-            response.Content.Headers.ContentType?.MediaType,
-            await response.Content.ReadAsStringAsync());
+        return new ProbeResponse(response.StatusCode, await response.Content.ReadAsStringAsync())
+        {
+            MediaType = response.Content.Headers.ContentType?.MediaType
+        };
     }
 
     private static void MapEndpoints(WebApplication app)
@@ -264,21 +262,6 @@ public class TypedParameterStatusTests
         app.MapGet("/toolarge/{id}", string (PersonalId id) =>
             throw new BadHttpRequestException(id.GetType().Name, StatusCodes.Status413PayloadTooLarge));
         app.MapGet(AppErrorPath, () => AppErrorBody);
-    }
-
-    private sealed record Response(HttpStatusCode Status, string? MediaType, string Body)
-    {
-        public JsonObject Json => JsonNode.Parse(Body)!.AsObject();
-
-        public string WithoutTraceId
-        {
-            get
-            {
-                var json = Json;
-                json.Remove(TraceIdKey);
-                return json.ToJsonString();
-            }
-        }
     }
 
     private sealed record TestHostSetup(string Environment)

@@ -29,14 +29,31 @@ app.Run();
 
 ## Response shapes
 
-When the library returns a 400 for an invalid Swedish ID, the response body shape depends on which surface triggered the failure. All four shapes share the same `type` URI (set by `ProblemDetailsTypeBaseUri`); only the body structure differs.
+When the library returns a 400 for an invalid Swedish ID, the response body shape depends on which surface triggered the failure. Rows 1, 3 and 4 have the `type` URI `{ProblemDetailsTypeBaseUri}bad-request`, row 2 has `{ProblemDetailsTypeBaseUri}invalid-id-number`.
+
+The `bad-request` type is app-wide: every 400 `ProblemDetails` whose `type` is empty or ASP.NET Core's default gets it, also on endpoints without an ID.
+
+Your own `CustomizeProblemDetails` runs after the library's, whichever was registered first, so your values win on every row below. Change the `ProblemDetails` you are given: MVC (rows 3 and 4) ignores a replaced instance. Three limits:
+
+- A `PostConfigure<ProblemDetailsOptions>` registered later that assigns it replaces both.
+- An `IProblemDetailsWriter` or MVC `ProblemDetailsFactory` of your own decides itself whether to run it.
+- It runs only when a `ProblemDetails` is written. If the client accepts no JSON, row 1 has none: set up as above, the parameter failure gives ASP.NET Core's plain-text status page when it is not thrown (the default outside Development), and a 400 with an empty body when it is. Row 2 is the same JSON whatever the client accepts; only `traceId` may be in another form, and a `status` your callback leaves empty is filled in when the client accepts no JSON.
+
+An exception from your callback, or from serializing what it adds, is not caught by the library. Register the types you add in `Microsoft.AspNetCore.Http.Json.JsonOptions`; the startup check covers `ProblemDetails` only. On row 2, `UseExceptionHandler()` logs the exception and rethrows the `InvalidIdNumberException`; the library and `UseExceptionHandler()` write no body, a developer exception page outside them may.
+
+Row 2 sends a redacted `input`. To send a stricter form, set `RedactInput`. To leave the member out entirely, remove it:
+
+```csharp
+builder.Services.AddProblemDetails(o =>
+    o.CustomizeProblemDetails = c => c.ProblemDetails.Extensions.Remove("input"));
+```
 
 | # | Trigger | Body type | Has `errors` dict |
 |---|---|---|---|
 | 1 | Minimal API route param `IParsable<T>` parse fail | `ProblemDetails` | No |
 | 2 | Minimal API endpoint throws `InvalidIdNumberException` | `ProblemDetails` (+ `reason` / `input` extensions) | No |
 | 3 | MVC `[ApiController]` ModelState invalid via `[ValidPersonalId]` | `ValidationProblemDetails` | Yes |
-| 4 | MVC `[FromBody]` STJ parse fail (typed `PersonalId` property) | `ValidationProblemDetails` (`errors` keyed by JSON path, e.g. `$.id`) | Yes |
+| 4 | MVC `[FromBody]` STJ parse fail (typed `PersonalId` property) | `ValidationProblemDetails` (`errors` keyed by the empty string and the action parameter's name) | Yes |
 
 Row 1 surfaces through ASP.NET Core's status-code 400 path, which the library customizes via `CustomizeProblemDetails` to set the `type` URI to `{ProblemDetailsTypeBaseUri}bad-request`. Although [`aspnetcore#62066`](https://github.com/dotnet/aspnetcore/pull/62066) added `HttpValidationProblemDetails` for minimal-API endpoint-filter validation in .NET 10 GA, typed-route-parameter parse failures for `IParsable<T>` bindings do not go through that filter — they short-circuit to a 400 from the binding layer with no field-level `errors` dictionary.
 
@@ -44,7 +61,7 @@ In Development, ASP.NET Core throws `BadHttpRequestException` for a malformed pa
 
 ASP.NET Core logs that exception at Error level with the submitted value, and its developer exception page shows it. Set `ThrowOnBadRequest = false` to avoid both; the binding failure is then logged at Debug level only. Independently of this, request logs at Information level contain the URL, and the request path is in the `RequestPath` log scope, which a provider that records scopes attaches to entries of every level. Both contain any ID in the route.
 
-Rows 2 and 4 share the `InvalidIdNumberException` handler path, which writes `reason` and (redacted) `input` extensions onto the `ProblemDetails`.
+Only row 2 goes through the `InvalidIdNumberException` handler, which writes `reason` and (redacted) `input` extensions onto the `ProblemDetails`.
 
 ### Example responses
 
@@ -122,7 +139,7 @@ Content-Type: application/json
 {"id": "19811218bad9"}
 ```
 
-When the Civitas converter throws `JsonException` during STJ deserialization, ASP.NET Core MVC's `[ApiController]` ModelState filter intercepts the failure and emits `ValidationProblemDetails` keyed by JSON path:
+When the Civitas converter throws `InvalidIdNumberException` during STJ deserialization, ASP.NET Core MVC's `[ApiController]` ModelState filter intercepts the failure and emits `ValidationProblemDetails`. Its keys are the empty string and the action parameter's name, here `dto`, not a JSON path:
 
 ```json
 {
@@ -130,7 +147,8 @@ When the Civitas converter throws `JsonException` during STJ deserialization, AS
   "title": "One or more validation errors occurred.",
   "status": 400,
   "errors": {
-    "$.id": ["..."]
+    "": ["..."],
+    "dto": ["..."]
   }
 }
 ```

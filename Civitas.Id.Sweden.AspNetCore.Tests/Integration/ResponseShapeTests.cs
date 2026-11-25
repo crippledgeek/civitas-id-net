@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text;
 using Microsoft.AspNetCore.Mvc;
+using static Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp.ProblemTestConstants;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration;
 
@@ -71,9 +72,10 @@ public sealed class ResponseShapeTests
         await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
         var pd = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
         await Assert.That(pd).IsNotNull();
-        await Assert.That(pd!.Extensions.ContainsKey("reason")).IsTrue();
-        await Assert.That(pd.Extensions["reason"]?.ToString()).IsEqualTo("InvalidFormat");
-        await Assert.That(pd.Extensions.ContainsKey("input")).IsTrue();
+        await Assert.That(pd!.Type).IsEqualTo(LibraryInvalidIdType);
+        await Assert.That(pd.Extensions.ContainsKey(ReasonKey)).IsTrue();
+        await Assert.That(pd.Extensions[ReasonKey]?.ToString()).IsEqualTo("InvalidFormat");
+        await Assert.That(pd.Extensions.ContainsKey(InputKey)).IsTrue();
     }
 
     /// <summary>Row 3 — MVC <c>[ApiController]</c> ModelState validation failure.</summary>
@@ -88,26 +90,27 @@ public sealed class ResponseShapeTests
         await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
         var vpd = await resp.Content.ReadFromJsonAsync<ValidationProblemDetails>();
         await Assert.That(vpd).IsNotNull();
-        await Assert.That(vpd!.Errors).IsNotEmpty();
+        await Assert.That(vpd!.Type).IsEqualTo(LibraryBadRequestType);
+        await Assert.That(vpd.Errors).IsNotEmpty();
     }
 
     /// <summary>Row 4 — MVC <c>[FromBody]</c> JSON parse failure (typed PersonalId property).</summary>
     [Test]
-    public async Task Row4_MvcController_FromBodyJsonParseFail_EmitsProblemDetails()
+    public async Task Row4_MvcController_FromBodyJsonParseFail_EmitsValidationProblemDetails()
     {
         await using var fx = await IntegrationTestFixture.CreateAsync();
-        // CustomerCreateController has a strongly-typed PersonalId property in its DTO;
-        // an invalid value triggers the JSON converter to throw InvalidIdNumberException
-        // during deserialization — surfaced via the exception handler as ProblemDetails,
-        // NOT as ValidationProblemDetails (no errors dict).
+        // MVC records the converter's exception in ModelState, so it does not reach
+        // InvalidIdNumberExceptionHandler and neither reason nor input is sent.
         using var content = new StringContent(
             "{\"id\":\"19811218bad9\"}", Encoding.UTF8, "application/json");
         var resp = await fx.Client.PostAsync(new Uri("/customer-create", UriKind.Relative), content);
 
         await Assert.That(resp.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
-        var pd = await resp.Content.ReadFromJsonAsync<ProblemDetails>();
-        await Assert.That(pd).IsNotNull();
-        await Assert.That(pd!.Type).IsNotNull();
-        await Assert.That(pd.Type!).StartsWith("https://civitas-id.dev/errors/");
+        var vpd = await resp.Content.ReadFromJsonAsync<ValidationProblemDetails>();
+        await Assert.That(vpd).IsNotNull();
+        await Assert.That(vpd!.Type).IsEqualTo(LibraryBadRequestType);
+        await Assert.That(vpd.Errors.Keys).IsEquivalentTo([string.Empty, "dto"]);
+        await Assert.That(vpd.Extensions.ContainsKey(ReasonKey)).IsFalse();
+        await Assert.That(vpd.Extensions.ContainsKey(InputKey)).IsFalse();
     }
 }

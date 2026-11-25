@@ -1,5 +1,4 @@
 using System.Diagnostics;
-using System.Text.Json;
 using Civitas.Id.Sweden.AspNetCore.Constants;
 using Civitas.Id.Sweden.AspNetCore.Options;
 using Civitas.Id.Sweden.Errors;
@@ -13,15 +12,11 @@ namespace Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 
 /// <summary>
 /// Translates <see cref="InvalidIdNumberException"/> instances thrown from
-/// endpoint handlers into RFC 9457 <see cref="ProblemDetails"/> 400 responses
-/// via <see cref="IProblemDetailsService.TryWriteAsync"/>, so consumer
+/// endpoint handlers into RFC 9457 <see cref="ProblemDetails"/> 400 responses,
+/// written by <see cref="InvalidIdProblemWriter"/>. Consumer
 /// <c>ProblemDetailsOptions.CustomizeProblemDetails</c> hooks and
-/// <c>IProblemDetailsWriter</c> registrations apply. Falls back to a
-/// hand-written AOT-safe <see cref="Utf8JsonWriter"/> path when the writer
-/// throws <see cref="NotSupportedException"/> (indicating
-/// <see cref="ProblemDetails"/> is absent from the
-/// <c>Microsoft.AspNetCore.Http.Json.JsonOptions</c> resolver chain) or
-/// returns <see langword="false"/>.
+/// <c>IProblemDetailsWriter</c> registrations apply; what they throw leaves
+/// the handler.
 /// </summary>
 /// <remarks>
 /// The exception itself never stores the raw input (see
@@ -32,12 +27,14 @@ namespace Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 /// </remarks>
 internal sealed partial class InvalidIdNumberExceptionHandler(
     IOptions<CivitasIdSwedenAspNetCoreOptions> options,
-    IProblemDetailsService problemDetailsService,
+    InvalidIdProblemWriter writer,
     ILogger<InvalidIdNumberExceptionHandler> logger) : IExceptionHandler
 {
-    private const string ProblemContentType = "application/problem+json";
     private const string ProblemTitle = "Invalid Swedish ID number";
     private const string ProblemDetailMessage = "The provided value is not a valid Swedish official ID.";
+    private const string ReasonExtension = "reason";
+    private const string InputExtension = "input";
+    private const string TraceIdExtension = "traceId";
 
     private readonly CivitasIdSwedenAspNetCoreOptions _opts = options.Value;
 
@@ -67,7 +64,7 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
 
         httpContext.Response.StatusCode = StatusCodes.Status400BadRequest;
 
-        var pd = new ProblemDetails
+        var problem = new ProblemDetails
         {
             Type = $"{_opts.ProblemDetailsTypeBaseUri}{ProblemTypeFragments.InvalidIdNumber}",
             Title = ProblemTitle,
@@ -75,75 +72,20 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
             Detail = ProblemDetailMessage,
             Extensions =
             {
-                ["reason"] = id.Reason.ToString(),
-                ["input"] = input,
-                ["traceId"] = Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier
+                [ReasonExtension] = id.Reason.ToString(),
+                [InputExtension] = input,
+                [TraceIdExtension] = Activity.Current?.TraceId.ToString() ?? httpContext.TraceIdentifier
             }
         };
 
-        try
+        var context = new ProblemDetailsContext
         {
-            var written = await problemDetailsService.TryWriteAsync(new ProblemDetailsContext
-            {
-                HttpContext = httpContext,
-                ProblemDetails = pd
-            }).ConfigureAwait(false);
-
-            if (written)
-            {
-                return true;
-            }
-
-            LogFallbackEngagedWarning(logger);
-            LogFallbackEngagedDebug(logger, "TryWriteAsync returned false (no writer claimed)");
-        }
-#pragma warning disable CA1031 // Do not catch general exception types — NotSupportedException is the documented signal from JsonSerializerOptions.GetTypeInfo when ProblemDetails is absent from the resolver chain.
-        catch (NotSupportedException ex)
-#pragma warning restore CA1031
-        {
-            // DefaultProblemDetailsWriter calls JsonSerializerOptions.GetTypeInfo
-            // which throws NotSupportedException (NOT silently returns null) when
-            // ProblemDetails is absent from the Http.Json.JsonOptions
-            // TypeInfoResolverChain. Engage the hand-written fallback so the 400
-            // response still reaches the client.
-            LogFallbackEngagedWarning(logger);
-            LogFallbackEngagedDebug(logger, ex.Message);
-        }
-
-        await WriteHandWrittenFallbackAsync(httpContext, pd, cancellationToken).ConfigureAwait(false);
+            HttpContext = httpContext,
+            ProblemDetails = problem,
+            Exception = id
+        };
+        await writer.WriteAsync(context, cancellationToken).ConfigureAwait(false);
         return true;
-    }
-
-    private static async Task WriteHandWrittenFallbackAsync(
-        HttpContext ctx,
-        ProblemDetails pd,
-        CancellationToken ct)
-    {
-        ctx.Response.ContentType = ProblemContentType;
-
-        // Hand-written AOT-safe ProblemDetails serialization. Avoids the
-        // reflection-based WriteAsJsonAsync overload (IL2026/IL3050).
-        // traceId is sourced from pd.Extensions (set at construction in
-        // TryHandleAsync) so the wire shape matches the success path.
-        // ReSharper disable UseAwaitUsing
-        using var buffer = new MemoryStream();
-        using (var writer = new Utf8JsonWriter(buffer))
-        {
-            writer.WriteStartObject();
-            writer.WriteString("type", pd.Type);
-            writer.WriteString("title", pd.Title);
-            writer.WriteNumber("status", pd.Status ?? StatusCodes.Status400BadRequest);
-            writer.WriteString("detail", pd.Detail);
-            foreach (var (key, value) in pd.Extensions)
-            {
-                writer.WriteString(key, value?.ToString() ?? string.Empty);
-            }
-
-            writer.WriteEndObject();
-        }
-
-        buffer.Position = 0;
-        await buffer.CopyToAsync(ctx.Response.Body, ct).ConfigureAwait(false);
     }
 
     [LoggerMessage(
@@ -151,16 +93,4 @@ internal sealed partial class InvalidIdNumberExceptionHandler(
         Level = LogLevel.Debug,
         Message = "Civitas.Id parse failure: {Reason}")]
     private static partial void LogParseFailure(ILogger logger, InvalidIdNumberReason reason);
-
-    [LoggerMessage(
-        EventId = 2,
-        Level = LogLevel.Warning,
-        Message = "Civitas.Id ProblemDetails fallback engaged.")]
-    private static partial void LogFallbackEngagedWarning(ILogger logger);
-
-    [LoggerMessage(
-        EventId = 3,
-        Level = LogLevel.Debug,
-        Message = "Civitas.Id ProblemDetails fallback engaged: {Reason}")]
-    private static partial void LogFallbackEngagedDebug(ILogger logger, string reason);
 }
