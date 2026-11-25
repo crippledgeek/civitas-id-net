@@ -1,3 +1,6 @@
+// Linked into several test projects, each of which uses only some of the members.
+// ReSharper disable UnusedType.Global, UnusedMember.Global
+
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 /// <summary>Organisation numbers of legal persons, from the pinned organisation file.</summary>

@@ -1,3 +1,6 @@
+// Linked into several test projects, each of which uses only some of the members.
+// ReSharper disable UnusedType.Global, UnusedMember.Global
+
 using System.Runtime.CompilerServices;
 
 namespace Civitas.Id.Sweden.Tests.Helpers;

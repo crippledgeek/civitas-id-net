@@ -1,3 +1,6 @@
+// Linked into several test projects, each of which uses only some of the members.
+// ReSharper disable UnusedMember.Global
+
 using System.Security.Cryptography;
 
 namespace Civitas.Id.Sweden.Tests.Helpers;

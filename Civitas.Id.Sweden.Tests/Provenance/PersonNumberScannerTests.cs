@@ -50,8 +50,8 @@ public class PersonNumberScannerTests
             yield return () => n => Join(n[2..], "-");
             yield return () => n => Join(n[2..], "+");
             yield return () => n => Join(n[2..], " ");
-            yield return () => n => Join(n[2..], "–");
-            yield return () => n => Join(n[2..], @"+");
+            yield return () => n => Join(n[2..], "\u2013");
+            yield return () => n => Join(n[2..], "\\u002B");
             yield return () => n => Join(n, "%2B");
             yield return () => n => "16" + n[2..];
             yield return () => n => "SE" + n;

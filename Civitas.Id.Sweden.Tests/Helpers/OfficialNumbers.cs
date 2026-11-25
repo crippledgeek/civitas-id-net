@@ -1,3 +1,6 @@
+// Linked into several test projects, each of which uses only some of the members.
+// ReSharper disable MemberCanBePrivate.Global, UnusedMember.Global
+
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 /// <summary>The numbers of Skatteverket's pinned test sets. A lookup throws when the sets hold no such number.</summary>

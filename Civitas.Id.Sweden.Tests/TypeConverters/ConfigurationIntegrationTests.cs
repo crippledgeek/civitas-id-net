@@ -1,9 +1,9 @@
-namespace Civitas.Id.Sweden.Tests.TypeConverters;
-
 using System.Diagnostics.CodeAnalysis;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
+
+namespace Civitas.Id.Sweden.Tests.TypeConverters;
 
 public class ConfigurationIntegrationTests
 {

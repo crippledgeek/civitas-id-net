@@ -1,3 +1,6 @@
+// Linked into several test projects, each of which uses only some of the members.
+// ReSharper disable MemberCanBePrivate.Global, UnusedMember.Global, NotAccessedPositionalProperty.Global
+
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 /// <summary>
