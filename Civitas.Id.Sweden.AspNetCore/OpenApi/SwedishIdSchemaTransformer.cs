@@ -19,9 +19,11 @@ internal sealed class SwedishIdSchemaTransformer : IOpenApiSchemaTransformer
     private const string OrganisationIdPattern = @"^\d{10}$";
     private const string SwedishOfficialIdPattern = @"^\d{6,12}[-+]?\d{4}?$";
 
-    // Numbers from Skatteverket's published test sets, so no example can belong to a real person.
+    // Person numbers from Skatteverket's published test sets.
     private const string PersonalIdExample = "189001019802";
     private const string CoordinationIdExample = "191401682396";
+
+    // An aktiebolag's number, as in the organisationsnummer/meta test data.
     private const string OrganisationIdExample = "5560160680";
 
     /// <summary>

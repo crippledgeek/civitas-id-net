@@ -16,13 +16,13 @@ namespace Civitas.Id.Sweden.Benchmarks;
 [ShortRunJob]
 public class PersonIdParseBenchmarks
 {
-    // Four forms of one number from Skatteverket's published test sets. The 10-digit
-    // forms infer 1990, the "+" form 1890: both the standard sliding-window century
+    // Three forms of one number from Skatteverket's published test sets, born in 2000, and
+    // the "+" form of another, born in 1890: both the standard sliding-window century
     // inference and the pre-1900 century inference path.
     [Params(
-        "189001019802",        // 12-digit long
-        "9001019802",          // 10-digit short
-        "900101-9802",         // 10-digit with hyphen
+        "200001012384",        // 12-digit long
+        "0001012384",          // 10-digit short
+        "000101-2384",         // 10-digit with hyphen
         "900101+9802")]        // 10-digit centenarian (parses as 1890)
     public string Input { get; set; } = null!;
 

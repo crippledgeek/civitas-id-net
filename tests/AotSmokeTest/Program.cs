@@ -20,8 +20,8 @@ Assert.Equal(pid.LongFormat(), SmokeNumbers.Personnummer, "PersonalId.LongFormat
 var cid = CoordinationId.Parse(SmokeNumbers.Samordningsnummer);
 Assert.Equal(cid.LongFormat(), SmokeNumbers.Samordningsnummer, "CoordinationId.LongFormat");
 
-var oid = OrganisationId.Parse("5560160680");
-Assert.Equal(oid.LongFormat(), "5560160680", "OrganisationId.LongFormat (legal-person 10-digit)");
+var oid = OrganisationId.Parse(SmokeNumbers.Organisationsnummer);
+Assert.Equal(oid.LongFormat(), SmokeNumbers.Organisationsnummer, "OrganisationId.LongFormat (legal-person 10-digit)");
 
 var any = SwedishOfficialId.ParseAny(SmokeNumbers.Personnummer);
 Assert.Equal(any.GetType().Name, "PersonalId", "SwedishOfficialId.ParseAny dispatch");
@@ -80,7 +80,7 @@ if (!validResp.IsSuccessStatusCode)
     throw new InvalidOperationException($"Expected 200, got {(int)validResp.StatusCode}");
 Console.WriteLine("  ✓ Valid PersonalId route → 200");
 
-var orgResp = await http.GetAsync(new Uri("/orgs/5560160680", UriKind.Relative));
+var orgResp = await http.GetAsync(new Uri($"/orgs/{SmokeNumbers.Organisationsnummer}", UriKind.Relative));
 if (!orgResp.IsSuccessStatusCode)
     throw new InvalidOperationException($"Expected 200 for org, got {(int)orgResp.StatusCode}");
 Console.WriteLine("  ✓ Valid OrganisationId route → 200");
@@ -119,11 +119,12 @@ Console.WriteLine("  ✓ Mvc.JsonOptions setup registered (Caveat 3 — AOT-clea
 Console.WriteLine("=== AOT smoke test PASS ===");
 return 0;
 
-// Numbers from Skatteverket's published test sets.
+// Person numbers from Skatteverket's published test sets, and an aktiebolag from the organisationsnummer/meta test data.
 internal static class SmokeNumbers
 {
     public const string Personnummer = "189001019802";
     public const string Samordningsnummer = "191401682396";
+    public const string Organisationsnummer = "5560160680";
 }
 
 internal static class DataAnnotationsProbe
