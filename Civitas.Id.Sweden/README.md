@@ -26,8 +26,8 @@ bool adult = person.IsAdult();
 
 // Format
 string long12 = person.LongFormat();              // "189001019802"
-string short10 = person.ShortFormat(PnrFormat.ShortFormat);            // "9001019802"
-string short11 = person.ShortFormat(PnrFormat.ShortFormatWithSeparator); // "900101+9802"
+string short10 = person.ShortFormat();            // "9001019802"
+string short11 = person.Format(PnrFormat.ShortFormatWithSeparator); // "900101+9802"
 
 // TryParse never throws
 if (PersonalId.TryParse("198112180000", out var maybe))
