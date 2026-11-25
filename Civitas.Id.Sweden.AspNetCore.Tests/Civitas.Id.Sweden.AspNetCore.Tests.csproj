@@ -17,12 +17,11 @@
     <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 
-  <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
-
   <ItemGroup>
-    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\RepositoryRoot.cs" Link="OfficialTestData\RepositoryRoot.cs" />
-    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\UnprintedAssert.cs" Link="OfficialTestData\UnprintedAssert.cs" />
+    <OfficialTestDataSource Include="RepositoryRoot;UnprintedAssert" />
   </ItemGroup>
+
+  <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
 
   <ItemGroup>
     <PackageReference Include="TUnit" />

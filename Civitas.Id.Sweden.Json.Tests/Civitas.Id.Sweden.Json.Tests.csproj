@@ -13,11 +13,11 @@
     <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
   </PropertyGroup>
 
-  <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
-
   <ItemGroup>
-    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\UnprintedAssert.cs" Link="OfficialTestData\UnprintedAssert.cs" />
+    <OfficialTestDataSource Include="GeneratedNumbers;UnprintedAssert" />
   </ItemGroup>
+
+  <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
 
   <ItemGroup>
     <PackageReference Include="TUnit" />

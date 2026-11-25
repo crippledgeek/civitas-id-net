@@ -28,7 +28,7 @@ indent_size = 2
 trim_trailing_whitespace = false
 
 # Linked into the other test projects, each of which uses only some of the members and is inspected by itself.
-[Civitas.Id.Sweden.Tests/Helpers/{CsvLoader,FixtureFiles,FixtureSpec,CheckDigits,LegalPersonNumber,LegalPersonNumbers,OfficialNumber,OfficialNumbers,UnprintedAssert}.cs]
+[Civitas.Id.Sweden.Tests/Helpers/{CsvLoader,FixtureFiles,FixtureSpec,CheckDigits,LegalPersonNumber,LegalPersonNumbers,OfficialNumber,OfficialNumbers,GeneratedNumbers,UnprintedAssert}.cs]
 resharper_member_can_be_private_global_highlighting = none
 resharper_unused_member_global_highlighting = none
 resharper_not_accessed_positional_property_global_highlighting = none

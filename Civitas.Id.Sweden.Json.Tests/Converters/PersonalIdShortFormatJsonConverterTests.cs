@@ -54,10 +54,10 @@ public class PersonalIdShortFormatJsonConverterTests
         [Test]
         public async Task ParsesShortFormatString_OfTheNineteenHundreds()
         {
-            var person = TwentiethCenturyPerson.Create();
+            var person = GeneratedNumbers.Person(GeneratedNumbers.TwentiethCentury);
             var id = JsonSerializer.Deserialize<PersonalId>($"\"{person.LongFormat()[2..]}\"", Opts);
             await UnprintedAssert.AreEqual(id, person).ConfigureAwait(false);
-            await Assert.That(id!.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
+            await Assert.That(id!.BirthDate).IsEqualTo(GeneratedNumbers.TwentiethCentury);
         }
 
         [Test]
@@ -101,11 +101,11 @@ public class PersonalIdShortFormatJsonConverterTests
         [Test]
         public async Task RoundTrips_PersonOfTheNineteenHundreds()
         {
-            var original = TwentiethCenturyPerson.Create();
+            var original = GeneratedNumbers.Person(GeneratedNumbers.TwentiethCentury);
             var json = JsonSerializer.Serialize(original, Opts);
             var roundTripped = JsonSerializer.Deserialize<PersonalId>(json, Opts);
             await UnprintedAssert.AreEqual(roundTripped, original).ConfigureAwait(false);
-            await Assert.That(roundTripped!.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
+            await Assert.That(roundTripped!.BirthDate).IsEqualTo(GeneratedNumbers.TwentiethCentury);
         }
     }
 }

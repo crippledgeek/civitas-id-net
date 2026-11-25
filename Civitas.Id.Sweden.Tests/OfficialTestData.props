@@ -1,6 +1,7 @@
 <Project>
   <!-- The official test numbers, for a test project outside Civitas.Id.Sweden.Tests: the sources that read
-       them, and the pinned files they read. Linked, so there is one copy of each. -->
+       them, and the pinned files they read. Linked, so there is one copy of each. A project lists any
+       other helper it uses as an OfficialTestDataSource before the import. -->
   <ItemGroup>
     <OfficialTestDataSource Include="CsvLoader;FixtureFiles;FixtureSpec" />
     <OfficialTestDataSource Include="CheckDigits;LegalPersonNumber;LegalPersonNumbers" />

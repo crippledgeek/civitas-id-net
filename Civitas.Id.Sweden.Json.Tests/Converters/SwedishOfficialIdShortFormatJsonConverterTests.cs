@@ -97,11 +97,11 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
         [Test]
         public async Task RoundTrips_PersonOfTheNineteenHundreds()
         {
-            SwedishOfficialId original = TwentiethCenturyPerson.Create();
+            SwedishOfficialId original = GeneratedNumbers.Person(GeneratedNumbers.TwentiethCentury);
             var json = JsonSerializer.Serialize(original, Opts);
             var roundTripped = JsonSerializer.Deserialize<SwedishOfficialId>(json, Opts);
             await UnprintedAssert.AreEqual(roundTripped, original).ConfigureAwait(false);
-            await Assert.That((roundTripped as PersonalId)?.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
+            await Assert.That((roundTripped as PersonalId)?.BirthDate).IsEqualTo(GeneratedNumbers.TwentiethCentury);
         }
     }
 }

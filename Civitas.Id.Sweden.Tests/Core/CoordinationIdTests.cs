@@ -490,8 +490,6 @@ public class CoordinationIdTests
 
     public class StockholmPin
     {
-        private const int FakerSeed = 1;
-
         [Test]
         public async Task ZeroArgGetAge_AnchorsToSwedenClockToday()
         {
@@ -501,7 +499,7 @@ public class CoordinationIdTests
             if (today is { Month: 2, Day: 29 }) return;
 
             var birthDate = today.AddYears(-18);
-            var id = CoordinationId.Parse(CoordinationIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
+            var id = CoordinationId.Parse(GeneratedNumbers.CoordinationPerson(birthDate).LongFormat());
             await Assert.That(id.IsAdult()).IsTrue();
             await Assert.That(id.GetAge()).IsEqualTo(18);
         }
@@ -512,7 +510,7 @@ public class CoordinationIdTests
             var today = SwedenClock.Today();
             // Construct a person reliably aged >= 100.
             var birthDate = today.AddYears(-100).AddDays(-1);
-            var id = CoordinationId.Parse(CoordinationIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
+            var id = CoordinationId.Parse(GeneratedNumbers.CoordinationPerson(birthDate).LongFormat());
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
 
             await UnprintedAssert.HasSeparator(formatted, '+').ConfigureAwait(false);

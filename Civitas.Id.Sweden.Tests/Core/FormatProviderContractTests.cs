@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
-using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
@@ -13,7 +12,6 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class FormatProviderContractTests
 {
-    private const int FakerSeed = 1;
     private const int BufferLength = 32; // longer than the longest form, 13 characters
     private const string LongFormat = "L";
     private const string NotAnId = "not-an-id";
@@ -42,7 +40,7 @@ public class FormatProviderContractTests
     [MethodDataSource(nameof(Providers))]
     public async Task OrganisationId_AcceptsProvider(IFormatProvider? provider)
     {
-        await AssertContracts(OrganisationIdFaker.WithSeed(FakerSeed).GenerateLegalPerson(), provider)
+        await AssertContracts(OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits), provider)
             .ConfigureAwait(false);
     }
 
