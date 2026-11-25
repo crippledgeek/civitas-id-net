@@ -1,3 +1,4 @@
+using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
 
@@ -22,7 +23,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = pid;
 #pragma warning restore CA1859
-        var s = f.ToString(null, null);
+        var s = f.ToString(null, CultureInfo.InvariantCulture);
         await Assert.That(s).IsEqualTo(pid.Format(PnrFormat.LongFormat));
     }
 
@@ -34,7 +35,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = pid;
 #pragma warning restore CA1859
-        await Assert.That(f.ToString("L", null)).IsEqualTo(pid.Format(PnrFormat.LongFormat));
+        await Assert.That(f.ToString("L", CultureInfo.InvariantCulture)).IsEqualTo(pid.Format(PnrFormat.LongFormat));
     }
 
     /// <summary>"S" specifier returns short-format equivalent.</summary>
@@ -45,7 +46,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = pid;
 #pragma warning restore CA1859
-        await Assert.That(f.ToString("S", null)).IsEqualTo(pid.Format(PnrFormat.ShortFormat));
+        await Assert.That(f.ToString("S", CultureInfo.InvariantCulture)).IsEqualTo(pid.Format(PnrFormat.ShortFormat));
     }
 
     /// <summary>"LD" specifier returns long-with-standard-separator equivalent.</summary>
@@ -56,7 +57,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = pid;
 #pragma warning restore CA1859
-        await Assert.That(f.ToString("LD", null))
+        await Assert.That(f.ToString("LD", CultureInfo.InvariantCulture))
             .IsEqualTo(pid.Format(PnrFormat.LongFormatWithStandardSeparator));
     }
 
@@ -68,7 +69,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = pid;
 #pragma warning restore CA1859
-        await Assert.That(f.ToString("SD", null))
+        await Assert.That(f.ToString("SD", CultureInfo.InvariantCulture))
             .IsEqualTo(pid.Format(PnrFormat.ShortFormatWithStandardSeparator));
     }
 
@@ -80,7 +81,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = pid;
 #pragma warning restore CA1859
-        var ex = await Assert.That(() => f.ToString("XYZ", null)).Throws<FormatException>();
+        var ex = await Assert.That(() => f.ToString("XYZ", CultureInfo.InvariantCulture)).Throws<FormatException>();
         await Assert.That(ex).IsNotNull();
     }
 
@@ -97,7 +98,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the ISpanFormattable contract explicitly.
             ISpanFormattable f = pid;
 #pragma warning restore CA1859
-            ok = f.TryFormat(buffer, out written, "LD", null);
+            ok = f.TryFormat(buffer, out written, "LD", CultureInfo.InvariantCulture);
             formatted = new string(buffer[..written]);
         }
         await Assert.That(ok).IsTrue();
@@ -115,7 +116,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the ISpanFormattable contract explicitly.
         ISpanFormattable f = pid;
 #pragma warning restore CA1859
-        var ok = f.TryFormat(buffer, out var written, "L", null);
+        var ok = f.TryFormat(buffer, out var written, "L", CultureInfo.InvariantCulture);
         await Assert.That(ok).IsFalse();
         await Assert.That(written).IsEqualTo(0);
     }
@@ -146,7 +147,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = oid;
 #pragma warning restore CA1859
-        await Assert.That(f.ToString(null, null)).IsEqualTo(ValidOrg);
+        await Assert.That(f.ToString(null, CultureInfo.InvariantCulture)).IsEqualTo(ValidOrg);
     }
 
     /// <summary>OrganisationId "LD" produces canonical with-separator form.</summary>
@@ -157,7 +158,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the IFormattable contract explicitly.
         IFormattable f = oid;
 #pragma warning restore CA1859
-        await Assert.That(f.ToString("LD", null))
+        await Assert.That(f.ToString("LD", CultureInfo.InvariantCulture))
             .IsEqualTo(oid.Format(PnrFormat.LongFormatWithStandardSeparator));
     }
 
@@ -170,7 +171,7 @@ public class SpanFormattableTests
 #pragma warning disable CA1859 // Test exercises the ISpanFormattable contract explicitly.
         ISpanFormattable f = oid;
 #pragma warning restore CA1859
-        var ok = f.TryFormat(buffer, out var written, "L", null);
+        var ok = f.TryFormat(buffer, out var written, "L", CultureInfo.InvariantCulture);
         await Assert.That(ok).IsFalse();
         await Assert.That(written).IsEqualTo(0);
     }

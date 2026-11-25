@@ -205,7 +205,7 @@ public class CoordinationIdTests
         [Test]
         public async Task ISpanParsable_TryParse_AcceptsSpan()
         {
-            var ok = CoordinationId.TryParse(ValidPin12.AsSpan(), null, out var id);
+            var ok = CoordinationId.TryParse(ValidPin12.AsSpan(), CultureInfo.InvariantCulture, out var id);
             await Assert.That(ok).IsTrue();
             await Assert.That(id).IsNotNull();
         }
@@ -213,14 +213,14 @@ public class CoordinationIdTests
         [Test]
         public async Task ISpanParsable_Parse_AcceptsSpan()
         {
-            var id = CoordinationId.Parse(ValidPin12.AsSpan(), null);
+            var id = CoordinationId.Parse(ValidPin12.AsSpan(), CultureInfo.InvariantCulture);
             await Assert.That(id).IsNotNull();
         }
 
         [Test]
         public async Task ISpanParsable_Parse_InvalidThrows()
         {
-            await Assert.That(() => CoordinationId.Parse("nope".AsSpan(), null))
+            await Assert.That(() => CoordinationId.Parse("nope".AsSpan(), CultureInfo.InvariantCulture))
                 .Throws<InvalidIdNumberException>();
         }
 
