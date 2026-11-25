@@ -22,6 +22,9 @@ public interface IPersonIdFaker<out T> : IIdFaker<T>
     /// <summary>
     ///     Generates a valid male ID for the specified <paramref name="birthDate" />.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="birthDate" /> is before 1800.
+    /// </exception>
     T GenerateMale(DateOnly birthDate);
 
     /// <summary>
@@ -30,11 +33,17 @@ public interface IPersonIdFaker<out T> : IIdFaker<T>
     /// <exception cref="InvalidIdNumberException">
     ///     Thrown when the date components do not form a valid calendar date.
     /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when the components form a calendar date before 1800.
+    /// </exception>
     T GenerateMale(int year, int month, int day);
 
     /// <summary>
     ///     Generates a valid female ID for the specified <paramref name="birthDate" />.
     /// </summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when <paramref name="birthDate" /> is before 1800.
+    /// </exception>
     T GenerateFemale(DateOnly birthDate);
 
     /// <summary>
@@ -42,6 +51,9 @@ public interface IPersonIdFaker<out T> : IIdFaker<T>
     /// </summary>
     /// <exception cref="InvalidIdNumberException">
     ///     Thrown when the date components do not form a valid calendar date.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when the components form a calendar date before 1800.
     /// </exception>
     T GenerateFemale(int year, int month, int day);
 
@@ -55,5 +67,9 @@ public interface IPersonIdFaker<out T> : IIdFaker<T>
     ///     <see cref="TimeProvider.LocalTimeZone" /> is intentionally ignored;
     ///     the timezone is library-fixed to <c>Europe/Stockholm</c>.
     /// </param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when "today" is before 1900, as everyone that old was then born before 1800. From 1900 to 1909
+    ///     the ages end where the birth year would be before 1800.
+    /// </exception>
     T GenerateCentenarian(TimeProvider? timeProvider = null);
 }

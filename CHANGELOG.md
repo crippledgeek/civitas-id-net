@@ -17,6 +17,10 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
   Earlier versions read and wrote such values, so stored ones no longer read: find and correct them before
   upgrading. One such row fails the whole query with `Civitas.Id.Sweden.EntityFrameworkCore` or
   `Civitas.Id.Sweden.Dapper`, whose READMEs have a query that finds them. (#50)
+- **Civitas.Id.Sweden.Fakers**: for a person's birth date before 1800, `Generate`, `GenerateMale` and
+  `GenerateFemale` throw `ArgumentOutOfRangeException`, and so does `SwedishOfficialIdFaker.Generate(DateOnly)`,
+  whichever type it would draw. `GenerateCentenarian` throws it with a clock before 1900 and, from 1900 to 1909,
+  generates no one born before 1800. Other seeded output is unchanged. (#50)
 
 ### Fixed
 - **Civitas.Id.Sweden**: a number with the year 0000, and a ten-digit number read on a date in one of the first

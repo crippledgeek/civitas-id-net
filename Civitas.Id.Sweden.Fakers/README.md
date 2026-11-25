@@ -41,6 +41,11 @@ OrganisationId enskild = OrganisationIdFaker.Default.GeneratePhysicalPerson();
 var batch = SwedishOfficialIdFaker.Default.Generate(count: 100);
 ```
 
+Birth dates before 1800 are not accepted, because the core library accepts no number with one: `Generate`,
+`GenerateMale` and `GenerateFemale` for such a date throw `ArgumentOutOfRangeException`, and so does
+`GenerateCentenarian` with a clock before 1900. The registration date of a legal person has no such limit, except
+in `SwedishOfficialIdFaker.Generate(DateOnly)`, which may draw a person.
+
 ## Documentation
 
 See the [main repository](https://github.com/crippledgeek/civitas-id-net) for full documentation.
