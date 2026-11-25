@@ -90,6 +90,7 @@ public class PersonNumberScannerTests
         yield return () => n => string.Concat(n.Select(c => $"&#{(int)c};"));
         yield return () => n => $"\"{n[..8]}\" + \"{n[8..]}\"";
         yield return () => n => $"\"{n[..5]}\"u8 +\n    \"{n[5..]}\"u8";
+        yield return () => n => $"\"%{n[2..8]}\" + \"{n[8..]}\"";
         yield return () => n => $"\"{n[2..8]}\" + '-' + \"{n[8..]}\"";
         yield return () => n => $"Join(\"{n[..8]}\", \"{n[8..]}\")";
         yield return () => n => $"['{string.Join("', '", n.AsEnumerable())}']";

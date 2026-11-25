@@ -1,3 +1,4 @@
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Text;
 
@@ -14,8 +15,7 @@ internal sealed record GitProcess(DirectoryInfo Directory, GitEnvironment Enviro
     /// <exception cref="TimeoutException">Git runs for longer than <see cref="Timeout" />.</exception>
     public string Run(params string[] arguments)
     {
-        using var git = Process.Start(StartInfo(arguments))
-                        ?? throw new InvalidOperationException("Git did not start.");
+        using var git = Start(arguments);
         git.StandardInput.Close();
 
         // Both are read while Git runs, so that a full pipe cannot stop it.
@@ -31,6 +31,19 @@ internal sealed record GitProcess(DirectoryInfo Directory, GitEnvironment Enviro
             throw new InvalidOperationException(
                 $"Git failed with exit code {git.ExitCode}: {errors.GetAwaiter().GetResult().Trim()}");
         return output.GetAwaiter().GetResult();
+    }
+
+    private Process Start(string[] arguments)
+    {
+        const string notStarted = "Git did not start.";
+        try
+        {
+            return Process.Start(StartInfo(arguments)) ?? throw new InvalidOperationException(notStarted);
+        }
+        catch (Win32Exception ex)
+        {
+            throw new InvalidOperationException(notStarted, ex);
+        }
     }
 
     private ProcessStartInfo StartInfo(string[] arguments)

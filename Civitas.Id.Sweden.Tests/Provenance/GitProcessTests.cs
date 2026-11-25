@@ -17,6 +17,14 @@ public class GitProcessTests
     }
 
     [Test]
+    public async Task NotStarted_Throws()
+    {
+        var absent = new DirectoryInfo(Path.Combine(Path.GetTempPath(), "no-such-directory"));
+        var git = new GitProcess(absent, GitEnvironment.Current);
+        await Assert.That(() => git.Run("version")).ThrowsExactly<InvalidOperationException>();
+    }
+
+    [Test]
     public async Task TooSlow_IsKilled()
     {
         var git = InTemporaryDirectory() with { Timeout = TimeSpan.FromMilliseconds(200) };

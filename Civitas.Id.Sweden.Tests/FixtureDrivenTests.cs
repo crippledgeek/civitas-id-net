@@ -142,12 +142,12 @@ public class FixtureDrivenTests
     private const int OrganisationLength = 10;
 
     /// <summary>
-    ///     The expected cells of one organisation row, raw text as the files hold it; the VAT number is null when the
-    ///     file has no such column.
+    ///     Where one organisation row is, only ever printed, and what it expects: the file's cells as raw text, with
+    ///     the short form taken from the input, and no VAT number, where the file has no such column.
     /// </summary>
     public sealed record OrganisationRow
     {
-        public required int Index { get; init; }
+        public required string Source { get; init; }
         public required string Input { get; init; }
         public required string LongFormat { get; init; }
         public required string ShortFormat { get; init; }
@@ -155,10 +155,10 @@ public class FixtureDrivenTests
         public required bool Valid { get; init; }
         public required string Type { get; init; }
 
-        /// <summary>The index of the row, because a short form can read as another person's number.</summary>
+        /// <summary>The place of the row, because a short form can read as another person's number.</summary>
         public override string ToString()
         {
-            return $"row {Index}";
+            return Source;
         }
     }
 
@@ -166,19 +166,33 @@ public class FixtureDrivenTests
     {
         return
         [
-            .. CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells).Select((r, i) =>
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row =>
                 new OrganisationRow
                 {
-                    Index = i, Input = r[0], LongFormat = r[1], ShortFormat = r[2], Valid = bool.Parse(r[3]), Type = r[4],
-                    VatNumber = r[5]
+                    Source = SourceOf(row),
+                    Input = row.Cells[0],
+                    LongFormat = row.Cells[1],
+                    ShortFormat = row.Cells[2],
+                    Valid = bool.Parse(row.Cells[3]),
+                    Type = row.Cells[4],
+                    VatNumber = row.Cells[5]
                 }),
-            .. CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma).Select(row => row.Cells).Select((r, i) =>
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma).Select(row =>
                 new OrganisationRow
                 {
-                    Index = i, Input = r[0], LongFormat = r[1], ShortFormat = LastTenDigits(r[0]), Valid = bool.Parse(r[2]),
-                    Type = r[3]
+                    Source = SourceOf(row),
+                    Input = row.Cells[0],
+                    LongFormat = row.Cells[1],
+                    ShortFormat = LastTenDigits(row.Cells[0]),
+                    Valid = bool.Parse(row.Cells[2]),
+                    Type = row.Cells[3]
                 })
         ];
+    }
+
+    private static string SourceOf(FixtureRow row)
+    {
+        return $"{row.FileName}:{row.Line}";
     }
 
     private static string LastTenDigits(string input)

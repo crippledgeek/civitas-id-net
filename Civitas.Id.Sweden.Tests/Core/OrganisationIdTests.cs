@@ -193,7 +193,7 @@ public class OrganisationIdTests
         public async Task LongFormat_LegalPerson_EqualsShortFormat()
         {
             var id = OrganisationId.Parse(ValidShort);
-            await Assert.That(id.LongFormat()).IsEqualTo(id.ShortFormat());
+            await UnprintedAssert.AreEqual(id.LongFormat(), id.ShortFormat()).ConfigureAwait(false);
         }
 
         [Test]
@@ -361,7 +361,7 @@ public class OrganisationIdTests
         public async Task LongFormat_EqualsShortFormat()
         {
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
-            await Assert.That(id.LongFormat()).IsEqualTo(id.ShortFormat());
+            await UnprintedAssert.AreEqual(id.LongFormat(), id.ShortFormat()).ConfigureAwait(false);
         }
 
         [Test]

@@ -18,6 +18,7 @@ internal static class RepositoryTexts
     ///     out of a sparse checkout, throws, because the commit may hold it and it cannot be read here.
     /// </remarks>
     /// <exception cref="InvalidOperationException">Git fails or lists no file, or a file is missing.</exception>
+    /// <exception cref="TimeoutException">Git runs for too long.</exception>
     public static IReadOnlyList<SourceText> Under(DirectoryInfo root)
     {
         return Under(root, GitEnvironment.Current);

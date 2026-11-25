@@ -4,9 +4,10 @@ using Civitas.Id.Sweden.Tests.Helpers;
 namespace Civitas.Id.Sweden.Tests.Provenance;
 
 /// <summary>
-///     Finds person-shaped numbers in text and in the path of the text, both as written and normalized. It reads 10 and 12 digits in pairs or whole,
-///     with or without separators, after a <c>16</c> prefix, in the <c>SE…01</c> VAT form, next to letters, escaped,
-///     grouped with <c>_</c>, and spread over adjacent literals joined with <c>+</c> or a comma.
+///     Finds person-shaped numbers in text and in the path of the text, both as written and normalized. It reads 10
+///     and 12 digits in pairs or whole, with or without separators, after a <c>16</c> prefix, in the <c>SE…01</c> VAT
+///     form, next to letters, escaped, grouped with <c>_</c>, and spread over adjacent literals joined with <c>+</c>
+///     or a comma.
 /// </summary>
 /// <remarks>
 ///     It does not see a number assembled at run time from variables or interpolation; one with other text, such as
@@ -34,9 +35,11 @@ internal sealed partial class PersonNumberScanner
 
     private FileScan Scan(SourceText text)
     {
-        var asWritten = Find(NormalizedText.Unchanged(text.Content));
+        var unchanged = NormalizedText.Unchanged(text.Content);
         var normalized = NormalizedText.Of(text.Content);
-        var lines = asWritten.Concat(Find(normalized)).Concat(Find(normalized.Joined()))
+        var asWritten = Find(unchanged);
+        var lines = asWritten.Concat(Find(unchanged.Joined()))
+            .Concat(Find(normalized)).Concat(Find(normalized.Joined()))
             .Where(finding => !finding.IsOfficial)
             .Select(finding => finding.Line)
             .Distinct()
