@@ -64,6 +64,20 @@ public class TypedParameterStatusTests
 
     [Test]
     [MethodDataSource(nameof(EnvironmentNames))]
+    public async Task GeneratedNumber_ValidGives200_AndEveryDefect400(string environment)
+    {
+        var valid = await GetUnloggedAsync(environment, GeneratedNumbers.ValidPersonnummer).ConfigureAwait(false);
+        await Assert.That(valid.Status).IsEqualTo(HttpStatusCode.OK);
+
+        foreach (var text in GeneratedNumbers.InvalidPersonnummer())
+        {
+            var response = await GetUnloggedAsync(environment, text).ConfigureAwait(false);
+            await Assert.That(response.Status).IsEqualTo(HttpStatusCode.BadRequest);
+        }
+    }
+
+    [Test]
+    [MethodDataSource(nameof(EnvironmentNames))]
     public async Task OrdinaryException_Stays500(string environment)
     {
         var response = await GetAsync(environment, "/boom/" + ValidId());
@@ -209,6 +223,11 @@ public class TypedParameterStatusTests
     private static Task<ProbeResponse> GetAsync(
         string environment, string path, Action<IServiceCollection>? configure = null)
         => GetAsync(new TestHostSetup(environment) { Configure = configure }, path);
+
+    /// <summary>Without logging, because the host logs the request path, which holds the number.</summary>
+    private static Task<ProbeResponse> GetUnloggedAsync(string environment, string number)
+        => GetAsync(environment, "/personal/" + number, static services =>
+            services.AddLogging(static logging => logging.ClearProviders()));
 
     private static Task<ProbeResponse> GetAsync(string environment, string path, Action<WebApplication> use)
         => GetAsync(new TestHostSetup(environment) { Use = use }, path);

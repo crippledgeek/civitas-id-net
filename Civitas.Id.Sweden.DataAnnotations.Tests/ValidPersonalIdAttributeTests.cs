@@ -5,6 +5,20 @@ namespace Civitas.Id.Sweden.DataAnnotations.Tests;
 
 public class ValidPersonalIdAttributeTests
 {
+    public class Generated
+    {
+        [Test]
+        public async Task Valid_Passes_AndEveryDefectFails()
+        {
+            var sut = new ValidPersonalIdAttribute();
+            var context = new ValidationContext(this);
+            await Assert.That(sut.GetValidationResult(GeneratedNumbers.ValidPersonnummer, context) is null).IsTrue();
+
+            foreach (var text in GeneratedNumbers.InvalidPersonnummer())
+                await Assert.That(sut.GetValidationResult(text, context) is null).IsFalse();
+        }
+    }
+
     public class StringInput
     {
         [Test]
