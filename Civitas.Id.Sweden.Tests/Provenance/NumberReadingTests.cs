@@ -8,8 +8,8 @@ public class NumberReadingTests
     [Test]
     [Arguments("")]
     [Arguments("12345678901")]
-    [Arguments("123456789a")]
-    public async Task NeitherTenNorTwelveDigits_Throws(string digits)
+    [Arguments("12345678901a")]
+    public async Task NotTwelveDigits_Throws(string digits)
     {
         await Assert.That(() => new NumberReading(digits)).Throws<ArgumentException>();
     }
@@ -23,5 +23,28 @@ public class NumberReadingTests
                 number.Long[..^1] + digit.ToString(CultureInfo.InvariantCulture)).IsPersonShaped())
             .ToList();
         await Assert.That(accepted.SequenceEqual([number.CheckDigit])).IsTrue();
+    }
+
+    [Test]
+    public async Task ShortForm_WithoutMark_IsInTheLatestCentury()
+    {
+        var number = OfficialNumbers.TwentiethCenturySamordningsnummer;
+        await Assert.That(NumberReading.OfShort(number.Short, false)!.Digits).IsEqualTo(number.Long);
+    }
+
+    [Test]
+    public async Task ShortForm_OfHundredOrOlder_IsInTheCenturyBefore()
+    {
+        var number = OfficialNumbers.Centenarian;
+        await Assert.That(NumberReading.OfShort(number.Short, true)!.Digits).IsEqualTo(number.Long);
+    }
+
+    [Test]
+    public async Task OfficialSets_HoldNoBirthYearAfterTheReferenceYear()
+    {
+        var younger = OfficialNumbers.All.Where(number =>
+            number.Long.StartsWith("20", StringComparison.Ordinal)
+            && NumberReading.OfShort(number.Short, false)?.Digits != number.Long);
+        await Assert.That(younger.Count()).IsEqualTo(0);
     }
 }

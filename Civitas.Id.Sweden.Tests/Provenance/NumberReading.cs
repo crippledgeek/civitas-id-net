@@ -3,78 +3,85 @@ using System.Globalization;
 namespace Civitas.Id.Sweden.Tests.Provenance;
 
 /// <summary>
-///     One way to read a run of digits as an identity number: 12 digits with a century or 10 without. Its date and
-///     checksum rules are written here, apart from the library's, so that a library defect cannot hide a number.
+///     Twelve digits read as an identity number. Its date and checksum rules are written here, apart from the
+///     library's, so that a library defect cannot hide a number.
 /// </summary>
 internal sealed record NumberReading
 {
-    private const int ShortLength = 10;
     private const int LongLength = 12;
+    private const int ShortLength = 10;
+    private const int CenturyLength = 2;
     private const int MonthsPerYear = 12;
     private const int FirstCoordinationDay = 60;
     private const int LastCoordinationDay = 91;
 
+    // Fixed, so that a ten-digit number reads the same on every run. It is later than every birth date in the
+    // pinned sets; a set with later dates needs a later year here.
+    private const int ReferenceYear = 2026;
+
+    // Latest first, the order in which a missing century is tried.
+    private static readonly string[] Centuries = ["20", "19", "18"];
+
     // The doubled digit's own digits summed, indexed by the digit.
     private static readonly int[] DoubledDigitSums = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
 
-    private static readonly string[] Centuries = ["18", "19", "20"];
-
     public NumberReading(string digits)
     {
-        if (digits.Length is not (ShortLength or LongLength) || !digits.All(char.IsAsciiDigit))
-            throw new ArgumentException("A reading is 10 or 12 digits.", nameof(digits));
+        if (digits.Length != LongLength || !digits.All(char.IsAsciiDigit))
+            throw new ArgumentException($"A reading is {LongLength} digits.", nameof(digits));
         Digits = digits;
     }
 
-    /// <summary>The 10 or 12 digits.</summary>
+    /// <summary>The 12 digits.</summary>
     public string Digits { get; }
 
-    /// <summary>True for a 12-digit reading whose century a living or recorded person can have.</summary>
-    public static bool IsPersonCentury(string century)
+    /// <summary>
+    ///     Reads ten digits: in the latest century that gives a person-shaped number, or in the one before that when
+    ///     the bearer is marked as 100 or older. Null when no century gives one.
+    /// </summary>
+    public static NumberReading? OfShort(string digits, bool hundredOrOlder)
     {
-        return Centuries.Contains(century, StringComparer.Ordinal);
+        return Centuries
+            .Select(century => new NumberReading(century + digits))
+            .Where(reading => reading.Year <= ReferenceYear)
+            .Skip(hundredOrOlder ? 1 : 0)
+            .FirstOrDefault(reading => reading.IsPersonShaped());
     }
 
-    /// <summary>True when the date and the checksum both hold for a personnummer or a samordningsnummer.</summary>
+    /// <summary>True when the century, date and checksum all hold for a personnummer or a samordningsnummer.</summary>
     public bool IsPersonShaped()
     {
-        var body = Digits[^ShortLength..];
-        return HasValidChecksum(body) && (IsCoordinationDate(body) || PossibleYears(body).Any(y => IsDate(y, body)));
+        return Centuries.Contains(Digits[..CenturyLength], StringComparer.Ordinal)
+               && HasValidChecksum()
+               && (IsCoordinationDate() || IsCalendarDate());
     }
 
-    private IEnumerable<int> PossibleYears(string body)
-    {
-        return Digits.Length == LongLength
-            ? [Number(Digits[..4])]
-            : Centuries.Select(century => Number(century + body[..2]));
-    }
+    private int Year => Number(0, 4);
 
-    private static bool IsDate(int year, string body)
+    private int Month => Number(4, 2);
+
+    private int Day => Number(6, 2);
+
+    private bool IsCalendarDate()
     {
-        var (month, day) = MonthAndDay(body);
-        return year > 0 && month is >= 1 and <= MonthsPerYear
-                        && day >= 1 && day <= DateTime.DaysInMonth(year, month);
+        return Month is >= 1 and <= MonthsPerYear && Day >= 1 && Day <= DateTime.DaysInMonth(Year, Month);
     }
 
     // Skatteverket issues samordningsnummer with an unknown month (00) or an unknown day (60).
-    private static bool IsCoordinationDate(string body)
+    private bool IsCoordinationDate()
     {
-        var (month, day) = MonthAndDay(body);
-        return month <= MonthsPerYear && day is >= FirstCoordinationDay and <= LastCoordinationDay;
+        return Month <= MonthsPerYear && Day is >= FirstCoordinationDay and <= LastCoordinationDay;
     }
 
-    private static (int Month, int Day) MonthAndDay(string body)
+    private bool HasValidChecksum()
     {
-        return (Number(body[2..4]), Number(body[4..6]));
+        return Digits[^ShortLength..]
+            .Select((c, i) => i % 2 == 0 ? DoubledDigitSums[c - '0'] : c - '0')
+            .Sum() % 10 == 0;
     }
 
-    private static bool HasValidChecksum(string body)
+    private int Number(int start, int length)
     {
-        return body.Select((c, i) => i % 2 == 0 ? DoubledDigitSums[c - '0'] : c - '0').Sum() % 10 == 0;
-    }
-
-    private static int Number(string digits)
-    {
-        return int.Parse(digits, NumberStyles.None, CultureInfo.InvariantCulture);
+        return int.Parse(Digits.AsSpan(start, length), NumberStyles.None, CultureInfo.InvariantCulture);
     }
 }
