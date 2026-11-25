@@ -14,6 +14,9 @@ internal readonly record struct IdDraft
     /// <summary>What a samordningsnummer adds to the day of birth.</summary>
     public const int CoordinationDayOffset = 60;
 
+    /// <summary>Digits after the separator in its legal position.</summary>
+    public const int DigitsAfterSeparator = 4;
+
     /// <summary>Splits a year into <see cref="Century" /> and <see cref="Year" />.</summary>
     public const int YearsPerCentury = 100;
 
@@ -34,6 +37,12 @@ internal readonly record struct IdDraft
 
     /// <summary>The three digits before the check digit.</summary>
     public required int Serial { get; init; }
+
+    /// <summary>The four-digit year of a person's number.</summary>
+    /// <exception cref="InvalidOperationException">There is no century, so this is a legal person's number.</exception>
+    public int FullYear => Century is { } century
+        ? century * YearsPerCentury + Year
+        : throw new InvalidOperationException("A legal person's number has no year of birth.");
 
     /// <summary>Writes the parts as digits and appends the check digit that matches them.</summary>
     /// <returns>Twelve digits, or ten when there is no <see cref="Century" />.</returns>
