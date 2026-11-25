@@ -43,8 +43,8 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp;
 /// <c>CustomizeProblemDetails</c> preserves consumer <c>type</c> values.</item>
 ///
 /// <item><b>/internal-error-probe</b> (GET) — emits a 500. Consumed by
-/// <c>CustomizeProblemDetailsTests</c> to verify the non-400 early-return
-/// branch (only 400s are normalized).</item>
+/// <c>CustomizeProblemDetailsTests</c> to verify the guard scope
+/// (only 400s are normalized).</item>
 ///
 /// <item><b>/consumer-422-probe</b> (GET) — emits a 422 with a non-library
 /// <c>type</c> URI. Consumed by <c>CustomizeProblemDetailsTests</c> to verify

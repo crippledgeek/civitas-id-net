@@ -20,6 +20,18 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
 - **Civitas.Id.Sweden.AspNetCore**: a malformed value for a typed ID parameter now gives the
   documented 400 in Development too with `UseExceptionHandler()`, where ASP.NET Core answered 500. (#41)
 
+- **Civitas.Id.Sweden.AspNetCore**: the app's and the library's `CustomizeProblemDetails` no longer
+  replace each other; both run, the app's last. Apps that registered theirs after the library now
+  get the library's `type` on 400 responses, unless they set one. (#43)
+
+- **Civitas.Id.Sweden.AspNetCore**: `CustomizeProblemDetails` also runs on the body written for an
+  `InvalidIdNumberException` when no `IProblemDetailsWriter` claims the response, and its context
+  now carries the exception. That body is now the same JSON as on the normal path, including
+  `instance`, members of derived types, the JSON form of extension values, and null handling; an
+  empty `status` is filled in. Errors from the customization and from serializing its result
+  surface; the startup check covers `ProblemDetails` itself only. The fallback log events
+  (Warning 2, Debug 3) are removed. (#43)
+
 ### Changed
 - **Civitas.Id.Sweden.AspNetCore**: with `AddCivitasIdSwedenAspNetCore()`, a
   `BadHttpRequestException` that reaches `UseExceptionHandler()` answers with its own status instead

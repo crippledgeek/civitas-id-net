@@ -6,10 +6,9 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp;
 
 /// <summary>
 /// MVC controller that exercises the <c>[FromBody]</c> STJ-parse-failure path
-/// using a DTO with a strongly-typed <see cref="PersonalId"/> property. The
-/// failure surface here is JSON deserialization (the converter throws
-/// <c>InvalidIdNumberException</c>), NOT ModelState validation, so the
-/// response shape is <c>ProblemDetails</c> (no <c>errors</c> dict).
+/// using a DTO with a strongly-typed <see cref="PersonalId"/> property. MVC
+/// records the converter's exception in ModelState, so the response shape is
+/// <see cref="ValidationProblemDetails"/>.
 /// </summary>
 [ApiController]
 [Route("customer-create")]
@@ -22,7 +21,7 @@ public sealed class CustomerCreateController : ControllerBase
         Justification = "Accessed via JSON serializer.")]
     public sealed record CustomerCreateDto(PersonalId Id);
 
-    /// <summary>Echoes the posted DTO; JSON parse failure on Id surfaces as ProblemDetails via the exception handler.</summary>
+    /// <summary>Echoes the posted DTO; JSON parse failure on Id surfaces as ValidationProblemDetails.</summary>
     [HttpPost]
     public ActionResult<CustomerCreateDto> Post([FromBody] CustomerCreateDto dto) => Ok(dto);
 }
