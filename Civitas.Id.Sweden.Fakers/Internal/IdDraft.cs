@@ -14,6 +14,9 @@ internal readonly record struct IdDraft
     /// <summary>What a samordningsnummer adds to the day of birth.</summary>
     public const int CoordinationDayOffset = 60;
 
+    /// <summary>Digits after the separator in its legal position.</summary>
+    public const int DigitsAfterSeparator = 4;
+
     /// <summary>Splits a year into <see cref="Century" /> and <see cref="Year" />.</summary>
     public const int YearsPerCentury = 100;
 
