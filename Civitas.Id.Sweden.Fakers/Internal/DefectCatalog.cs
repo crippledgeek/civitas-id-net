@@ -1,4 +1,5 @@
 using System.Globalization;
+using Civitas.Id.Sweden.Internal;
 
 namespace Civitas.Id.Sweden.Fakers.Internal;
 
@@ -19,6 +20,12 @@ internal sealed class DefectCatalog
     private const char NonAsciiZero = '\u0660';
 
     private static readonly InclusiveRange ImpossibleMonths = new(13, 19);
+
+    private static readonly int[] YearsBelowMinimum = [.. Enumerable.Range(0, SwedishIdParsing.MinimumBirthYear)];
+
+    /// <summary>The years that keep a leap day real. Not year zero, which <see cref="DateTime" /> does not hold.</summary>
+    private static readonly int[] LeapYearsBelowMinimum =
+        [.. YearsBelowMinimum.Where(year => year > 0 && DateTime.IsLeapYear(year))];
 
     private static readonly DefectRule WrongCheckDigit = new(IdDefect.WrongCheckDigit, InText((text, next) =>
         text[..^1] + Digit((text[^1] - '0' + next(1, DecimalBase)) % DecimalBase)));
@@ -104,6 +111,13 @@ internal sealed class DefectCatalog
             {
                 Allows = birthDate => birthDate is not { } date || !DateTime.IsLeapYear(date.Year)
             },
+            new DefectRule(IdDefect.BirthYearBelowMinimum, InFields((draft, next) =>
+            {
+                var years = draft.Month == February && draft.Day == LeapDay + dayOffset
+                    ? LeapYearsBelowMinimum
+                    : YearsBelowMinimum;
+                return draft.BornIn(years[next(0, years.Length)]);
+            })),
             .. LengthAndCharacterRules
         ]);
     }

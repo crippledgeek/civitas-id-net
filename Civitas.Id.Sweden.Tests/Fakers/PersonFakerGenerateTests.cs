@@ -8,7 +8,7 @@ public abstract class PersonFakerGenerateTests
 {
     private const int Seed = 11;
     private const int Samples = 2000;
-    private const int Defects = 8;
+    private const int Defects = 9;
     private const int DateAndGenderCases = 8;
 
     private static readonly DateOnly LeapDay = new(2000, 2, 29);

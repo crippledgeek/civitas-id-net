@@ -17,7 +17,11 @@ internal static class BirthYearSamples
         public string Accepted => cases.BornIn(BirthYearCases.FirstAcceptedYear);
 
         /// <summary>Numbers of someone born too early.</summary>
-        public IReadOnlyList<string> Early => [.. EarlyYears.Select(cases.BornIn)];
+        public IReadOnlyList<string> Early =>
+        [
+            .. EarlyYears.Select(cases.BornIn),
+            cases.WithDefect(IdDefect.BirthYearBelowMinimum)
+        ];
 
         /// <summary>A number that is rejected for its check digit, as the early ones must be.</summary>
         public string WithWrongCheckDigit => cases.WithDefect(IdDefect.WrongCheckDigit);

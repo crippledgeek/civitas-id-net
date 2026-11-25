@@ -48,6 +48,7 @@ internal static class DefectInspection
                                           ? ImpossibleCoordinationDays
                                           : ImpossiblePersonalDays).Contains(Day(text)),
             IdDefect.NonLeapFebruary29 => IsNonLeapFebruary29(text, valid),
+            IdDefect.BirthYearBelowMinimum => IsRealDateBelowMinimum(text, valid),
             IdDefect.TooShort => text.Length == valid.Length - 1 && IsSubsequence(text, valid),
             IdDefect.TooLong =>
                 text.Length == valid.Length + 1 && text.All(char.IsAsciiDigit) && IsSubsequence(valid, text),
@@ -101,6 +102,25 @@ internal static class DefectInspection
         return keepsYear && Month(text) == February &&
                Day(text) == (IsCoordinationDay(Day(valid)) ? CoordinationLeapDay : LeapDay) &&
                text[^DigitsAfterSeparator..^1] == valid[^DigitsAfterSeparator..^1] && IndependentLuhn.IsValid(text);
+    }
+
+    /// <summary>
+    ///     Whether only the year and the check digit may differ, the year is too early, and the date is real. Leap
+    ///     years are decided here, because the calendar types throw for year zero.
+    /// </summary>
+    private static bool IsRealDateBelowMinimum(string text, string valid)
+    {
+        if (text.Length != valid.Length || !text.All(char.IsAsciiDigit)) return false;
+        var year = FullYear(text);
+        var isLeapDay = Month(text) == February && Day(text) is LeapDay or CoordinationLeapDay;
+        return year < BirthYearCases.FirstAcceptedYear && (!isLeapDay || IsLeapYear(year)) &&
+               text[YearLength..^1] == valid[YearLength..^1] && IndependentLuhn.IsValid(text);
+    }
+
+    /// <summary>By the Gregorian rule. Year zero is no leap year here, as no calendar type holds its days.</summary>
+    private static bool IsLeapYear(int year)
+    {
+        return year > 0 && (year % 400 == 0 || (year % 4 == 0 && year % 100 != 0));
     }
 
     private static bool HasOneNonAsciiDigit(string text, string valid)

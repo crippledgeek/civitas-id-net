@@ -40,7 +40,7 @@ public class GeneratedIdTests
         IdDefect[] agreed =
         [
             IdDefect.WrongCheckDigit, IdDefect.ImpossibleMonth, IdDefect.ImpossibleDay, IdDefect.NonLeapFebruary29,
-            IdDefect.TooShort, IdDefect.TooLong, IdDefect.NonAsciiDigit, IdDefect.MisplacedSeparator
+            IdDefect.BirthYearBelowMinimum, IdDefect.TooShort, IdDefect.TooLong, IdDefect.NonAsciiDigit, IdDefect.MisplacedSeparator
         ];
 
         await Assert.That(Enum.GetValues<IdDefect>().SequenceEqual(agreed)).IsTrue();

@@ -19,6 +19,8 @@ public class IdNotationTests
     private const int DigitsAfterPlus = 4;
 
     private const int PlusAge = 100;
+    private const int Serial = 120;
+    private const int GenderDigit = 4;
 
     private static readonly DateOnly Today = new(2026, 6, 15);
 
@@ -98,6 +100,30 @@ public class IdNotationTests
         foreach (var notation in forLegalPersons)
             await AssertAcceptedAsync(typeof(OrganisationId), LegalPerson, notation).ConfigureAwait(false);
         await Assert.That(() => LegalPerson.Render(IdNotation.ContradictoryPlus)).Throws<ArgumentOutOfRangeException>();
+    }
+
+    /// <summary>The same parts are accepted in every one of these notations but for their year.</summary>
+    [Test]
+    public async Task Render_BirthYearBelowMinimum_IsRejectedInEveryNotation()
+    {
+        IReadOnlyList<IdNotation> notations =
+        [
+            IdNotation.Canonical, IdNotation.AsciiPadded, IdNotation.NoBreakSpacePadded, IdNotation.SePrefix,
+            IdNotation.OverLengthPadded
+        ];
+        IReadOnlyList<IdDraft> drafts =
+        [
+            Generation.DraftPersonnummer(Centenarian, Serial, GenderDigit),
+            Generation.DraftSamordningsnummer(Centenarian, Serial, GenderDigit)
+        ];
+
+        foreach (var notation in notations)
+            foreach (var draft in drafts)
+            {
+                var tooEarly = draft with { Century = 0 };
+                await Assert.That(ParserProbe.AcceptedBy(NotationCatalog.Render(notation, draft, Today))).IsNotEmpty();
+                await Assert.That(ParserProbe.AcceptedBy(NotationCatalog.Render(notation, tooEarly, Today))).IsEmpty();
+            }
     }
 
     [Test]
