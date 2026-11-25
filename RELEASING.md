@@ -23,9 +23,10 @@ All seven packages release in lockstep at the same version. The version is set o
   - **Repository**: `civitas-id-net`
   - **Workflow filename**: `publish.yml`
   - **Environment** (optional but recommended): `release`
-- **GitHub Actions runner must use .NET 10 SDK** (`actions/setup-dotnet@v4` with `dotnet-version: '10.x'`). The `NuGet/login@v1` action requires a recent SDK to exchange OIDC tokens.
+- **GitHub Actions runner must use the SDK in `global.json`** (`actions/setup-dotnet` with `global-json-file: global.json`). The `NuGet/login@v1` action requires a recent SDK to exchange OIDC tokens.
 - **Workflow permissions must include `id-token: write`** and `contents: read`. OIDC token mint requires the former; checkout requires the latter.
 - **No `NUGET_API_KEY` secret is needed** with OIDC. If one exists, delete it — `NuGet/login@v1` mints a short-lived (1-hour, single-use) key per workflow run.
+- **`NUGET_USER` secret**: the nuget.org profile name, not the email address. The login step needs it.
 - **Gradual rollout caveat**: if the "Trusted Publishing" tab is not visible on the nuget.org profile, the feature has not yet rolled out to the account. Fall back to a scoped API key for the affected packages; retry OIDC setup after the rollout reaches the account.
 
 ## Branch flow (gitflow)
@@ -139,7 +140,7 @@ Release-note format mirrors prior releases — one section per affected package,
 
 ## What the publish workflow does
 
-`release: published` → workflow checks out the tagged commit → `actions/setup-dotnet@v4` → `dotnet pack -c Release` → `NuGet/login@v1` exchanges the GitHub OIDC token for a 1-hour scoped nuget.org API key → `dotnet nuget push *.nupkg` for each of the seven packages, with `--skip-duplicate` (safe to re-run) → explicit second loop for `*.snupkg` (symbol packages).
+The committed [`.github/workflows/publish.yml`](.github/workflows/publish.yml) is authoritative; its steps are not repeated here. It runs when a GitHub release is published, or by hand for the ref given as input (default `master`), in the `release` environment, which waits for its required reviewer. It builds and tests before packing, exchanges the GitHub OIDC token for a short-lived nuget.org key, and pushes every `.nupkg` and then every `.snupkg`. `--skip-duplicate` makes a re-run after a partial failure push only the missing packages. If trusted publishing is unavailable, use "Manual publish (fallback)" below.
 
 Successful publish emits these markers in the log:
 
@@ -151,79 +152,6 @@ Your package was pushed.
 ```
 
 A successful `*.snupkg` push reports the same shape. The repository-signing certificate (Microsoft NuGet repo signing, SHA-256 `1F4B311D9ACC115C8DC8018B5A49E00FCE6DA8E2855F9F014CA6F34570BC482D` as of the April 2024 rotation) is applied by nuget.org automatically — no action required from the workflow.
-
-### The publish workflow (live since v1.0.0)
-
-The workflow is live at `.github/workflows/publish.yml` (added for the v1.0.0 release) — that committed file is authoritative. It hardens the reference block below in three ways: actions are pinned to commit SHAs (not floating `@v4`/`@v1`), the SDK is resolved via `global-json-file: global.json` (not `dotnet-version: '10.x'`), and the minted key is passed through a step `env:` var rather than inline `${{ }}`. The block below is kept as the annotated reference; the "Manual publish (pre-CI)" section remains a fallback for when OIDC/trusted publishing is unavailable.
-
-```yaml
-name: Publish to NuGet
-
-on:
-  release:
-    types: [published]
-  workflow_dispatch:
-    inputs:
-      ref:
-        description: "Tag or branch to publish from (e.g. v1.0.1)"
-        required: true
-        default: "master"
-
-jobs:
-  publish:
-    runs-on: ubuntu-latest
-    environment: release          # optional; matches the nuget.org trusted-publisher policy
-
-    permissions:
-      contents: read              # checkout
-      id-token: write             # mint OIDC token for NuGet/login@v1
-
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.inputs.ref || github.ref }}
-
-      - uses: actions/setup-dotnet@v4
-        with:
-          dotnet-version: '10.x'
-
-      # Build + test before pack so a broken build can't ship.
-      - run: dotnet restore CivitasId.slnx
-      - run: dotnet build CivitasId.slnx -c Release --no-restore
-      - run: dotnet test CivitasId.slnx -c Release --no-build
-
-      - run: dotnet pack CivitasId.slnx -c Release --no-build --output ./artifacts
-        env:
-          CI: true                # triggers ContinuousIntegrationBuild → deterministic pack
-
-      # Exchange the GitHub OIDC token for a short-lived nuget.org API key.
-      # The trusted-publisher policy on nuget.org gates which repo+workflow+ref combinations
-      # can mint a key. No NUGET_API_KEY secret is configured.
-      - uses: NuGet/login@v1
-        id: login
-        with:
-          user: ${{ secrets.NUGET_USER }}   # nuget.org profile name (NOT email)
-
-      - name: Push .nupkg files
-        run: |
-          for pkg in ./artifacts/*.nupkg; do
-            dotnet nuget push "$pkg" \
-              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
-              --source https://api.nuget.org/v3/index.json \
-              --skip-duplicate
-          done
-
-      - name: Push .snupkg files
-        run: |
-          for sym in ./artifacts/*.snupkg; do
-            dotnet nuget push "$sym" \
-              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
-              --source https://api.nuget.org/v3/index.json \
-              --skip-duplicate
-          done
-```
-
-`--skip-duplicate` makes the push loop idempotent — re-running the workflow after a partial failure pushes only the missing packages.
 
 ## Manual publish (fallback)
 
