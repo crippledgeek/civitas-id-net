@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 using Civitas.Id.Sweden.Tests.Helpers;
 
@@ -8,12 +7,14 @@ public class RepositoryTextsTests
 {
     private const string Content = "some text";
 
+    private static readonly GitEnvironment Fixture = GitEnvironment.Current.WithoutConfiguration();
+
     [Test]
     public async Task NotARepository_Throws()
     {
         using var directory = new TemporaryDirectory();
         var root = directory.Root;
-        var ex = await Assert.That(() => RepositoryTexts.Under(root)).ThrowsExactly<InvalidOperationException>();
+        var ex = await Assert.That(() => RepositoryTexts.Under(root, Fixture)).ThrowsExactly<InvalidOperationException>();
         await Assert.That(ex!.Message).Contains("exit code");
     }
 
@@ -22,7 +23,7 @@ public class RepositoryTextsTests
     {
         using var directory = TemporaryDirectory.WithRepository();
         var root = directory.Root;
-        await Assert.That(() => RepositoryTexts.Under(root)).ThrowsExactly<InvalidOperationException>();
+        await Assert.That(() => RepositoryTexts.Under(root, Fixture)).ThrowsExactly<InvalidOperationException>();
     }
 
     [Test]
@@ -74,15 +75,72 @@ public class RepositoryTextsTests
     }
 
     [Test]
+    public async Task TrackedFileOutsideASparseCheckout_Throws()
+    {
+        using var directory = TemporaryDirectory.WithRepository();
+        directory.Write("kept.txt", Content);
+        directory.Write("sparse.txt", Content);
+        directory.Git("add", "kept.txt", "sparse.txt");
+        directory.Git("update-index", "--skip-worktree", "sparse.txt");
+        directory.Delete("sparse.txt");
+        var root = directory.Root;
+
+        var ex = await Assert.That(() => RepositoryTexts.Under(root, Fixture)).ThrowsExactly<InvalidOperationException>();
+        await Assert.That(ex!.Message).Contains("sparse.txt");
+    }
+
+    [Test]
+    public async Task NestedRepository_IsLeftOut()
+    {
+        using var directory = TemporaryDirectory.WithRepository();
+        directory.Write("kept.txt", Content);
+        directory.Write("nested/inside.txt", Content);
+        directory.Git("init", "--quiet", "nested");
+
+        await Assert.That(Paths(directory).SetEquals(["kept.txt"])).IsTrue();
+    }
+
+    /// <summary>Variables that point Git at another repository.</summary>
+    public static IEnumerable<(string Name, string Below)> HostileVariables()
+    {
+        yield return ("GIT_DIR", ".git");
+        yield return ("GIT_WORK_TREE", "");
+        yield return ("GIT_INDEX_FILE", ".git/index");
+        yield return ("GIT_COMMON_DIR", ".git");
+        yield return ("GIT_OBJECT_DIRECTORY", ".git/objects");
+        yield return ("git_dir", ".git");
+    }
+
+    [Test]
+    [MethodDataSource(nameof(HostileVariables))]
+    public async Task InheritedVariable_PointsGitNowhereElse(string name, string below)
+    {
+        using var other = TemporaryDirectory.WithRepository();
+        other.Write("other.txt", Content);
+        other.Git("add", "other.txt");
+        using var directory = TemporaryDirectory.WithRepository();
+        directory.Write("own.txt", Content);
+        var hostile = Fixture.Inherit(name, Path.Combine(other.Root.FullName, below));
+
+        new GitProcess(directory.Root, hostile).Run("add", "own.txt");
+        var texts = RepositoryTexts.Under(directory.Root, hostile);
+
+        await Assert.That(texts.Single().Path.Value).IsEqualTo("own.txt");
+        await Assert.That(new GitProcess(directory.Root, Fixture).Run("ls-files")).IsEqualTo("own.txt\n");
+        await Assert.That(new GitProcess(other.Root, Fixture).Run("ls-files")).IsEqualTo("other.txt\n");
+    }
+
+    [Test]
     public async Task SymbolicLink_IsItsTargetText_AndIsNotFollowed()
     {
+        Skip.When(OperatingSystem.IsWindows(), "Creating a symbolic link needs a privilege on Windows.");
         using var outside = new TemporaryDirectory();
         outside.Write("outside.txt", Content);
         using var directory = TemporaryDirectory.WithRepository();
         directory.Link("link", outside.Root.FullName);
         directory.Link("dangling", "no-such-target");
 
-        var texts = RepositoryTexts.Under(directory.Root).ToDictionary(text => text.Path.Value, text => text.Content);
+        var texts = RepositoryTexts.Under(directory.Root, Fixture).ToDictionary(text => text.Path.Value, text => text.Content);
         await Assert.That(texts.Count).IsEqualTo(2);
         await Assert.That(texts["link"]).IsEqualTo(outside.Root.FullName);
         await Assert.That(texts["dangling"]).IsEqualTo("no-such-target");
@@ -106,7 +164,7 @@ public class RepositoryTextsTests
         using var directory = TemporaryDirectory.WithRepository();
         directory.Write("a.txt", [.. encoding.GetPreamble(), .. encoding.GetBytes(Content)]);
 
-        await Assert.That(RepositoryTexts.Under(directory.Root).Single().Content).IsEqualTo(Content);
+        await Assert.That(RepositoryTexts.Under(directory.Root, Fixture).Single().Content).IsEqualTo(Content);
     }
 
     [Test]
@@ -119,12 +177,12 @@ public class RepositoryTextsTests
         bytes[position] = 0;
         directory.Write("a.bin", bytes);
 
-        await Assert.That(RepositoryTexts.Under(directory.Root).Count == 1).IsEqualTo(isText);
+        await Assert.That(RepositoryTexts.Under(directory.Root, Fixture).Count == 1).IsEqualTo(isText);
     }
 
     private static HashSet<string> Paths(TemporaryDirectory directory)
     {
-        return [.. RepositoryTexts.Under(directory.Root).Select(text => text.Path.Value)];
+        return [.. RepositoryTexts.Under(directory.Root, Fixture).Select(text => text.Path.Value)];
     }
 
     private sealed class TemporaryDirectory : IDisposable
@@ -162,10 +220,7 @@ public class RepositoryTextsTests
 
         public void Git(params string[] arguments)
         {
-            using var git = Process.Start(new ProcessStartInfo("git", arguments) { WorkingDirectory = Root.FullName })!;
-            git.WaitForExit();
-            if (git.ExitCode != 0)
-                throw new InvalidOperationException($"Git failed: exit code {git.ExitCode}.");
+            new GitProcess(Root, Fixture).Run(arguments);
         }
 
         public void Dispose()

@@ -1,4 +1,3 @@
-using System.Diagnostics;
 using System.Text;
 
 namespace Civitas.Id.Sweden.Tests.Provenance;
@@ -9,49 +8,53 @@ internal static class RepositoryTexts
     // Git calls a file binary when a zero byte is among its first 8000 bytes.
     private const int BinaryProbeLength = 8000;
 
-    private static readonly string[] ListFiles =
-        ["ls-files", "-z", "--cached", "--others", "--exclude-standard"];
-
     // Longest byte order mark first, because UTF-32's begins with UTF-16's.
     private static readonly Encoding[] MarkedEncodings =
         [Encoding.UTF32, new UTF32Encoding(true, true), Encoding.UTF8, Encoding.Unicode, Encoding.BigEndianUnicode];
 
     /// <summary>Every text file under <paramref name="root" />, the root of a Git working tree.</summary>
-    /// <exception cref="InvalidOperationException">Git fails or lists no file.</exception>
+    /// <remarks>
+    ///     A file that Git lists and the working tree lacks must be one Git calls deleted. Any other, such as one left
+    ///     out of a sparse checkout, throws, because the commit may hold it and it cannot be read here.
+    /// </remarks>
+    /// <exception cref="InvalidOperationException">Git fails or lists no file, or a file is missing.</exception>
     public static IReadOnlyList<SourceText> Under(DirectoryInfo root)
     {
-        return [.. Paths(root).Select(path => Read(root, path)).OfType<SourceText>()];
+        return Under(root, GitEnvironment.Current);
     }
 
-    private static List<RelativePath> Paths(DirectoryInfo root)
+    /// <inheritdoc cref="Under(DirectoryInfo)" />
+    public static IReadOnlyList<SourceText> Under(DirectoryInfo root, GitEnvironment environment)
     {
-        var start = new ProcessStartInfo("git", ListFiles)
-        {
-            WorkingDirectory = root.FullName,
-            RedirectStandardOutput = true,
-            StandardOutputEncoding = new UTF8Encoding(false)
-        };
-        using var git = Process.Start(start) ?? throw new InvalidOperationException("Git did not start.");
-        var output = git.StandardOutput.ReadToEnd();
-        git.WaitForExit();
-        if (git.ExitCode != 0)
-            throw new InvalidOperationException($"Git could not list the files: exit code {git.ExitCode}.");
+        var git = new GitProcess(root, environment);
+        var listed = Paths(git, "--cached", "--others", "--exclude-standard");
+        if (listed.Count == 0)
+            throw new InvalidOperationException("Git lists no files.");
 
-        var paths = output.Split('\0', StringSplitOptions.RemoveEmptyEntries)
-            .Distinct(StringComparer.Ordinal)
-            .Select(path => new RelativePath(path))
-            .ToList();
-        return paths.Count > 0 ? paths : throw new InvalidOperationException("Git lists no files.");
+        var deleted = Paths(git, "--deleted");
+        return [.. listed.Except(deleted).Select(path => Read(root, path)).OfType<SourceText>()];
     }
 
-    // Null for a binary file, a file deleted from the working tree, and a nested repository.
+    private static HashSet<RelativePath> Paths(GitProcess git, params string[] selection)
+    {
+        return
+        [
+            .. git.Run(["ls-files", "-z", .. selection])
+                .Split('\0', StringSplitOptions.RemoveEmptyEntries)
+                .Select(path => new RelativePath(path))
+        ];
+    }
+
+    // Null for a binary file and for a directory, which Git lists only when it is another repository.
     private static SourceText? Read(DirectoryInfo root, RelativePath path)
     {
         var file = new FileInfo(Path.Combine(root.FullName, path.Value));
         if (file.LinkTarget is { } target)
             return new SourceText(path, target);
-        if (!file.Exists)
+        if (Directory.Exists(file.FullName))
             return null;
+        if (!file.Exists)
+            throw new InvalidOperationException($"Git lists {path}, which is not in the working tree.");
 
         var bytes = File.ReadAllBytes(file.FullName);
         return Decode(bytes) is { } content ? new SourceText(path, content) : null;

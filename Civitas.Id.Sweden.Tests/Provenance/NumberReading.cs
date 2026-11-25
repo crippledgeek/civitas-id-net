@@ -16,7 +16,8 @@ internal sealed record NumberReading
     private const int LastCoordinationDay = 91;
 
     // Fixed, so that a ten-digit number reads the same on every run. It is later than every birth date in the
-    // pinned sets; a set with later dates needs a later year here.
+    // pinned sets; a set with later dates needs a later year here. Ten digits of a person born after it read as
+    // the 1900s, which no official number matches except by chance, so such a number is still reported.
     private const int ReferenceYear = 2026;
 
     // Latest first, the order in which a missing century is tried.

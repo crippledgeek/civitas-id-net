@@ -29,14 +29,16 @@ public class NumberReadingTests
     public async Task ShortForm_WithoutMark_IsInTheLatestCentury()
     {
         var number = OfficialNumbers.TwentiethCenturySamordningsnummer;
-        await Assert.That(NumberReading.OfShort(number.Short, false)!.Digits).IsEqualTo(number.Long);
+        await UnprintedAssert.AreEqual(NumberReading.OfShort(number.Short, false)!.Digits, number.Long)
+            .ConfigureAwait(false);
     }
 
     [Test]
     public async Task ShortForm_OfHundredOrOlder_IsInTheCenturyBefore()
     {
         var number = OfficialNumbers.Centenarian;
-        await Assert.That(NumberReading.OfShort(number.Short, true)!.Digits).IsEqualTo(number.Long);
+        await UnprintedAssert.AreEqual(NumberReading.OfShort(number.Short, true)!.Digits, number.Long)
+            .ConfigureAwait(false);
     }
 
     [Test]

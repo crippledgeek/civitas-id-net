@@ -71,6 +71,8 @@ public class PersonNumberScannerTests
         yield return () => n => Join(n[2..], "&#x2d;");
         yield return () => n => Join(n[2..], "&minus;");
         yield return () => n => "16" + n[2..];
+        yield return () => n => $"LIKE '%{n[2..]}'";
+        yield return () => n => n[2..] + "\u00B2";
         yield return () => n => "SE" + n;
         yield return () => n => "SE" + n[2..] + "01";
         yield return () => n => "SE" + Join(n[2..], "-") + "01";
@@ -127,23 +129,28 @@ public class PersonNumberScannerTests
         }
 
         /// <summary>The short forms of a centenarian that read as a younger person, and of a younger one with a plus.</summary>
-        public static IEnumerable<string> ShortFormsOfAnotherCentury()
+        private static readonly Func<string>[] ShortFormsOfAnotherCentury =
+        [
+            () => OfficialNumbers.Centenarian.Short,
+            () => OfficialNumbers.Centenarian.ShortWithHyphen,
+            () => OfficialNumbers.CentenarianSamordningsnummer.Short,
+            () => OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen,
+            () => $"SE{OfficialNumbers.Centenarian.Short}01",
+            () => $"16{OfficialNumbers.Centenarian.Short}",
+            () => OfficialNumbers.Modern.ShortWithPlus,
+            () => OfficialNumbers.TwentiethCenturySamordningsnummer.ShortWithPlus
+        ];
+
+        public static IEnumerable<int> ShortFormIndexes()
         {
-            yield return OfficialNumbers.Centenarian.Short;
-            yield return OfficialNumbers.Centenarian.ShortWithHyphen;
-            yield return OfficialNumbers.CentenarianSamordningsnummer.Short;
-            yield return OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen;
-            yield return $"SE{OfficialNumbers.Centenarian.Short}01";
-            yield return $"16{OfficialNumbers.Centenarian.Short}";
-            yield return OfficialNumbers.Modern.ShortWithPlus;
-            yield return OfficialNumbers.TwentiethCenturySamordningsnummer.ShortWithPlus;
+            return Enumerable.Range(0, ShortFormsOfAnotherCentury.Length);
         }
 
         [Test]
-        [MethodDataSource(nameof(ShortFormsOfAnotherCentury))]
-        public async Task OfficialShortForm_ThatReadsAsAnotherCentury(string written)
+        [MethodDataSource(nameof(ShortFormIndexes))]
+        public async Task OfficialShortForm_ThatReadsAsAnotherCentury(int index)
         {
-            await AssertReported(written).ConfigureAwait(false);
+            await AssertReported(ShortFormsOfAnotherCentury[index]()).ConfigureAwait(false);
         }
 
         [Test]

@@ -23,8 +23,19 @@ internal sealed partial class NormalizedText
     /// <summary>The reduced text, with line feeds where the source had them.</summary>
     public string Text { get; }
 
+    /// <summary>The text as it is written.</summary>
+    public static NormalizedText Unchanged(string content)
+    {
+        return Of(content, line => line);
+    }
+
     /// <summary>Reduces <paramref name="content" />.</summary>
     public static NormalizedText Of(string content)
+    {
+        return Of(content, Normalize);
+    }
+
+    private static NormalizedText Of(string content, Func<string, string> normalize)
     {
         var text = new StringBuilder(content.Length);
         var lines = new List<int>(content.Length);
@@ -32,7 +43,7 @@ internal sealed partial class NormalizedText
         foreach (var source in content.Split('\n'))
         {
             line++;
-            var normalized = Normalize(source);
+            var normalized = normalize(source);
             text.Append(normalized).Append('\n');
             lines.AddRange(Enumerable.Repeat(line, normalized.Length + 1));
         }
@@ -104,8 +115,8 @@ internal sealed partial class NormalizedText
     }
 
     [GeneratedRegex("""
-        \\+u([0-9A-Fa-f]{4}) | \\+u\{0*([0-9A-Fa-f]{1,4})\} | \\+U0000([0-9A-Fa-f]{4})
-        | \\+x([0-9A-Fa-f]{2}) | %([0-9A-Fa-f]{2})
+        (?<!\\)\\+(?:u([0-9A-Fa-f]{4}) | u\{0*([0-9A-Fa-f]{1,4})\} | U0000([0-9A-Fa-f]{4}) | x([0-9A-Fa-f]{2}))
+        | %([0-9A-Fa-f]{2})
         """, RegexOptions.IgnorePatternWhitespace)]
     private static partial Regex Escape();
 
