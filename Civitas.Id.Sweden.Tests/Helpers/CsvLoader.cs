@@ -2,21 +2,63 @@ namespace Civitas.Id.Sweden.Tests.Helpers;
 
 internal static class CsvLoader
 {
-    public static IReadOnlyList<string[]> Load(string filename)
+    /// <summary>
+    ///     Loads the fixture's data rows (header excluded). Fails closed: a missing file throws
+    ///     <see cref="FileNotFoundException" />; a content hash that differs from the spec, no data rows,
+    ///     or a row count that differs from the spec throws <see cref="InvalidDataException" />.
+    /// </summary>
+    public static IReadOnlyList<FixtureRow> Rows(FixtureSpec spec)
     {
-        var path = Path.Combine(AppContext.BaseDirectory, "Fixtures", filename);
-        return
-        [
-            .. File.ReadAllLines(path)
-                .Where(line => !string.IsNullOrWhiteSpace(line))
-                .Select(line => line.Split(',').Select(c => c.Trim()).ToArray())
-        ];
+        return Rows(spec, FixtureFiles.Directory);
     }
 
-    public static IReadOnlyList<string> LoadColumn(string filename, int columnIndex = 0, bool skipHeader = false)
+    /// <inheritdoc cref="Rows(FixtureSpec)" />
+    public static IReadOnlyList<FixtureRow> Rows(FixtureSpec spec, string directory)
     {
-        var rows = Load(filename);
-        var data = skipHeader ? rows.Skip(1) : rows;
-        return [.. data.Select(row => row[columnIndex])];
+        var path = Path.Combine(directory, spec.FileName);
+        var bytes = File.ReadAllBytes(path);
+
+        var actualHash = FixtureFiles.Sha256Hex(bytes);
+        if (actualHash != spec.Sha256)
+            throw new InvalidDataException(
+                $"{spec.FileName}: SHA-256 is {actualHash}, expected {spec.Sha256}.");
+
+        var rows = ParseLines(spec, System.Text.Encoding.UTF8.GetString(bytes));
+        if (rows.Count == 0)
+            throw new InvalidDataException($"{spec.FileName}: no data rows.");
+        if (rows.Count != spec.DataRows)
+            throw new InvalidDataException(
+                $"{spec.FileName}: {rows.Count} data rows, expected {spec.DataRows}.");
+
+        return rows;
+    }
+
+    /// <summary>The first cell of every data row of a verified fixture.</summary>
+    public static IReadOnlyList<string> Column(FixtureSpec spec)
+    {
+        return [.. Rows(spec).Select(row => row.Cells[0])];
+    }
+
+    private static List<FixtureRow> ParseLines(FixtureSpec spec, string text)
+    {
+        var rows = new List<FixtureRow>();
+        var headerPending = spec.HasHeader;
+        var line = 0;
+        using var reader = new StringReader(text);
+        while (reader.ReadLine() is { } content)
+        {
+            line++;
+            if (string.IsNullOrWhiteSpace(content))
+                continue;
+            if (headerPending)
+            {
+                headerPending = false;
+                continue;
+            }
+
+            rows.Add(new FixtureRow(spec.FileName, line, [.. content.Split(',').Select(c => c.Trim())]));
+        }
+
+        return rows;
     }
 }

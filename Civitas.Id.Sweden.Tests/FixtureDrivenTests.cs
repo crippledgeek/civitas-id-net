@@ -6,8 +6,7 @@ using Civitas.Id.Sweden.Tests.Helpers;
 namespace Civitas.Id.Sweden.Tests;
 
 /// <summary>
-///     Fixture-driven tests exercising the full Skatteverket-published corpus
-///     across all six fixture files in <c>Fixtures/</c>.
+///     Fixture-driven tests over the test data files read below.
 /// </summary>
 public class FixtureDrivenTests
 {
@@ -31,7 +30,7 @@ public class FixtureDrivenTests
 
     public static IEnumerable<string> Personnummer1890S()
     {
-        return CsvLoader.LoadColumn("Testpersonnummer 1890-1899.csv");
+        return CsvLoader.Column(Fixtures.Personnummer1890S);
     }
 
     [Test]
@@ -46,7 +45,7 @@ public class FixtureDrivenTests
     public static IEnumerable<(string Pin, bool Female, bool Male, bool Adult, bool Child, int Age, bool Valid)>
         PersonnummerFinal()
     {
-        var rows = CsvLoader.Load("testpersonnummer_final.csv").Skip(1);
+        var rows = CsvLoader.Rows(Fixtures.PersonnummerFinal).Select(row => row.Cells);
         foreach (var r in rows)
             yield return (
                 r[0],
@@ -79,7 +78,7 @@ public class FixtureDrivenTests
     public static IEnumerable<(string Pin, bool Female, bool Male, int Age, bool Adult, bool Child, bool Valid)>
         Samordningsnummer()
     {
-        var rows = CsvLoader.Load("Testsamordningsnummer_2019_corrected.csv").Skip(1);
+        var rows = CsvLoader.Rows(Fixtures.SamordningsnummerCorrected).Select(row => row.Cells);
         foreach (var r in rows)
             yield return (
                 r[0],
@@ -112,7 +111,7 @@ public class FixtureDrivenTests
     public static IEnumerable<(string Input, string LongFormatHyphenated, string ShortFormat, bool Valid, string Type)>
         OrganisationsnummerExtended()
     {
-        var rows = CsvLoader.Load("testorganisationsnummer_extended.csv").Skip(1);
+        var rows = CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells);
         foreach (var r in rows)
             yield return (
                 r[0],
@@ -153,7 +152,7 @@ public class FixtureDrivenTests
 
     public static IEnumerable<string> OrganisationsnummerTextual()
     {
-        return CsvLoader.LoadColumn("testorganisationsnummer.txt");
+        return CsvLoader.Column(Fixtures.OrganisationsnummerTextual);
     }
 
     [Test]
@@ -167,7 +166,7 @@ public class FixtureDrivenTests
 
     public static IEnumerable<string> InvalidIds()
     {
-        return CsvLoader.LoadColumn("invalid_swedish_ids.csv");
+        return CsvLoader.Column(Fixtures.InvalidIds);
     }
 
     [Test]

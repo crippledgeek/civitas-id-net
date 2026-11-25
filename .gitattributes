@@ -1,0 +1,5 @@
+# Test fixtures are pinned by SHA-256 and must reach the working tree byte for byte.
+Civitas.Id.Sweden.Tests/Fixtures/** -text
+# Verify snapshots: stable line endings and encoding across platforms.
+*.verified.txt text eol=lf working-tree-encoding=UTF-8
+*.verified.json text eol=lf working-tree-encoding=UTF-8

@@ -764,7 +764,7 @@ public class PersonalIdTests
     {
         public static IEnumerable<string> Personnummer1890S()
         {
-            return CsvLoader.LoadColumn("Testpersonnummer 1890-1899.csv");
+            return CsvLoader.Column(Fixtures.Personnummer1890S);
         }
 
         [Test]
