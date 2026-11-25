@@ -61,30 +61,49 @@ public class GenerationTests
         }
     }
 
-    public class BuildPersonnummer
+    public class DraftPersonnummer
     {
         [Test]
-        public async Task BuildPersonnummer_ProducesValidLuhn12Digit()
+        public async Task DraftPersonnummer_ProducesValidLuhn12Digit()
         {
             var birth = new DateOnly(2008, 5, 8);
-            var built = Generation.BuildPersonnummer(birth, 0, 0);
+            var built = Generation.DraftPersonnummer(birth, 0, 0).Render();
 
             await Assert.That(built.Length).IsEqualTo(12);
             await Assert.That(PersonalId.IsValid(built)).IsTrue();
         }
     }
 
-    public class BuildSamordningsnummer
+    public class DraftSamordningsnummer
     {
         [Test]
-        public async Task BuildSamordningsnummer_DayOffsetBy60()
+        public async Task DraftSamordningsnummer_DayOffsetBy60()
         {
             var birth = new DateOnly(2008, 5, 8);
-            var built = Generation.BuildSamordningsnummer(birth, 0, 0);
+            var built = Generation.DraftSamordningsnummer(birth, 0, 0).Render();
 
             await Assert.That(built.Length).IsEqualTo(12);
             await Assert.That(built.Substring(6, 2)).IsEqualTo("68");
             await Assert.That(CoordinationId.IsValid(built)).IsTrue();
+        }
+    }
+
+    public class DraftGuards
+    {
+        private static readonly DateOnly Birth = new(2008, 5, 8);
+
+        private static readonly IReadOnlyList<Func<DateOnly, int, int, IdDraft>> Drafts =
+            [Generation.DraftPersonnummer, Generation.DraftSamordningsnummer];
+
+        [Test]
+        [Arguments(-1, 0)]
+        [Arguments(1000, 0)]
+        [Arguments(0, -1)]
+        [Arguments(0, 10)]
+        public async Task Draft_SerialOrGenderDigitOutOfRange_Throws(int serial, int genderDigit)
+        {
+            foreach (var draft in Drafts)
+                await Assert.That(() => draft(Birth, serial, genderDigit)).Throws<ArgumentOutOfRangeException>();
         }
     }
 }

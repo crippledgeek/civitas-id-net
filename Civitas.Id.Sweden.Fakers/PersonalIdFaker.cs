@@ -68,7 +68,7 @@ public sealed class PersonalIdFaker : IPersonIdFaker<PersonalId>
     {
         var serial = Generation.RandomSerial(_next);
         var gender = Generation.RandomGenderDigit(_next, _next(0, 2) == 1);
-        var pn = Generation.BuildPersonnummer(birthDate, serial, gender);
+        var pn = Generation.DraftPersonnummer(birthDate, serial, gender).Render();
         return PersonalId.FromValidated(pn);
     }
 
@@ -134,7 +134,7 @@ public sealed class PersonalIdFaker : IPersonIdFaker<PersonalId>
     {
         var serial = Generation.RandomSerial(_next);
         var gender = Generation.RandomGenderDigit(_next, male);
-        var pn = Generation.BuildPersonnummer(birthDate, serial, gender);
+        var pn = Generation.DraftPersonnummer(birthDate, serial, gender).Render();
         return PersonalId.FromValidated(pn);
     }
 }
