@@ -46,7 +46,7 @@ public class SwedishLuhnAlgorithmTests
     [Test]
     public async Task IsValid_RejectsWrongChecksum()
     {
-        await Assert.That(SwedishLuhnAlgorithm.IsValid(OfficialNumbers.Modern.Body + "0")).IsFalse();
+        await Assert.That(SwedishLuhnAlgorithm.IsValid(CheckDigits.Replaced(OfficialNumbers.Modern.Short))).IsFalse();
     }
 
     [Test]

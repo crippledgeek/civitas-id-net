@@ -2,16 +2,11 @@
 
 today=1994-05-07
   LongFormatWithSeparator   = 18950508-9814
-  ShortFormatWithSeparator  = 950508-9814
 today=1995-05-07
   LongFormatWithSeparator   = 18950508-9814
-  ShortFormatWithSeparator  = 950508-9814
 today=1995-05-08
   LongFormatWithSeparator   = 18950508+9814
-  ShortFormatWithSeparator  = 950508+9814
 today=1995-05-09
   LongFormatWithSeparator   = 18950508+9814
-  ShortFormatWithSeparator  = 950508+9814
 today=2000-01-01
   LongFormatWithSeparator   = 18950508+9814
-  ShortFormatWithSeparator  = 950508+9814

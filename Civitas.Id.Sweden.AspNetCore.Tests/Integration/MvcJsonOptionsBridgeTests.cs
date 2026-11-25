@@ -104,7 +104,7 @@ public sealed class MvcJsonOptionsBridgeTests
         var mvcResp = await client.PostAsync(new Uri("/mvc-bridge-test", UriKind.Relative), content);
         mvcResp.EnsureSuccessStatusCode();
         var mvcBody = await mvcResp.Content.ReadAsStringAsync();
-        await Assert.That(mvcBody).Contains(OfficialNumbers.Modern.Short);
+        await Assert.That(mvcBody).IsEqualTo($$"""{"id":"{{OfficialNumbers.Modern.Short}}"}""");
 
         // Minimal API emits same ShortFormat — proves the SAME PnrFormat option drives both surfaces.
         var minimalBody = await client.GetStringAsync(new Uri("/minimal-bridge-test", UriKind.Relative));

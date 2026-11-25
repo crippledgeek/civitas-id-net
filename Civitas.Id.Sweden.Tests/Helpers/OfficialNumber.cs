@@ -1,6 +1,3 @@
-// Linked into several test projects, each of which uses only some of the members.
-// ReSharper disable MemberCanBePrivate.Global, UnusedMember.Global
-
 using System.Globalization;
 
 namespace Civitas.Id.Sweden.Tests.Helpers;
@@ -15,7 +12,6 @@ internal abstract record OfficialNumber
     private const int LongLength = 12;
     private const int CenturyLength = 2;
     private const int SerialLength = 4;
-    private const int CheckDigitLength = 1;
 
     private protected OfficialNumber(string digits)
     {
@@ -43,22 +39,28 @@ internal abstract record OfficialNumber
     public string ShortWithPlus => Separated(Short, '+');
 
     /// <summary>The nine digits the check digit is computed over.</summary>
-    public string Body => Short[..^CheckDigitLength];
+    public string Body => Short[..^1];
 
-    /// <summary>The published check digit.</summary>
-    public int CheckDigit => Number(Long[^CheckDigitLength..]);
+    /// <summary>The published check digit, an <see cref="int" /> because the library's check digit is one.</summary>
+    public int CheckDigit => Number(Long[^1..]);
+
+    /// <summary>The published form with another check digit, so a number that is not valid.</summary>
+    public string WithWrongCheckDigit => CheckDigits.Replaced(Long);
 
     /// <summary>The last four digits, NNNN.</summary>
     public string Serial => Long[^SerialLength..];
 
-    /// <summary>The date of birth the number encodes.</summary>
-    public DateOnly BirthDate => new(Number(Long[..4]), Number(Long[4..6]), CalendarDay(Number(Long[6..8])));
-
-    /// <summary>False for a number whose day or month part is not a calendar date.</summary>
-    public bool HasCalendarDate =>
+    /// <summary>The date of birth the number encodes, or null when it encodes no calendar date.</summary>
+    public DateOnly? CalendarDate =>
         DateOnly.TryParseExact(
             Long[..6] + CalendarDay(Number(Long[6..8])).ToString("00", CultureInfo.InvariantCulture),
-            "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out _);
+            "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
+            ? date
+            : null;
+
+    /// <summary>The date of birth the number encodes.</summary>
+    /// <exception cref="InvalidOperationException">The number encodes no calendar date.</exception>
+    public DateOnly BirthDate => CalendarDate ?? throw new InvalidOperationException("The number has no calendar date.");
 
     /// <summary>The published form.</summary>
     public sealed override string ToString()

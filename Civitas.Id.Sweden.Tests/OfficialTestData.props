@@ -2,17 +2,14 @@
   <!-- The official test numbers, for a test project outside Civitas.Id.Sweden.Tests: the sources that read
        them, and the pinned files they read. Linked, so there is one copy of each. -->
   <ItemGroup>
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\CsvLoader.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\FixtureFiles.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\FixtureSpec.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\LegalPersonNumbers.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialNumber.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialNumbers.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialPersonnummer.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialSamordningsnummer.cs" />
-    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\RepositoryRoot.cs" />
-    <Compile Include="@(OfficialTestDataSource)" Link="OfficialTestData\%(Filename)%(Extension)" />
-    <None Include="$(MSBuildThisFileDirectory)Fixtures\*.*" Link="Fixtures\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <OfficialTestDataSource Include="CsvLoader;FixtureFiles;FixtureSpec" />
+    <OfficialTestDataSource Include="CheckDigits;LegalPersonNumber;LegalPersonNumbers" />
+    <OfficialTestDataSource Include="OfficialNumber;OfficialNumbers;OfficialPersonnummer;OfficialSamordningsnummer" />
+    <Compile Include="@(OfficialTestDataSource->'$(MSBuildThisFileDirectory)Helpers\%(Identity).cs')" Link="OfficialTestData\%(Filename)%(Extension)" />
+    <OfficialTestDataFile Include="Testpersonnummer 1890-1899.csv;Testpersonnummer_2000-2009_official.csv" />
+    <OfficialTestDataFile Include="Testsamordningsnummer_2019_official.csv;Testsamordningsnummer_2020_official.csv" />
+    <OfficialTestDataFile Include="testorganisationsnummer_extended.csv" />
+    <None Include="@(OfficialTestDataFile->'$(MSBuildThisFileDirectory)Fixtures\%(Identity)')" Link="Fixtures\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
     <Using Include="Civitas.Id.Sweden.Tests.Helpers" />
   </ItemGroup>
 </Project>

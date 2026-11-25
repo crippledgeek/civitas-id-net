@@ -1,20 +1,20 @@
-﻿BirthDate=1890-01-01
-  LongFormat                       = 189001019802
-  ShortFormat                      = 9001019802
-  Format(LongFormat)               = 189001019802
-  Format(ShortFormatWithStandard)  = 900101-9802
-
-BirthDate=1899-12-31
-  LongFormat                       = 189912319812
-  ShortFormat                      = 9912319812
-  Format(LongFormat)               = 189912319812
-  Format(ShortFormatWithStandard)  = 991231-9812
+﻿BirthDate=2000-01-01
+  LongFormat                       = 200001012384
+  ShortFormat                      = 0001012384
+  Format(LongFormat)               = 200001012384
+  Format(ShortFormatWithStandard)  = 000101-2384
 
 BirthDate=2000-02-29
   LongFormat                       = 200002292399
   ShortFormat                      = 0002292399
   Format(LongFormat)               = 200002292399
   Format(ShortFormatWithStandard)  = 000229-2399
+
+BirthDate=2005-07-14
+  LongFormat                       = 200507142388
+  ShortFormat                      = 0507142388
+  Format(LongFormat)               = 200507142388
+  Format(ShortFormatWithStandard)  = 050714-2388
 
 BirthDate=2008-12-31
   LongFormat                       = 200812312395

@@ -137,46 +137,67 @@ public class FixtureDrivenTests
         await Assert.That(id.BirthDate).IsEqualTo(new OfficialSamordningsnummer(pin).BirthDate);
     }
 
-    // ── Organisationsnummer extended ──
+    // ── Organisationsnummer extended, and the sole-trader rows without the columns that drop the century ──
 
-    public static IEnumerable<(string Input, string LongFormatHyphenated, string ShortFormat, bool Valid, string Type)>
-        OrganisationsnummerExtended()
+    private const int OrganisationLength = 10;
+
+    /// <summary>The expected cells of one organisation row, raw text as the files hold it.</summary>
+    public sealed record OrganisationRow
     {
-        var rows = CsvLoader.Rows(Fixtures.OrganisationsnummerExtended)
-            .Concat(CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma))
-            .Select(row => row.Cells);
-        foreach (var r in rows)
-            yield return (
-                r[0],
-                r[1],
-                r[2],
-                bool.Parse(r[3]),
-                r[4]);
+        public required string Input { get; init; }
+        public required string LongFormat { get; init; }
+        public required string ShortFormat { get; init; }
+        public required string VatNumber { get; init; }
+        public required bool Valid { get; init; }
+        public required string Type { get; init; }
+    }
+
+    public static IEnumerable<OrganisationRow> OrganisationsnummerRows()
+    {
+        return
+        [
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells).Select(r =>
+                new OrganisationRow
+                {
+                    Input = r[0], LongFormat = r[1], ShortFormat = r[2], Valid = bool.Parse(r[3]), Type = r[4],
+                    VatNumber = r[5]
+                }),
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma).Select(row => row.Cells).Select(r =>
+                new OrganisationRow
+                {
+                    Input = r[0], LongFormat = r[1], ShortFormat = LastTenDigits(r[0]), Valid = bool.Parse(r[2]),
+                    Type = r[3], VatNumber = $"SE{LastTenDigits(r[0])}01"
+                })
+        ];
+    }
+
+    private static string LastTenDigits(string input)
+    {
+        return string.Concat(input.Where(char.IsAsciiDigit))[^OrganisationLength..];
     }
 
     [Test]
-    [MethodDataSource(nameof(OrganisationsnummerExtended))]
-    public async Task OrganisationId_FixtureMatchesShape(
-        string input, string longFormatHyphenated, string shortFormat, bool valid, string type)
+    [MethodDataSource(nameof(OrganisationsnummerRows))]
+    public async Task OrganisationId_FixtureMatchesShape(OrganisationRow row)
     {
-        await Assert.That(OrganisationId.IsValid(input)).IsEqualTo(valid);
-        if (!valid) return;
+        ArgumentNullException.ThrowIfNull(row);
+        await Assert.That(OrganisationId.IsValid(row.Input)).IsEqualTo(row.Valid);
+        if (!row.Valid) return;
 
-        var id = OrganisationId.Parse(input);
-        await Assert.That(id.ShortFormat()).IsEqualTo(shortFormat);
-        // The fixture's "long_format" column is the short-form-with-separator (e.g. "556016-0680",
-        // or the same with "+" for centenarian Enskild firma). Assert against ShortFormatWithSeparator,
-        // which preserves the inferred separator ('+' for centenarians, '-' otherwise).
-        await Assert.That(id.Format(PnrFormat.ShortFormatWithSeparator))
-            .IsEqualTo(longFormatHyphenated);
+        var id = OrganisationId.Parse(row.Input);
+        await Assert.That(id.ShortFormat()).IsEqualTo(row.ShortFormat);
+        await Assert.That($"SE{id.ShortFormat()}01").IsEqualTo(row.VatNumber);
+        // The files' "long_format" column is the short form with a separator: "-", or "+" for an Enskild firma
+        // whose bearer is 100 or older. ShortFormatWithSeparator infers the same separator.
+        await Assert.That(id.Format(PnrFormat.ShortFormatWithSeparator)).IsEqualTo(row.LongFormat);
 
-        // The fixture's "type" column is the layperson entity name ("Aktiebolag"
+        // The files' "type" column is the layperson entity name ("Aktiebolag"
         // for legal persons, "Enskild firma" for physical persons). Map and assert.
-        var expectedNumberType = type switch
+        var expectedNumberType = row.Type switch
         {
             "Aktiebolag" => OrganisationNumberType.LegalPerson,
             "Enskild firma" => OrganisationNumberType.PhysicalPerson,
-            _ => throw new InvalidOperationException($"Unknown type column value: {type}")
+            _ => throw new InvalidOperationException($"Unknown type column value: {row.Type}")
         };
         await Assert.That(id.NumberType).IsEqualTo(expectedNumberType);
     }

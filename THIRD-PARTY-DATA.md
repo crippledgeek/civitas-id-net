@@ -1,6 +1,6 @@
 # Third-party test data
 
-Known sources of the ID numbers in `Civitas.Id.Sweden.Tests/Fixtures/`.
+Known sources of the ID numbers in `Civitas.Id.Sweden.Tests/Fixtures/`, and where the same numbers are used elsewhere.
 
 ## Skatteverket
 
@@ -61,9 +61,9 @@ Retrieval and comparison below were done on 2026-11-24, and on 2026-11-25 for th
 ## testorganisationsnummer_enskild_firma.csv
 
 - File: `Civitas.Id.Sweden.Tests/Fixtures/testorganisationsnummer_enskild_firma.csv`
-- Its 16 numbers are numbers of the official files above: 3 from the 1890-1899 file, 3 from the 2000-2009 file and 10
-  from the 2019 samordningsnummer file. Every column is those digits rewritten: with or without century, separator,
-  `SE` prefix and VAT suffix.
+- Its 20 numbers are numbers of the official files above: 3 from the 1890-1899 file, 3 from the 2000-2009 file and 14
+  from the 2019 samordningsnummer file. The columns `input` and `long_format` are those digits rewritten: with or
+  without century, separator and `SE` prefix. No column holds ten digits without a separator.
 
 ## testorganisationsnummer_extended.csv
 
@@ -98,6 +98,19 @@ WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING
 FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR
 OTHER DEALINGS IN THE SOFTWARE.
 ```
+
+## Uses outside the fixtures
+
+Numbers of the Skatteverket sets, except where an aktiebolag is named, are also written in:
+
+- `Civitas.Id.Sweden/README.md`, `Civitas.Id.Sweden.Dapper/README.md` and `Civitas.Id.Sweden.EntityFrameworkCore/README.md`,
+  which are part of the packages
+- the OpenAPI examples in `Civitas.Id.Sweden.AspNetCore/OpenApi/SwedishIdSchemaTransformer.cs`, which an application
+  that adds the schemas shows in its OpenAPI document; the `OrganisationId` example is an aktiebolag from
+  organisationsnummer/meta
+- `Civitas.Id.Sweden.Benchmarks/PersonIdParseBenchmarks.cs`
+- the AOT smoke tests in `tests/`, with the same aktiebolag
+- the verified snapshots of the test projects, with the same aktiebolag
 
 ## Files of unknown origin
 

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Json.Converters;
 
 namespace Civitas.Id.Sweden.Json.Tests.Converters;
@@ -17,7 +18,7 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
         {
             yield return (OfficialNumbers.Modern.Long, typeof(PersonalId));
             yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
-            yield return (LegalPersonNumbers.Aktiebolag, typeof(OrganisationId));
+            yield return (LegalPersonNumbers.Aktiebolag.Digits, typeof(OrganisationId));
         }
 
         [Test]
@@ -67,9 +68,9 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
         public async Task WritesLongFormat_ForOrganisationId()
         {
             // OrganisationId has no ShortFormat axis; always written as 10-digit LongFormat.
-            SwedishOfficialId id = OrganisationId.Parse("5560160680");
+            SwedishOfficialId id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"5560160680\"");
+            await Assert.That(json).IsEqualTo($"\"{LegalPersonNumbers.Aktiebolag.Digits}\"");
         }
     }
 
@@ -78,8 +79,10 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
         public static IEnumerable<string> RoundTripsInputs()
         {
             yield return OfficialNumbers.Modern.Long; // PersonalId — modern, round-trips via 10-digit ShortFormat
+            yield return OfficialNumbers.TwentiethCenturySamordningsnummer.Long;
+            yield return PersonalIdFaker.WithSeed(1).Generate(new DateOnly(1981, 12, 18)).LongFormat();
             yield return OfficialNumbers.ModernSamordningsnummer.Long; // CoordinationId — modern, round-trips
-            yield return LegalPersonNumbers.Aktiebolag; // OrganisationId — always 10-digit LongFormat, always round-trips
+            yield return LegalPersonNumbers.Aktiebolag.Digits; // OrganisationId — always 10-digit LongFormat, always round-trips
         }
 
         [Test]

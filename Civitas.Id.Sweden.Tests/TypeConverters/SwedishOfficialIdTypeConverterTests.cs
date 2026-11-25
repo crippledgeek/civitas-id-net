@@ -52,7 +52,7 @@ public class SwedishOfficialIdTypeConverterTests
         {
             yield return (OfficialNumbers.Centenarian.Long, typeof(PersonalId));
             yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
-            yield return (LegalPersonNumbers.Aktiebolag, typeof(OrganisationId));
+            yield return (LegalPersonNumbers.Aktiebolag.Digits, typeof(OrganisationId));
         }
 
         [Test]
@@ -116,9 +116,9 @@ public class SwedishOfficialIdTypeConverterTests
         public async Task ReturnsLongFormat_ForOrganisationId()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            SwedishOfficialId id = OrganisationId.Parse("5560160680");
+            SwedishOfficialId id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(result).IsEqualTo("5560160680");
+            await Assert.That(result).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
         }
 
         [Test]

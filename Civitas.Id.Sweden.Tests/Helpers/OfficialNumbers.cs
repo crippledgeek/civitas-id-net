@@ -1,6 +1,3 @@
-// Linked into several test projects, each of which uses only some of the members.
-// ReSharper disable MemberCanBePrivate.Global, UnusedMember.Global
-
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 /// <summary>The numbers of Skatteverket's pinned test sets. A lookup throws when the sets hold no such number.</summary>
@@ -51,6 +48,10 @@ internal static class OfficialNumbers
     /// <summary>A samordningsnummer born in 2000, whose short form resolves to the same century today.</summary>
     public static OfficialSamordningsnummer ModernSamordningsnummer => Samordningsnummer(new DateOnly(2000, 6, 6));
 
+    /// <summary>A samordningsnummer born in 1981, whose short form resolves to the same century today.</summary>
+    public static OfficialSamordningsnummer TwentiethCenturySamordningsnummer =>
+        Samordningsnummer(new DateOnly(1981, 12, 15));
+
     /// <summary>The first published personnummer born on <paramref name="born" />.</summary>
     public static OfficialPersonnummer Personnummer(DateOnly born)
     {
@@ -73,6 +74,6 @@ internal static class OfficialNumbers
     private static ILookup<DateOnly, TNumber> ByBirthDate<TNumber>(IEnumerable<TNumber> numbers)
         where TNumber : OfficialNumber
     {
-        return numbers.Where(number => number.HasCalendarDate).ToLookup(number => number.BirthDate);
+        return numbers.Where(number => number.CalendarDate is not null).ToLookup(number => number.BirthDate);
     }
 }

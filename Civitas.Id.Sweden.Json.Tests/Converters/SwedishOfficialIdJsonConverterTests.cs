@@ -17,7 +17,7 @@ public class SwedishOfficialIdJsonConverterTests
         {
             yield return (OfficialNumbers.Centenarian.Long, typeof(PersonalId));
             yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
-            yield return (LegalPersonNumbers.Aktiebolag, typeof(OrganisationId));
+            yield return (LegalPersonNumbers.Aktiebolag.Digits, typeof(OrganisationId));
         }
 
         [Test]
@@ -64,9 +64,9 @@ public class SwedishOfficialIdJsonConverterTests
         [Test]
         public async Task WritesLongFormat_ForOrganisationId()
         {
-            SwedishOfficialId id = OrganisationId.Parse("5560160680");
+            SwedishOfficialId id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"5560160680\"");
+            await Assert.That(json).IsEqualTo($"\"{LegalPersonNumbers.Aktiebolag.Digits}\"");
         }
     }
 }

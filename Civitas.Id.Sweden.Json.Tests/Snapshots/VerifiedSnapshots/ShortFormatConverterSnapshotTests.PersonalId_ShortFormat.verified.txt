@@ -1,10 +1,10 @@
-﻿BirthDate=1890-01-01
-  LongFormat (canonical) = 189001019802
-  JSON wire form         = "9001019802"
+﻿BirthDate=2000-01-01
+  LongFormat (canonical) = 200001012384
+  JSON wire form         = "0001012384"
 
-BirthDate=1899-12-31
-  LongFormat (canonical) = 189912319812
-  JSON wire form         = "9912319812"
+BirthDate=2005-07-14
+  LongFormat (canonical) = 200507142388
+  JSON wire form         = "0507142388"
 
 BirthDate=2000-02-29
   LongFormat (canonical) = 200002292399

@@ -1,6 +1,3 @@
-// Linked into several test projects, each of which uses only some of the members.
-// ReSharper disable MemberCanBePrivate.Global
-
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 internal static class CsvLoader

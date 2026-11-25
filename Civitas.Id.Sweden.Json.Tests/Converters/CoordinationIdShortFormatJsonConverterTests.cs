@@ -37,10 +37,10 @@ public class CoordinationIdShortFormatJsonConverterTests
         [Test]
         public async Task ParsesShortFormatString()
         {
-            // Short form: the century is inferred by a sliding window from today, so year "00" resolves to 2000.
-            var id = JsonSerializer.Deserialize<CoordinationId>($"\"{OfficialNumbers.ModernSamordningsnummer.Short}\"", Opts);
+            // Short form: the century is inferred by a sliding window from today, so year "81" resolves to 1981.
+            var id = JsonSerializer.Deserialize<CoordinationId>($"\"{OfficialNumbers.TwentiethCenturySamordningsnummer.Short}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.ModernSamordningsnummer.Long);
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.TwentiethCenturySamordningsnummer.Long);
         }
 
         [Test]
@@ -63,6 +63,7 @@ public class CoordinationIdShortFormatJsonConverterTests
         public static IEnumerable<string> RoundTripsInputs()
         {
             yield return OfficialNumbers.ModernSamordningsnummer.Long;
+            yield return OfficialNumbers.TwentiethCenturySamordningsnummer.Long;
         }
 
         [Test]

@@ -11,7 +11,7 @@ public class ValidSwedishOfficialIdAttributeTests
         {
             yield return OfficialNumbers.Centenarian.Long; // personnummer
             yield return OfficialNumbers.CentenarianSamordningsnummer.Long; // samordningsnummer
-            yield return LegalPersonNumbers.Aktiebolag; // organisationsnummer
+            yield return LegalPersonNumbers.Aktiebolag.Digits; // organisationsnummer
         }
 
         [Test]
@@ -62,7 +62,7 @@ public class ValidSwedishOfficialIdAttributeTests
         public async Task OrganisationId_Passes()
         {
             var attr = new ValidSwedishOfficialIdAttribute();
-            var result = attr.GetValidationResult(OrganisationId.Parse("5560160680"), new ValidationContext(this));
+            var result = attr.GetValidationResult(OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits), new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
     }

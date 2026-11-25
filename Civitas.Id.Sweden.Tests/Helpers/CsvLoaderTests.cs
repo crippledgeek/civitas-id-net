@@ -7,6 +7,15 @@ public class CsvLoaderTests
     // The only spec used for file-integrity tests: a tiny, headerless, ASCII file.
     private static readonly FixtureSpec Small = Fixtures.InvalidIds;
 
+    // A spec naming a file that does not exist, for the fail-closed tests.
+    private static readonly FixtureSpec Missing = new()
+    {
+        FileName = "does-not-exist.csv",
+        DataRows = 1,
+        Sha256 = FixtureFiles.Sha256Hex([]),
+        HasHeader = false
+    };
+
     public static IEnumerable<(FixtureSpec Spec, int ExpectedRows)> ExpectedRowCounts()
     {
         // Counts are pinned independently of the specs so a spec edit cannot silently move them.
@@ -14,7 +23,7 @@ public class CsvLoaderTests
         yield return (Fixtures.PersonnummerFinal, 3653);
         yield return (Fixtures.SamordningsnummerCorrected, 1306);
         yield return (Fixtures.OrganisationsnummerExtended, 10);
-        yield return (Fixtures.OrganisationsnummerEnskildFirma, 16);
+        yield return (Fixtures.OrganisationsnummerEnskildFirma, 20);
         yield return (Fixtures.OrganisationsnummerTextual, 6);
         yield return (Fixtures.InvalidIds, 9);
         yield return (Fixtures.SamordningsnummerOfficial, 1498);
@@ -25,7 +34,7 @@ public class CsvLoaderTests
     private const int FirstColumn = 0;
     private const int SecondColumn = 1;
 
-    // Column indexes of testorganisationsnummer_extended.csv and testorganisationsnummer_enskild_firma.csv; a header test keeps them honest.
+    // Column indexes of testorganisationsnummer_extended.csv; the sole-trader file has the first two; a header test keeps them honest.
     private const int InputColumn = FirstColumn;
     private const int LongFormatColumn = 1;
     private const int ShortFormatColumn = 2;
@@ -54,8 +63,6 @@ public class CsvLoaderTests
         yield return (Fixtures.OrganisationsnummerExtended, VatNumberColumn, 5);
         yield return (Fixtures.OrganisationsnummerEnskildFirma, InputColumn, 0);
         yield return (Fixtures.OrganisationsnummerEnskildFirma, LongFormatColumn, 0);
-        yield return (Fixtures.OrganisationsnummerEnskildFirma, ShortFormatColumn, 0);
-        yield return (Fixtures.OrganisationsnummerEnskildFirma, VatNumberColumn, 0);
         yield return (Fixtures.OrganisationsnummerTextual, FirstColumn, 0);
         yield return (Fixtures.InvalidIds, FirstColumn, 0);
         yield return (Fixtures.SamordningsnummerOfficial, FirstColumn, 0);
@@ -119,10 +126,10 @@ public class CsvLoaderTests
         }
 
         [Test]
-        public async Task EnskildFirmaFile_HasTheHeaderOfTheExtendedFile()
+        public async Task EnskildFirmaFile_HasNoColumnThatDropsTheCentury()
         {
             var header = HeaderCells(Fixtures.OrganisationsnummerEnskildFirma);
-            await Assert.That(header.SequenceEqual(HeaderCells(Fixtures.OrganisationsnummerExtended))).IsTrue();
+            await Assert.That(header.SequenceEqual(["input", "long_format", "valid", "type"])).IsTrue();
         }
 
         [Test]
@@ -151,7 +158,7 @@ public class CsvLoaderTests
         [Test]
         public async Task MissingFile_ThrowsFileNotFound()
         {
-            var missing = FixtureFiles.Missing;
+            var missing = Missing;
             await Assert.That(() => CsvLoader.Rows(missing)).ThrowsExactly<FileNotFoundException>();
         }
 
@@ -211,7 +218,7 @@ public class CsvLoaderTests
         [Test]
         public async Task Column_OfMissingFile_ThrowsFileNotFound()
         {
-            var missing = FixtureFiles.Missing;
+            var missing = Missing;
             await Assert.That(() => CsvLoader.Column(missing)).ThrowsExactly<FileNotFoundException>();
         }
     }

@@ -56,7 +56,7 @@ public sealed class FormatAwareConverterTests
         // A PersonalId, a CoordinationId and an OrganisationId (Aktiebolag).
         string[] inputs =
         [
-            OfficialNumbers.Modern.Long, OfficialNumbers.CentenarianSamordningsnummer.Long, LegalPersonNumbers.Aktiebolag
+            OfficialNumbers.Modern.Long, OfficialNumbers.CentenarianSamordningsnummer.Long, LegalPersonNumbers.Aktiebolag.Digits
         ];
         foreach (var raw in inputs)
         {

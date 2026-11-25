@@ -29,16 +29,15 @@ public sealed class FormatAwareConverterSnapshots
     {
         // Note: AspNetCore options validator (Phase 3) rejects ShortFormatWithSeparator,
         // so the centenarian "+" sentinel never reaches the wire through the library's
-        // JSON pipeline. This snapshot pins the hyphenless ShortFormat output for
+        // JSON pipeline. This test pins the hyphenless ShortFormat output for
         // centenarians. If a future v1.x widens the validator to permit
-        // ShortFormatWithSeparator, this snapshot MUST be updated to include "+".
+        // ShortFormatWithSeparator, this test MUST be updated to include "+".
         // Until then, the absence of "+" is the locked-in expected behavior.
         //
         // Born 1890-01-01, age >100 -> centenarian.
         var pid = PersonalId.Parse(OfficialNumbers.Centenarian.Long, new DateOnly(2026, 5, 19));
         var json = SerializeWith(PnrFormat.ShortFormat, pid);
-        await Verify(json, "json")
-            .UseFileName("ShortFormat_Centenarian_NoSeparator");
+        await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Centenarian.Short}\"");
     }
 
     private static string SerializeWith<T>(PnrFormat format, T value) where T : notnull

@@ -15,15 +15,16 @@ public sealed class ShortFormatConverterSnapshotTests
 {
     private static readonly DateOnly[] PersonalDates =
     [
-        new(1890, 1, 1),   // more than 100 years old
-        new(1899, 12, 31),
+        new(2000, 1, 1),
+        new(2005, 7, 14),
         new(2000, 2, 29),  // leap-day birthday
         new(2008, 12, 31)
     ];
 
     private static readonly DateOnly[] CoordinationDates =
     [
-        new(1914, 1, 8),   // more than 100 years old
+        new(1955, 8, 11),
+        new(1981, 12, 15),
         new(2000, 6, 6),
         new(2008, 12, 27),
         new(2020, 2, 29)   // leap-day birthday
@@ -84,14 +85,14 @@ public sealed class ShortFormatConverterSnapshotTests
         sb.AppendLine(CultureInfo.InvariantCulture, $"  JSON wire form         = {JsonSerializer.Serialize(asBase, opts)}");
         sb.AppendLine();
 
-        var coordId = CoordinationId.Parse(OfficialNumbers.ModernSamordningsnummer.Long);
+        var coordId = CoordinationId.Parse(OfficialNumbers.TwentiethCenturySamordningsnummer.Long);
         asBase = coordId;
         sb.AppendLine("CoordinationId (via base type):");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {coordId.LongFormat()}");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  JSON wire form         = {JsonSerializer.Serialize(asBase, opts)}");
         sb.AppendLine();
 
-        var legalOrg = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag);
+        var legalOrg = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
         asBase = legalOrg;
         sb.AppendLine("OrganisationId/LegalPerson (via base type, always LongFormat):");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {legalOrg.LongFormat()}");

@@ -1,6 +1,3 @@
-// Linked into several test projects, each of which uses only some of the members.
-// ReSharper disable MemberCanBePrivate.Global, UnusedMember.Global, NotAccessedPositionalProperty.Global
-
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 /// <summary>
@@ -55,12 +52,12 @@ internal static class Fixtures
         HasHeader = true
     };
 
-    /// <summary>Official person numbers written as sole-trader organisation numbers, with the extended file's columns.</summary>
+    /// <summary>Official person numbers written as sole-trader organisation numbers. A column that drops the century is left out.</summary>
     public static readonly FixtureSpec OrganisationsnummerEnskildFirma = new()
     {
         FileName = "testorganisationsnummer_enskild_firma.csv",
-        DataRows = 16,
-        Sha256 = "4729b2ca084db192b952edcbfdf32c86e6e223f7cb4450b4a76b2048917b066a",
+        DataRows = 20,
+        Sha256 = "7e13959a21ef7535ace2e71fe5bfb866848e2cae67243c650db2f901f58cd01c",
         HasHeader = true
     };
 

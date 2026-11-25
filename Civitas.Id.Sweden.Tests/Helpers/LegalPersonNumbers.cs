@@ -1,11 +1,19 @@
-// Linked into several test projects, each of which uses only some of the members.
-// ReSharper disable UnusedType.Global, UnusedMember.Global
-
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 /// <summary>Organisation numbers of legal persons, from the pinned organisation file.</summary>
 internal static class LegalPersonNumbers
 {
-    /// <summary>An aktiebolag, the file's first row. Raw parser input, so a <see cref="string" />.</summary>
-    public static string Aktiebolag => CsvLoader.Column(Fixtures.OrganisationsnummerExtended)[0];
+    /// <summary>An aktiebolag in the 556 range.</summary>
+    public static LegalPersonNumber Aktiebolag => At(0);
+
+    /// <summary>Another aktiebolag in the 556 range.</summary>
+    public static LegalPersonNumber OtherAktiebolag => At(2);
+
+    /// <summary>An aktiebolag in the 559 range.</summary>
+    public static LegalPersonNumber Aktiebolag559 => At(4);
+
+    private static LegalPersonNumber At(int row)
+    {
+        return new LegalPersonNumber(CsvLoader.Column(Fixtures.OrganisationsnummerExtended)[row]);
+    }
 }

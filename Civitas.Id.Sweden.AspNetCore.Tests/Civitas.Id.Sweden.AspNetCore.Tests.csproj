@@ -20,6 +20,10 @@
   <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
 
   <ItemGroup>
+    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\RepositoryRoot.cs" Link="OfficialTestData\RepositoryRoot.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="TUnit" />
     <PackageReference Include="Verify.TUnit" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" />

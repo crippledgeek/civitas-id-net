@@ -63,7 +63,7 @@ public class SwedishIdSchemaTransformerTests
         {
             yield return (typeof(PersonalId), OfficialNumbers.Centenarian.Long);
             yield return (typeof(CoordinationId), OfficialNumbers.CentenarianSamordningsnummer.Long);
-            yield return (typeof(OrganisationId), LegalPersonNumbers.Aktiebolag);
+            yield return (typeof(OrganisationId), LegalPersonNumbers.Aktiebolag.Digits);
             yield return (typeof(SwedishOfficialId), OfficialNumbers.Centenarian.Long);
         }
 

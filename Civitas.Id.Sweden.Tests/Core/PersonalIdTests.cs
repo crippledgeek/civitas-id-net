@@ -45,12 +45,17 @@ public class PersonalIdTests
         [Arguments("")]
         [Arguments("   ")]
         [Arguments("abc")]
-        [Arguments("189001019800")] // wrong checksum
         [Arguments("189013019802")] // invalid month 13
         [Arguments("189001329802")] // invalid day 32
         public async Task IsValid_RejectsInvalid(string? input)
         {
             await Assert.That(PersonalId.IsValid(input)).IsFalse();
+        }
+
+        [Test]
+        public async Task IsValid_RejectsWrongChecksum()
+        {
+            await Assert.That(PersonalId.IsValid(OfficialNumbers.Centenarian.WithWrongCheckDigit)).IsFalse();
         }
 
         [Test]
@@ -432,7 +437,8 @@ public class PersonalIdTests
             // The short form parsed today → century inferred as 1990 → age ~35 → '-'
             var id = PersonalId.Parse(ValidPin10);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
-            await Assert.That(formatted).EndsWith("-" + OfficialNumbers.Centenarian.Serial);
+            await Assert.That(id.BirthDate).IsEqualTo(new DateOnly(1990, 1, 1));
+            await Assert.That(formatted).IsEqualTo($"19900101-{OfficialNumbers.Centenarian.Serial}");
             await Assert.That(formatted).DoesNotContain("+");
         }
 
@@ -749,6 +755,7 @@ public class PersonalIdTests
             // 2026-05-10 is a Sunday. Lag (1930:173) §2 (Sunday/holiday extension)
             // applies to deadlines for actions, NOT to age accrual.
             var sunday = new DateOnly(2026, 5, 10);
+            await Assert.That(sunday.DayOfWeek).IsEqualTo(DayOfWeek.Sunday);
             var id = PersonalId.Parse(OfficialNumbers.Personnummer(new DateOnly(2008, 5, 10)).Long);
 
             await Assert.That(id.IsAdult(sunday)).IsTrue();
