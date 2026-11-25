@@ -1,12 +1,18 @@
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Internal;
 
 public class SwedishLuhnAlgorithmTests
 {
+    public static IEnumerable<(string NineDigits, int Expected)> OfficialInputs()
+    {
+        yield return (OfficialNumbers.Modern.Body, OfficialNumbers.Modern.CheckDigit);
+        yield return (OfficialNumbers.Centenarian.Body, OfficialNumbers.Centenarian.CheckDigit);
+    }
+
     [Test]
-    [Arguments("811218987", 6)] // 8112189876 — known valid personnummer
-    [Arguments("900101980", 2)] // 9001019802 — from testpersonnummer_final.csv (189001019802)
+    [MethodDataSource(nameof(OfficialInputs))]
     [Arguments("000000000", 0)]
     [Arguments("123456789", 7)]
     public async Task ComputeCheckDigit_KnownInputs(string nineDigits, int expected)
@@ -34,13 +40,13 @@ public class SwedishLuhnAlgorithmTests
     [Test]
     public async Task IsValid_AcceptsCorrectChecksum()
     {
-        await Assert.That(SwedishLuhnAlgorithm.IsValid("8112189876")).IsTrue();
+        await Assert.That(SwedishLuhnAlgorithm.IsValid(OfficialNumbers.Modern.Short)).IsTrue();
     }
 
     [Test]
     public async Task IsValid_RejectsWrongChecksum()
     {
-        await Assert.That(SwedishLuhnAlgorithm.IsValid("8112189870")).IsFalse();
+        await Assert.That(SwedishLuhnAlgorithm.IsValid(OfficialNumbers.Modern.Body + "0")).IsFalse();
     }
 
     [Test]

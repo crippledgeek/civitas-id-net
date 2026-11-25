@@ -15,23 +15,26 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class PersonalIdTests
 {
-    // Known-valid PINs from Civitas.Id.Sweden.Tests/Fixtures/testpersonnummer_final.csv
-    // (Skatteverket-published test data, guaranteed Luhn-valid).
-    private const string ValidPin12 = "189001019802"; // 12-digit form, female, born 1890-01-01
-    private const string ValidPin10 = "9001019802"; // 10-digit form (last 10 of the 12)
+    private static readonly string ValidPin12 = OfficialNumbers.Centenarian.Long;
+    private static readonly string ValidPin10 = OfficialNumbers.Centenarian.Short;
 
-    private const string ValidPinWithHyphen = "900101-9802";
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.Centenarian.ShortWithHyphen;
 
     // '+' separator means 100+ years old, so YY=90 resolves to 1890 (same as ValidPin12).
-    private const string ValidPin10WithPlus = "900101+9802";
-    private const string ValidPinMale = "189001029819"; // male, born 1890-01-02
+    private static readonly string ValidPin10WithPlus = OfficialNumbers.Centenarian.ShortWithPlus;
+    private static readonly string ValidPinMale = OfficialNumbers.CentenarianMale.Long;
 
     public class Parsing
     {
+        public static IEnumerable<string> IsValidAcceptsKnownValidInputs()
+        {
+            yield return ValidPin12;
+            yield return ValidPin10;
+            yield return ValidPinWithHyphen;
+        }
+
         [Test]
-        [Arguments(ValidPin12)]
-        [Arguments(ValidPin10)]
-        [Arguments(ValidPinWithHyphen)]
+        [MethodDataSource(nameof(IsValidAcceptsKnownValidInputs))]
         public async Task IsValid_AcceptsKnownValid(string input)
         {
             await Assert.That(PersonalId.IsValid(input)).IsTrue();
@@ -123,9 +126,9 @@ public class PersonalIdTests
         public async Task PlusSeparator_ResolvesToPreviousCentury()
         {
             // '+' separator means "100+ years old" — century inference shifts back.
-            // 900101+9802 with current year 2026 would otherwise infer 1990; '+' shifts to 1890.
+            // Year 90 with the current year 2026 would otherwise infer 1990; '+' shifts to 1890.
             var id = PersonalId.Parse(ValidPin10WithPlus);
-            await Assert.That(id.LongFormat()).IsEqualTo("189001019802");
+            await Assert.That(id.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
     }
 
@@ -285,7 +288,7 @@ public class PersonalIdTests
         [Test]
         public async Task IsFemale_ForEvenGenderDigit()
         {
-            // 189001019802 — gender digit '0' (position 10), even → female
+            // Gender digit '0' (position 10), even → female
             var id = PersonalId.Parse(ValidPin12);
             await Assert.That(id.IsFemale).IsTrue();
             await Assert.That(id.IsMale).IsFalse();
@@ -294,7 +297,7 @@ public class PersonalIdTests
         [Test]
         public async Task IsMale_ForOddGenderDigit()
         {
-            // 189001029819 — gender digit '1' (position 10), odd → male
+            // Gender digit '1' (position 10), odd → male
             var id = PersonalId.Parse(ValidPinMale);
             await Assert.That(id.IsMale).IsTrue();
             await Assert.That(id.IsFemale).IsFalse();
@@ -367,28 +370,28 @@ public class PersonalIdTests
         public async Task LongFormat_TwelveDigits()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.LongFormat()).IsEqualTo("189001019802");
+            await Assert.That(id.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]
         public async Task ShortFormat_TenDigits()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.ShortFormat()).IsEqualTo("9001019802");
+            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]
         public async Task Format_LongFormat()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.Format(PnrFormat.LongFormat)).IsEqualTo("189001019802");
+            await Assert.That(id.Format(PnrFormat.LongFormat)).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]
         public async Task Format_ShortFormat()
         {
             var id = PersonalId.Parse(ValidPin12);
-            await Assert.That(id.Format(PnrFormat.ShortFormat)).IsEqualTo("9001019802");
+            await Assert.That(id.Format(PnrFormat.ShortFormat)).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]
@@ -396,7 +399,7 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(ValidPin12);
             await Assert.That(id.Format(PnrFormat.LongFormatWithStandardSeparator))
-                .IsEqualTo("18900101-9802");
+                .IsEqualTo(OfficialNumbers.Centenarian.LongWithHyphen);
         }
 
         [Test]
@@ -404,7 +407,7 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(ValidPin12);
             await Assert.That(id.Format(PnrFormat.ShortFormatWithStandardSeparator))
-                .IsEqualTo("900101-9802");
+                .IsEqualTo(OfficialNumbers.Centenarian.ShortWithHyphen);
         }
 
         [Test]
@@ -412,7 +415,7 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(ValidPin12);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
-            await Assert.That(formatted).IsEqualTo("18900101+9802");
+            await Assert.That(formatted).IsEqualTo(OfficialNumbers.Centenarian.LongWithPlus);
         }
 
         [Test]
@@ -420,16 +423,16 @@ public class PersonalIdTests
         {
             var id = PersonalId.Parse(ValidPin12);
             var formatted = id.Format(PnrFormat.ShortFormatWithSeparator);
-            await Assert.That(formatted).IsEqualTo("900101+9802");
+            await Assert.That(formatted).IsEqualTo(OfficialNumbers.Centenarian.ShortWithPlus);
         }
 
         [Test]
         public async Task Format_LongFormatWithSeparator_HyphenForUnderHundred()
         {
-            // 9001019802 parsed today → century inferred as 1990 → age ~35 → '-'
+            // The short form parsed today → century inferred as 1990 → age ~35 → '-'
             var id = PersonalId.Parse(ValidPin10);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
-            await Assert.That(formatted).EndsWith("-9802");
+            await Assert.That(formatted).EndsWith("-" + OfficialNumbers.Centenarian.Serial);
             await Assert.That(formatted).DoesNotContain("+");
         }
 
@@ -444,7 +447,7 @@ public class PersonalIdTests
 
     public class TimeProviderAge
     {
-        private const string Born20080508 = "200805080009";
+        private static readonly string EighteenIn2026 = OfficialNumbers.EighteenIn2026.Long;
 
         private static FakeTimeProvider StockholmFake(DateTimeOffset utcNow)
         {
@@ -456,7 +459,7 @@ public class PersonalIdTests
         {
             // 2026-05-08 00:30 CEST = 2026-05-07 22:30 UTC
             var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 22, 30, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
 
             await Assert.That(id.GetAge(fake)).IsEqualTo(18);
         }
@@ -466,7 +469,7 @@ public class PersonalIdTests
         {
             // 2026-05-07 12:00 CEST = 2026-05-07 10:00 UTC
             var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 10, 0, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
 
             await Assert.That(id.GetAge(fake)).IsEqualTo(17);
         }
@@ -474,7 +477,7 @@ public class PersonalIdTests
         [Test]
         public async Task GetAge_NullTimeProvider_Throws()
         {
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(() => id.GetAge(null!))
                 .Throws<ArgumentNullException>();
         }
@@ -485,7 +488,7 @@ public class PersonalIdTests
             // Verify the TimeProvider path produces the same answer as
             // calling GetAge(DateOnly today) directly with the equivalent date.
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
 
             var viaProvider = id.GetAge(fake);
             var viaDateOnly = id.GetAge(new DateOnly(2026, 6, 15));
@@ -497,7 +500,7 @@ public class PersonalIdTests
         public async Task IsAdult_OnExactBirthdayMidnightStockholm_True()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 22, 30, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(id.IsAdult(fake)).IsTrue();
         }
 
@@ -505,7 +508,7 @@ public class PersonalIdTests
         public async Task IsAdult_OneDayBeforeBirthdayStockholm_False()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 10, 0, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(id.IsAdult(fake)).IsFalse();
         }
 
@@ -513,21 +516,21 @@ public class PersonalIdTests
         public async Task IsChild_OnExactBirthdayMidnightStockholm_False()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 22, 30, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(id.IsChild(fake)).IsFalse();
         }
 
         [Test]
         public async Task IsAdult_NullTimeProvider_Throws()
         {
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(() => id.IsAdult(null!)).Throws<ArgumentNullException>();
         }
 
         [Test]
         public async Task IsChild_NullTimeProvider_Throws()
         {
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(() => id.IsChild(null!)).Throws<ArgumentNullException>();
         }
     }
@@ -543,7 +546,7 @@ public class PersonalIdTests
         public async Task Parse_TwoDigitYear_UsesProviderYearForCenturyInference()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse("080508-0009", fake);
+            var id = PersonalId.Parse(OfficialNumbers.EighteenIn2026.ShortWithHyphen, fake);
 
             await Assert.That(id.BirthDate).IsEqualTo(new DateOnly(2008, 5, 8));
         }
@@ -551,7 +554,7 @@ public class PersonalIdTests
         [Test]
         public async Task Parse_NullTimeProvider_Throws()
         {
-            await Assert.That(() => PersonalId.Parse("080508-0009", null!))
+            await Assert.That(() => PersonalId.Parse(OfficialNumbers.EighteenIn2026.ShortWithHyphen, null!))
                 .Throws<ArgumentNullException>();
         }
 
@@ -559,7 +562,7 @@ public class PersonalIdTests
         public async Task TryParse_TwoDigitYear_UsesProviderYearForCenturyInference()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var ok = PersonalId.TryParse("080508-0009", fake, out var id);
+            var ok = PersonalId.TryParse(OfficialNumbers.EighteenIn2026.ShortWithHyphen, fake, out var id);
 
             await Assert.That(ok).IsTrue();
             await Assert.That(id!.BirthDate).IsEqualTo(new DateOnly(2008, 5, 8));
@@ -578,15 +581,15 @@ public class PersonalIdTests
         [Test]
         public async Task TryParse_NullTimeProvider_Throws()
         {
-            await Assert.That(() => PersonalId.TryParse("080508-0009", null!, out _))
+            await Assert.That(() => PersonalId.TryParse(OfficialNumbers.EighteenIn2026.ShortWithHyphen, null!, out _))
                 .Throws<ArgumentNullException>();
         }
     }
 
     public class TimeProviderFormatting
     {
-        private const string Born19250601Centenarian = "192506010004";
-        private const string Born20080508 = "200805080009";
+        private static readonly string HundredIn1995 = OfficialNumbers.HundredIn1995.Long;
+        private static readonly string EighteenIn2026 = OfficialNumbers.EighteenIn2026.Long;
 
         private static FakeTimeProvider StockholmFake(DateTimeOffset utcNow)
         {
@@ -596,9 +599,9 @@ public class PersonalIdTests
         [Test]
         public async Task Format_LongFormatWithSeparator_BeforeCentenarianBirthday_UsesHyphen()
         {
-            // 2025-05-31 12:00 CEST (UTC 10:00) — age 99, separator "-"
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 10, 0, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born19250601Centenarian);
+            // 1995-05-31 12:00 CEST (UTC 10:00) — age 99, separator "-"
+            var fake = StockholmFake(new DateTimeOffset(1995, 5, 31, 10, 0, 0, TimeSpan.Zero));
+            var id = PersonalId.Parse(HundredIn1995);
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
@@ -609,10 +612,10 @@ public class PersonalIdTests
         [Test]
         public async Task Format_LongFormatWithSeparator_OnCentenarianBirthdayStockholm_UsesPlus()
         {
-            // 2025-06-01 00:30 CEST = 2025-05-31 22:30 UTC — Stockholm has crossed midnight,
+            // 1995-06-01 00:30 CEST = 1995-05-31 22:30 UTC — Stockholm has crossed midnight,
             // person is age 100; UTC anchor would still say age 99 ("-").
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 22, 30, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born19250601Centenarian);
+            var fake = StockholmFake(new DateTimeOffset(1995, 5, 31, 22, 30, 0, TimeSpan.Zero));
+            var id = PersonalId.Parse(HundredIn1995);
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
@@ -622,7 +625,7 @@ public class PersonalIdTests
         [Test]
         public async Task Format_NullTimeProvider_Throws()
         {
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
             await Assert.That(() => id.Format(PnrFormat.LongFormatWithSeparator, null!))
                 .Throws<ArgumentNullException>();
         }
@@ -632,7 +635,7 @@ public class PersonalIdTests
         {
             // ShortFormat doesn't embed a "+/-" — result identical with/without provider.
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var id = PersonalId.Parse(Born20080508);
+            var id = PersonalId.Parse(EighteenIn2026);
 
             var withProvider = id.Format(PnrFormat.ShortFormat, fake);
             var withoutProvider = id.Format(PnrFormat.ShortFormat);
@@ -643,6 +646,8 @@ public class PersonalIdTests
 
     public class StockholmPin
     {
+        private const int FakerSeed = 1;
+
         [Test]
         public async Task ZeroArgGetAge_AnchorsToSwedenClockToday()
         {
@@ -651,9 +656,7 @@ public class PersonalIdTests
             if (today is { Month: 2, Day: 29 }) return;
 
             var birthDate = today.AddYears(-18);
-            var pnr = TestIdBuilder.PersonalIdForBirthDate(birthDate, "000");
-
-            var id = PersonalId.Parse(pnr);
+            var id = PersonalId.Parse(PersonalIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
             await Assert.That(id.IsAdult()).IsTrue();
             await Assert.That(id.GetAge()).IsEqualTo(18);
         }
@@ -664,9 +667,8 @@ public class PersonalIdTests
             var today = SwedenClock.Today();
             // Construct a person reliably aged >= 100.
             var birthDate = today.AddYears(-100).AddDays(-1);
-            var pnr = TestIdBuilder.PersonalIdForBirthDate(birthDate, "000");
+            var id = PersonalId.Parse(PersonalIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
 
-            var id = PersonalId.Parse(pnr);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
 
             await Assert.That(formatted).Contains("+");
@@ -676,7 +678,7 @@ public class PersonalIdTests
         public async Task ZeroArgGetAge_AndDateOnlyOverloadWithSwedenClockToday_AreEqual()
         {
             var today = SwedenClock.Today();
-            var id = PersonalId.Parse("200805080009");
+            var id = PersonalId.Parse(OfficialNumbers.EighteenIn2026.Long);
 
             await Assert.That(id.GetAge()).IsEqualTo(id.GetAge(today));
         }
@@ -696,8 +698,7 @@ public class PersonalIdTests
         {
             _ = scenario;
             var today = DateOnly.Parse(todayIso, CultureInfo.InvariantCulture);
-            var pnr = TestIdBuilder.PersonalIdForBirthDate(new DateOnly(2008, 2, 29), "000");
-            var id = PersonalId.Parse(pnr);
+            var id = PersonalId.Parse(OfficialNumbers.Personnummer(new DateOnly(2008, 2, 29)).Long);
 
             await Assert.That(id.GetAge(today)).IsEqualTo(expectedAge);
             await Assert.That(id.IsAdult(today)).IsEqualTo(expectedIsAdult);
@@ -708,7 +709,7 @@ public class PersonalIdTests
     {
         private static string Pnr()
         {
-            return TestIdBuilder.PersonalIdForBirthDate(new DateOnly(2008, 5, 8), "000");
+            return OfficialNumbers.EighteenIn2026.Long;
         }
 
         [Test]
@@ -748,8 +749,7 @@ public class PersonalIdTests
             // 2026-05-10 is a Sunday. Lag (1930:173) §2 (Sunday/holiday extension)
             // applies to deadlines for actions, NOT to age accrual.
             var sunday = new DateOnly(2026, 5, 10);
-            var pnr = TestIdBuilder.PersonalIdForBirthDate(new DateOnly(2008, 5, 10), "000");
-            var id = PersonalId.Parse(pnr);
+            var id = PersonalId.Parse(OfficialNumbers.Personnummer(new DateOnly(2008, 5, 10)).Long);
 
             await Assert.That(id.IsAdult(sunday)).IsTrue();
             await Assert.That(id.GetAge(sunday)).IsEqualTo(18);

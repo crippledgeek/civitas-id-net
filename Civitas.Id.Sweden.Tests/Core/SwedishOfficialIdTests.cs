@@ -12,8 +12,8 @@ namespace Civitas.Id.Sweden.Tests.Core;
 public class SwedishOfficialIdTests
 {
     // One valid number of each subtype; THIRD-PARTY-DATA.md says where the fixture files come from.
-    private const string ValidPersonalId = "189001019802"; // 1890s personnummer (female), Skatteverket
-    private const string ValidCoordinationId = "191401682396"; // 1914 samordningsnummer (male), Skatteverket
+    private static readonly string ValidPersonalId = OfficialNumbers.Centenarian.Long;
+    private static readonly string ValidCoordinationId = OfficialNumbers.CentenarianSamordningsnummer.Long;
     private const string ValidOrganisationId = "5560160680"; // aktiebolag, in testorganisationsnummer_extended.csv
 
     public class TryParseAny
@@ -88,10 +88,15 @@ public class SwedishOfficialIdTests
 
     public class IsValid
     {
+        public static IEnumerable<string> AcceptsAllThreeTypesInputs()
+        {
+            yield return ValidPersonalId;
+            yield return ValidCoordinationId;
+            yield return ValidOrganisationId;
+        }
+
         [Test]
-        [Arguments(ValidPersonalId)]
-        [Arguments(ValidCoordinationId)]
-        [Arguments(ValidOrganisationId)]
+        [MethodDataSource(nameof(AcceptsAllThreeTypesInputs))]
         public async Task AcceptsAllThreeTypes(string input)
         {
             await Assert.That(SwedishOfficialId.IsValid(input)).IsTrue();
@@ -165,7 +170,7 @@ public class SwedishOfficialIdTests
             // "provider-year is required" guard lives in PersonalIdTests.TimeProviderParsing
             // (Task 5); this layer asserts dispatch + threading + a tightened result check.
             var fake = StockholmFake(new DateTimeOffset(2050, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var id = SwedishOfficialId.ParseAny("080508-0009", fake);
+            var id = SwedishOfficialId.ParseAny(OfficialNumbers.EighteenIn2026.ShortWithHyphen, fake);
 
             await Assert.That(id).IsTypeOf<PersonalId>();
             await Assert.That(((PersonalId)id).BirthDate.Year).IsEqualTo(2008);
@@ -174,7 +179,7 @@ public class SwedishOfficialIdTests
         [Test]
         public async Task ParseAny_NullTimeProvider_Throws()
         {
-            await Assert.That(() => SwedishOfficialId.ParseAny("080508-0009", null!))
+            await Assert.That(() => SwedishOfficialId.ParseAny(OfficialNumbers.EighteenIn2026.ShortWithHyphen, null!))
                 .Throws<ArgumentNullException>();
         }
 
@@ -183,7 +188,7 @@ public class SwedishOfficialIdTests
         {
             // See ParseAny_PersonalId_TwoDigitYear_UsesProviderYear for rationale on the 2050 anchor.
             var fake = StockholmFake(new DateTimeOffset(2050, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var ok = SwedishOfficialId.TryParseAny("080508-0009", fake, out var id);
+            var ok = SwedishOfficialId.TryParseAny(OfficialNumbers.EighteenIn2026.ShortWithHyphen, fake, out var id);
 
             await Assert.That(ok).IsTrue();
             await Assert.That(id).IsTypeOf<PersonalId>();
@@ -193,7 +198,7 @@ public class SwedishOfficialIdTests
         [Test]
         public async Task TryParseAny_NullTimeProvider_Throws()
         {
-            await Assert.That(() => SwedishOfficialId.TryParseAny("080508-0009", null!, out _))
+            await Assert.That(() => SwedishOfficialId.TryParseAny(OfficialNumbers.EighteenIn2026.ShortWithHyphen, null!, out _))
                 .Throws<ArgumentNullException>();
         }
 

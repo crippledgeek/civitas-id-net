@@ -15,20 +15,24 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class CoordinationIdTests
 {
-    // Skatteverket-published from Testsamordningsnummer_2019_corrected.csv row 1:
-    // Male, born 1914-01-08 (encoded day 68), age 111 vs 2025-12-01.
-    private const string ValidPin12 = "191401682396";
-    private const string ValidPin10 = "1401682396";
-    private const string ValidPinWithHyphen = "140168-2396";
+    // Male, born 1914-01-08 (encoded day 68).
+    private static readonly string ValidPin12 = OfficialNumbers.CentenarianSamordningsnummer.Long;
+    private static readonly string ValidPin10 = OfficialNumbers.CentenarianSamordningsnummer.Short;
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen;
 
-    // Row "first female": 191406652386 — Female, born 1914-06-05 (encoded day 65)
-    private const string ValidPinFemale = "191406652386";
+    // Female, born 1914-06-05 (encoded day 65)
+    private static readonly string ValidPinFemale = OfficialNumbers.CentenarianFemaleSamordningsnummer.Long;
 
     public class Parsing
     {
+        public static IEnumerable<string> IsValidAcceptsKnownValidInputs()
+        {
+            yield return ValidPin12;
+            yield return ValidPinWithHyphen;
+        }
+
         [Test]
-        [Arguments(ValidPin12)]
-        [Arguments(ValidPinWithHyphen)]
+        [MethodDataSource(nameof(IsValidAcceptsKnownValidInputs))]
         public async Task IsValid_AcceptsKnownValid(string input)
         {
             await Assert.That(CoordinationId.IsValid(input)).IsTrue();
@@ -243,7 +247,7 @@ public class CoordinationIdTests
         [Test]
         public async Task IsMale_ForOddGenderDigit()
         {
-            // 191401682396 — gender digit '9' (position 10), odd → male
+            // Gender digit '9' (position 10), odd → male
             var id = CoordinationId.Parse(ValidPin12);
             await Assert.That(id.IsMale).IsTrue();
             await Assert.That(id.IsFemale).IsFalse();
@@ -252,7 +256,7 @@ public class CoordinationIdTests
         [Test]
         public async Task IsFemale_ForEvenGenderDigit()
         {
-            // 191406652386 — gender digit '8' (position 10), even → female
+            // Gender digit '8' (position 10), even → female
             var id = CoordinationId.Parse(ValidPinFemale);
             await Assert.That(id.IsFemale).IsTrue();
             await Assert.That(id.IsMale).IsFalse();
@@ -305,7 +309,7 @@ public class CoordinationIdTests
         {
             var id = CoordinationId.Parse(ValidPin12);
             await Assert.That(id.Format(PnrFormat.LongFormatWithStandardSeparator))
-                .IsEqualTo("19140168-2396");
+                .IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.LongWithHyphen);
         }
 
         [Test]
@@ -313,7 +317,7 @@ public class CoordinationIdTests
         {
             var id = CoordinationId.Parse(ValidPin12);
             await Assert.That(id.Format(PnrFormat.ShortFormatWithStandardSeparator))
-                .IsEqualTo("140168-2396");
+                .IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen);
         }
 
         [Test]
@@ -335,8 +339,8 @@ public class CoordinationIdTests
 
     public class TimeProviderAge
     {
-        // Born 2008-05-08 (encoded day 68), valid Luhn.
-        private const string Coord20080508 = "200805680006";
+        // Born 2000-06-06 (encoded day 66).
+        private static readonly string EighteenIn2018 = OfficialNumbers.ModernSamordningsnummer.Long;
 
         private static FakeTimeProvider StockholmFake(DateTimeOffset utcNow)
         {
@@ -346,38 +350,38 @@ public class CoordinationIdTests
         [Test]
         public async Task GetAge_OnExactBirthdayMidnightStockholm_Returns18()
         {
-            // 2026-05-08 00:30 CEST = 2026-05-07 22:30 UTC.
-            var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 22, 30, 0, TimeSpan.Zero));
-            var id = CoordinationId.Parse(Coord20080508);
+            // 2018-06-06 00:30 CEST = 2018-06-05 22:30 UTC.
+            var fake = StockholmFake(new DateTimeOffset(2018, 6, 5, 22, 30, 0, TimeSpan.Zero));
+            var id = CoordinationId.Parse(EighteenIn2018);
             await Assert.That(id.GetAge(fake)).IsEqualTo(18);
         }
 
         [Test]
         public async Task GetAge_NullTimeProvider_Throws()
         {
-            var id = CoordinationId.Parse(Coord20080508);
+            var id = CoordinationId.Parse(EighteenIn2018);
             await Assert.That(() => id.GetAge(null!)).Throws<ArgumentNullException>();
         }
 
         [Test]
         public async Task IsAdult_OnExactBirthdayMidnightStockholm_True()
         {
-            var fake = StockholmFake(new DateTimeOffset(2026, 5, 7, 22, 30, 0, TimeSpan.Zero));
-            var id = CoordinationId.Parse(Coord20080508);
+            var fake = StockholmFake(new DateTimeOffset(2018, 6, 5, 22, 30, 0, TimeSpan.Zero));
+            var id = CoordinationId.Parse(EighteenIn2018);
             await Assert.That(id.IsAdult(fake)).IsTrue();
         }
 
         [Test]
         public async Task IsAdult_NullTimeProvider_Throws()
         {
-            var id = CoordinationId.Parse(Coord20080508);
+            var id = CoordinationId.Parse(EighteenIn2018);
             await Assert.That(() => id.IsAdult(null!)).Throws<ArgumentNullException>();
         }
 
         [Test]
         public async Task IsChild_NullTimeProvider_Throws()
         {
-            var id = CoordinationId.Parse(Coord20080508);
+            var id = CoordinationId.Parse(EighteenIn2018);
             await Assert.That(() => id.IsChild(null!)).Throws<ArgumentNullException>();
         }
     }
@@ -393,14 +397,14 @@ public class CoordinationIdTests
         public async Task Parse_TwoDigitYear_UsesProviderYearForCenturyInference()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var id = CoordinationId.Parse("080568-0006", fake);
-            await Assert.That(id.BirthDate).IsEqualTo(new DateOnly(2008, 5, 8));
+            var id = CoordinationId.Parse(OfficialNumbers.ModernSamordningsnummer.ShortWithHyphen, fake);
+            await Assert.That(id.BirthDate).IsEqualTo(OfficialNumbers.ModernSamordningsnummer.BirthDate);
         }
 
         [Test]
         public async Task Parse_NullTimeProvider_Throws()
         {
-            await Assert.That(() => CoordinationId.Parse("080568-0006", null!))
+            await Assert.That(() => CoordinationId.Parse(OfficialNumbers.ModernSamordningsnummer.ShortWithHyphen, null!))
                 .Throws<ArgumentNullException>();
         }
 
@@ -408,9 +412,9 @@ public class CoordinationIdTests
         public async Task TryParse_TwoDigitYear_UsesProviderYearForCenturyInference()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var ok = CoordinationId.TryParse("080568-0006", fake, out var id);
+            var ok = CoordinationId.TryParse(OfficialNumbers.ModernSamordningsnummer.ShortWithHyphen, fake, out var id);
             await Assert.That(ok).IsTrue();
-            await Assert.That(id!.BirthDate).IsEqualTo(new DateOnly(2008, 5, 8));
+            await Assert.That(id!.BirthDate).IsEqualTo(OfficialNumbers.ModernSamordningsnummer.BirthDate);
         }
 
         [Test]
@@ -425,16 +429,16 @@ public class CoordinationIdTests
         [Test]
         public async Task TryParse_NullTimeProvider_Throws()
         {
-            await Assert.That(() => CoordinationId.TryParse("080568-0006", null!, out _))
+            await Assert.That(() => CoordinationId.TryParse(OfficialNumbers.ModernSamordningsnummer.ShortWithHyphen, null!, out _))
                 .Throws<ArgumentNullException>();
         }
     }
 
     public class TimeProviderFormatting
     {
-        // Born 1925-06-01 (encoded day 61), valid Luhn (check=1). Centenarian on 2025-06-01.
-        private const string Born19250601Centenarian = "192506610001";
-        private const string Born20080508 = "200805680006";
+        // Born 1914-06-05 (encoded day 65). Centenarian on 2014-06-05.
+        private static readonly string HundredIn2014 = OfficialNumbers.CentenarianFemaleSamordningsnummer.Long;
+        private static readonly string EighteenIn2018 = OfficialNumbers.ModernSamordningsnummer.Long;
 
         private static FakeTimeProvider StockholmFake(DateTimeOffset utcNow)
         {
@@ -444,9 +448,9 @@ public class CoordinationIdTests
         [Test]
         public async Task Format_LongFormatWithSeparator_BeforeCentenarianBirthday_UsesHyphen()
         {
-            // 2025-05-31 12:00 CEST (UTC 10:00) — age 99, separator "-"
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 10, 0, 0, TimeSpan.Zero));
-            var id = CoordinationId.Parse(Born19250601Centenarian);
+            // 2014-06-04 12:00 CEST (UTC 10:00) — age 99, separator "-"
+            var fake = StockholmFake(new DateTimeOffset(2014, 6, 4, 10, 0, 0, TimeSpan.Zero));
+            var id = CoordinationId.Parse(HundredIn2014);
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
@@ -457,9 +461,9 @@ public class CoordinationIdTests
         [Test]
         public async Task Format_LongFormatWithSeparator_OnCentenarianBirthdayStockholm_UsesPlus()
         {
-            // 2025-06-01 00:30 CEST = 2025-05-31 22:30 UTC.
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 22, 30, 0, TimeSpan.Zero));
-            var id = CoordinationId.Parse(Born19250601Centenarian);
+            // 2014-06-05 00:30 CEST = 2014-06-04 22:30 UTC.
+            var fake = StockholmFake(new DateTimeOffset(2014, 6, 4, 22, 30, 0, TimeSpan.Zero));
+            var id = CoordinationId.Parse(HundredIn2014);
 
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
@@ -469,7 +473,7 @@ public class CoordinationIdTests
         [Test]
         public async Task Format_NullTimeProvider_Throws()
         {
-            var id = CoordinationId.Parse(Born20080508);
+            var id = CoordinationId.Parse(EighteenIn2018);
             await Assert.That(() => id.Format(PnrFormat.LongFormatWithSeparator, null!))
                 .Throws<ArgumentNullException>();
         }
@@ -478,7 +482,7 @@ public class CoordinationIdTests
         public async Task Format_NonSeparatorEnumValue_UsesProviderForConsistencyButResultIsTimeIndependent()
         {
             var fake = StockholmFake(new DateTimeOffset(2026, 6, 15, 12, 0, 0, TimeSpan.Zero));
-            var id = CoordinationId.Parse(Born20080508);
+            var id = CoordinationId.Parse(EighteenIn2018);
 
             var withProvider = id.Format(PnrFormat.ShortFormat, fake);
             var withoutProvider = id.Format(PnrFormat.ShortFormat);
@@ -489,6 +493,8 @@ public class CoordinationIdTests
 
     public class StockholmPin
     {
+        private const int FakerSeed = 1;
+
         [Test]
         public async Task ZeroArgGetAge_AnchorsToSwedenClockToday()
         {
@@ -498,9 +504,7 @@ public class CoordinationIdTests
             if (today is { Month: 2, Day: 29 }) return;
 
             var birthDate = today.AddYears(-18);
-            var coord = TestIdBuilder.CoordinationIdForBirthDate(birthDate, "000");
-
-            var id = CoordinationId.Parse(coord);
+            var id = CoordinationId.Parse(CoordinationIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
             await Assert.That(id.IsAdult()).IsTrue();
             await Assert.That(id.GetAge()).IsEqualTo(18);
         }
@@ -511,9 +515,7 @@ public class CoordinationIdTests
             var today = SwedenClock.Today();
             // Construct a person reliably aged >= 100.
             var birthDate = today.AddYears(-100).AddDays(-1);
-            var coord = TestIdBuilder.CoordinationIdForBirthDate(birthDate, "000");
-
-            var id = CoordinationId.Parse(coord);
+            var id = CoordinationId.Parse(CoordinationIdFaker.WithSeed(FakerSeed).Generate(birthDate).LongFormat());
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
 
             await Assert.That(formatted).Contains("+");
@@ -523,7 +525,7 @@ public class CoordinationIdTests
         public async Task ZeroArgGetAge_AndDateOnlyOverloadWithSwedenClockToday_AreEqual()
         {
             var today = SwedenClock.Today();
-            var id = CoordinationId.Parse("200805680006");
+            var id = CoordinationId.Parse(OfficialNumbers.ModernSamordningsnummer.Long);
             await Assert.That(id.GetAge()).IsEqualTo(id.GetAge(today));
         }
     }
@@ -531,19 +533,18 @@ public class CoordinationIdTests
     public class LeapDayBirthday
     {
         [Test]
-        [Arguments("2026-02-27", 17, false, "day before legal birthday in non-leap year")]
-        [Arguments("2026-02-28", 18, true, "legal birthday in non-leap year (Lag 1930:173 §1)")]
-        [Arguments("2026-03-01", 18, true, "day after legal birthday in non-leap year")]
-        [Arguments("2028-02-28", 19, true, "day before real leap-day birthday in leap year")]
-        [Arguments("2028-02-29", 20, true, "real leap-day birthday in leap year")]
-        [Arguments("2028-03-01", 20, true, "day after leap-day birthday in leap year")]
+        [Arguments("2038-02-27", 17, false, "day before legal birthday in non-leap year")]
+        [Arguments("2038-02-28", 18, true, "legal birthday in non-leap year (Lag 1930:173 §1)")]
+        [Arguments("2038-03-01", 18, true, "day after legal birthday in non-leap year")]
+        [Arguments("2040-02-28", 19, true, "day before real leap-day birthday in leap year")]
+        [Arguments("2040-02-29", 20, true, "real leap-day birthday in leap year")]
+        [Arguments("2040-03-01", 20, true, "day after leap-day birthday in leap year")]
         public async Task LeapDay_AgeAndIsAdult_FollowLag1930_173Para1(
             string todayIso, int expectedAge, bool expectedIsAdult, string scenario)
         {
             _ = scenario;
             var today = DateOnly.Parse(todayIso, CultureInfo.InvariantCulture);
-            var coord = TestIdBuilder.CoordinationIdForBirthDate(new DateOnly(2008, 2, 29), "000");
-            var id = CoordinationId.Parse(coord);
+            var id = CoordinationId.Parse(OfficialNumbers.Samordningsnummer(new DateOnly(2020, 2, 29)).Long);
 
             await Assert.That(id.GetAge(today)).IsEqualTo(expectedAge);
             await Assert.That(id.IsAdult(today)).IsEqualTo(expectedIsAdult);
@@ -554,35 +555,35 @@ public class CoordinationIdTests
     {
         private static string Coord()
         {
-            return TestIdBuilder.CoordinationIdForBirthDate(new DateOnly(2008, 5, 8), "000");
+            return OfficialNumbers.ModernSamordningsnummer.Long;
         }
 
         [Test]
         public async Task IsAdult_OneDayBeforeBirthday_False()
         {
             var id = CoordinationId.Parse(Coord());
-            await Assert.That(id.IsAdult(new DateOnly(2026, 5, 7))).IsFalse();
+            await Assert.That(id.IsAdult(new DateOnly(2018, 6, 5))).IsFalse();
         }
 
         [Test]
         public async Task IsAdult_OnExactBirthday_True()
         {
             var id = CoordinationId.Parse(Coord());
-            await Assert.That(id.IsAdult(new DateOnly(2026, 5, 8))).IsTrue();
+            await Assert.That(id.IsAdult(new DateOnly(2018, 6, 6))).IsTrue();
         }
 
         [Test]
         public async Task GetAge_OneDayBeforeBirthday_Returns17()
         {
             var id = CoordinationId.Parse(Coord());
-            await Assert.That(id.GetAge(new DateOnly(2026, 5, 7))).IsEqualTo(17);
+            await Assert.That(id.GetAge(new DateOnly(2018, 6, 5))).IsEqualTo(17);
         }
 
         [Test]
         public async Task GetAge_OnExactBirthday_Returns18()
         {
             var id = CoordinationId.Parse(Coord());
-            await Assert.That(id.GetAge(new DateOnly(2026, 5, 8))).IsEqualTo(18);
+            await Assert.That(id.GetAge(new DateOnly(2018, 6, 6))).IsEqualTo(18);
         }
     }
 
@@ -591,11 +592,11 @@ public class CoordinationIdTests
         [Test]
         public async Task IsAdult_OnSundayBirthday_AccruesThatSundayNotMonday()
         {
-            // 2026-05-10 is a Sunday. Lag (1930:173) §2 (Sunday/holiday extension)
+            // 2018-08-12 is a Sunday. Lag (1930:173) §2 (Sunday/holiday extension)
             // applies to deadlines for actions, NOT to age accrual.
-            var sunday = new DateOnly(2026, 5, 10);
-            var coord = TestIdBuilder.CoordinationIdForBirthDate(new DateOnly(2008, 5, 10), "000");
-            var id = CoordinationId.Parse(coord);
+            var sunday = new DateOnly(2018, 8, 12);
+            await Assert.That(sunday.DayOfWeek).IsEqualTo(DayOfWeek.Sunday);
+            var id = CoordinationId.Parse(OfficialNumbers.Samordningsnummer(new DateOnly(2000, 8, 12)).Long);
 
             await Assert.That(id.IsAdult(sunday)).IsTrue();
             await Assert.That(id.GetAge(sunday)).IsEqualTo(18);

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Civitas.Id.Sweden.TypeConverters;
 
 namespace Civitas.Id.Sweden.Tests.TypeConverters;
@@ -12,7 +13,7 @@ public class OrganisationIdTypeConverterTests
 {
     private const string ValidLegalPerson = "5560160680"; // 10-digit Aktiebolag
     private const string ValidLegalPersonWithHyphen = "556016-0680";
-    private const string ValidEnskildFirma = "191212121212"; // 12-digit personnummer shape
+    private static readonly string ValidEnskildFirma = OfficialNumbers.Centenarian.Long; // 12-digit personnummer shape
 
     public class CanConvertFrom
     {
@@ -50,10 +51,15 @@ public class OrganisationIdTypeConverterTests
 
     public class ConvertFrom
     {
+        public static IEnumerable<string> ParsesValidStringInputs()
+        {
+            yield return ValidLegalPerson;
+            yield return ValidLegalPersonWithHyphen;
+            yield return ValidEnskildFirma;
+        }
+
         [Test]
-        [Arguments(ValidLegalPerson)]
-        [Arguments(ValidLegalPersonWithHyphen)]
-        [Arguments(ValidEnskildFirma)]
+        [MethodDataSource(nameof(ParsesValidStringInputs))]
         public async Task Parses_ValidString(string input)
         {
             var sut = new OrganisationIdTypeConverter();
@@ -107,7 +113,7 @@ public class OrganisationIdTypeConverterTests
             var sut = new OrganisationIdTypeConverter();
             var id = OrganisationId.Parse(ValidEnskildFirma);
             var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(result).IsEqualTo("1212121212");
+            await Assert.That(result).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]

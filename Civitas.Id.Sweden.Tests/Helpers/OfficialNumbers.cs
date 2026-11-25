@@ -31,6 +31,12 @@ internal static class OfficialNumbers
     /// <summary>A number born in 2000, whose short form resolves to the same century today.</summary>
     public static OfficialPersonnummer Modern => Personnummer(new DateOnly(2000, 1, 1));
 
+    /// <summary>A number born on 8 May 2008.</summary>
+    public static OfficialPersonnummer EighteenIn2026 => Personnummer(new DateOnly(2008, 5, 8));
+
+    /// <summary>A number born on 1 June 1895.</summary>
+    public static OfficialPersonnummer HundredIn1995 => Personnummer(new DateOnly(1895, 6, 1));
+
     /// <summary>A man's samordningsnummer born in 1914.</summary>
     public static OfficialSamordningsnummer CentenarianSamordningsnummer =>
         Samordningsnummer(new DateOnly(1914, 1, 8));

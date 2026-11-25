@@ -1,4 +1,5 @@
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
 
@@ -10,11 +11,8 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class PhysicalPersonIdEqualityTests
 {
-    // Known-valid pins; only ValidPersonal is in a fixture file (number from Skatteverket).
-    // ValidPersonal: from testpersonnummer_final.csv (body 9001019802 -> check 2, verified).
-    // ValidCoordination: Luhn-valid coordination number, not from a fixture file (body 9001610006 -> check 6, verified).
-    private const string ValidPersonal = "189001019802";
-    private const string ValidCoordination = "189001610006";
+    private static readonly string ValidPersonal = OfficialNumbers.Centenarian.Long;
+    private static readonly string ValidCoordination = OfficialNumbers.CentenarianSamordningsnummer.Long;
 
     [Test]
     public async Task PersonalId_ValueEquality_HoldsAcrossInstances()
@@ -43,7 +41,7 @@ public class PhysicalPersonIdEqualityTests
         // validation and inject the SAME body into both record types. This
         // isolates the EqualityContract invariant — equality must fail purely
         // due to runtime-type discrimination, not due to body inequality.
-        const string sameBody = "189001019802";
+        var sameBody = OfficialNumbers.Centenarian.Long;
         var p = PersonalId.FromValidated(sameBody);
         var c = CoordinationId.FromValidated(sameBody);
 

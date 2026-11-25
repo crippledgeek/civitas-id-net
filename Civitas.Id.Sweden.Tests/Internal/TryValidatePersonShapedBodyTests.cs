@@ -1,4 +1,5 @@
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Internal;
 
@@ -9,9 +10,7 @@ namespace Civitas.Id.Sweden.Tests.Internal;
 /// </summary>
 public class TryValidatePersonShapedBodyTests
 {
-    // Luhn-valid personnummer: 1989-01-01 with check digit 1 (verified: body
-    // 8901010101 → weighted sum 19 → check (10-9)%10 = 1).
-    private const string ValidLong12 = "198901010101";
+    private static readonly string ValidLong12 = OfficialNumbers.Modern.Long;
 
     /// <summary>
     ///     Runs the structural parse + the leaf validation entirely synchronously
@@ -30,7 +29,7 @@ public class TryValidatePersonShapedBodyTests
     [Test]
     public async Task ValidInput_ReturnsTrue()
     {
-        var (matched, valid) = Run(ValidLong12, 1989, 1);
+        var (matched, valid) = Run(ValidLong12, 2000, 1);
         await Assert.That(matched).IsTrue();
         await Assert.That(valid).IsTrue();
     }
@@ -57,8 +56,9 @@ public class TryValidatePersonShapedBodyTests
     [Test]
     public async Task LeapDayInLeapYear_ReturnsTrueIfLuhnValid()
     {
-        // Feb 29 2000 — leap year. Luhn-valid (body 0002296127 → check 7).
-        var (matched, valid) = Run("200002296127", 2000, 29);
+        // Feb 29 2000 — leap year.
+        var leapDay = OfficialNumbers.Personnummer(new DateOnly(2000, 2, 29)).Long;
+        var (matched, valid) = Run(leapDay, 2000, 29);
         await Assert.That(matched).IsTrue();
         await Assert.That(valid).IsTrue();
     }
@@ -66,7 +66,7 @@ public class TryValidatePersonShapedBodyTests
     [Test]
     public async Task InvalidLuhn_ReturnsFalse()
     {
-        // ValidLong12 with check digit changed from 1 to 2 — Luhn-invalid.
+        // Body 890101010 has check digit 1, not 2 — Luhn-invalid.
         var (matched, valid) = Run("198901010102", 1989, 1);
         await Assert.That(matched).IsTrue();
         await Assert.That(valid).IsFalse();
@@ -78,7 +78,7 @@ public class TryValidatePersonShapedBodyTests
         // realDay = 0 is not a valid calendar day; leaf must reject it.
         // (No production caller passes realDay = 0 — TSelf.IsDayValid pre-screens —
         // but the leaf must be safe by construction.)
-        var (matched, valid) = Run(ValidLong12, 1989, 0);
+        var (matched, valid) = Run(ValidLong12, 2000, 0);
         await Assert.That(matched).IsTrue();
         await Assert.That(valid).IsFalse();
     }

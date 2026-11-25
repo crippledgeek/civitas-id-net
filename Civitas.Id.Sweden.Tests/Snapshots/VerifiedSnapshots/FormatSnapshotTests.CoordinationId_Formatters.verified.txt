@@ -1,30 +1,30 @@
-﻿BirthDate=1900-01-01
-  LongFormat                       = 190001616606
-  ShortFormat                      = 0001616606
-  Format(LongFormat)               = 190001616606
-  Format(ShortFormatWithStandard)  = 000161-6606
+﻿BirthDate=1914-01-08
+  LongFormat                       = 191401682396
+  ShortFormat                      = 1401682396
+  Format(LongFormat)               = 191401682396
+  Format(ShortFormatWithStandard)  = 140168-2396
 
-BirthDate=1955-07-14
-  LongFormat                       = 195507745221
-  ShortFormat                      = 5507745221
-  Format(LongFormat)               = 195507745221
-  Format(ShortFormatWithStandard)  = 550774-5221
+BirthDate=1914-06-05
+  LongFormat                       = 191406652386
+  ShortFormat                      = 1406652386
+  Format(LongFormat)               = 191406652386
+  Format(ShortFormatWithStandard)  = 140665-2386
 
-BirthDate=1988-02-29
-  LongFormat                       = 198802897218
-  ShortFormat                      = 8802897218
-  Format(LongFormat)               = 198802897218
-  Format(ShortFormatWithStandard)  = 880289-7218
+BirthDate=2000-06-06
+  LongFormat                       = 200006662399
+  ShortFormat                      = 0006662399
+  Format(LongFormat)               = 200006662399
+  Format(ShortFormatWithStandard)  = 000666-2399
 
-BirthDate=2008-12-31
-  LongFormat                       = 200812917623
-  ShortFormat                      = 0812917623
-  Format(LongFormat)               = 200812917623
-  Format(ShortFormatWithStandard)  = 081291-7623
+BirthDate=2008-12-27
+  LongFormat                       = 200812872380
+  ShortFormat                      = 0812872380
+  Format(LongFormat)               = 200812872380
+  Format(ShortFormatWithStandard)  = 081287-2380
 
-BirthDate=2024-06-06
-  LongFormat                       = 202406665022
-  ShortFormat                      = 2406665022
-  Format(LongFormat)               = 202406665022
-  Format(ShortFormatWithStandard)  = 240666-5022
+BirthDate=2020-02-29
+  LongFormat                       = 202002892392
+  ShortFormat                      = 2002892392
+  Format(LongFormat)               = 202002892392
+  Format(ShortFormatWithStandard)  = 200289-2392
 

@@ -1,4 +1,5 @@
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
 
@@ -15,7 +16,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task PersonalId_CanonicalInput_ReusesInputString()
     {
-        const string input = "200001019801";
+        var input = OfficialNumbers.Modern.Long;
         var ok = PersonalId.TryParse(input, out var pid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(pid!.LongFormat(), input)).IsTrue();
@@ -25,7 +26,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task PersonalId_NonCanonicalInput_AllocatesNewString()
     {
-        const string input = "0001019801"; // 10-digit, no century — needs reconstruction
+        var input = OfficialNumbers.Modern.Short; // 10-digit, no century — needs reconstruction
         var ok = PersonalId.TryParse(input, out var pid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(pid!.LongFormat(), input)).IsFalse();
@@ -45,7 +46,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task PersonalId_InputWithDelimiter_AllocatesNewString()
     {
-        const string input = "20000101-9801";
+        var input = OfficialNumbers.Modern.LongWithHyphen;
         var ok = PersonalId.TryParse(input, out var pid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(pid!.LongFormat(), input)).IsFalse();
@@ -55,7 +56,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task PersonalId_InputWithSePrefix_AllocatesNewString()
     {
-        const string input = "SE200001019801";
+        var input = $"SE{OfficialNumbers.Modern.Long}";
         var ok = PersonalId.TryParse(input, out var pid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(pid!.LongFormat(), input)).IsFalse();
@@ -65,7 +66,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task PersonalId_InputWithWhitespace_AllocatesNewString()
     {
-        const string input = " 200001019801 ";
+        var input = $" {OfficialNumbers.Modern.Long} ";
         var ok = PersonalId.TryParse(input, out var pid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(pid!.LongFormat(), input)).IsFalse();

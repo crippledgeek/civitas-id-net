@@ -1,17 +1,17 @@
-﻿BirthDate=1920-05-08, canonical=192005087883
+﻿BirthDate=1895-05-08, canonical=189505089814
 
-today=2019-05-07
-  LongFormatWithSeparator   = 19200508-7883
-  ShortFormatWithSeparator  = 200508-7883
-today=2020-05-07
-  LongFormatWithSeparator   = 19200508-7883
-  ShortFormatWithSeparator  = 200508-7883
-today=2020-05-08
-  LongFormatWithSeparator   = 19200508+7883
-  ShortFormatWithSeparator  = 200508+7883
-today=2020-05-09
-  LongFormatWithSeparator   = 19200508+7883
-  ShortFormatWithSeparator  = 200508+7883
-today=2025-01-01
-  LongFormatWithSeparator   = 19200508+7883
-  ShortFormatWithSeparator  = 200508+7883
+today=1994-05-07
+  LongFormatWithSeparator   = 18950508-9814
+  ShortFormatWithSeparator  = 950508-9814
+today=1995-05-07
+  LongFormatWithSeparator   = 18950508-9814
+  ShortFormatWithSeparator  = 950508-9814
+today=1995-05-08
+  LongFormatWithSeparator   = 18950508+9814
+  ShortFormatWithSeparator  = 950508+9814
+today=1995-05-09
+  LongFormatWithSeparator   = 18950508+9814
+  ShortFormatWithSeparator  = 950508+9814
+today=2000-01-01
+  LongFormatWithSeparator   = 18950508+9814
+  ShortFormatWithSeparator  = 950508+9814

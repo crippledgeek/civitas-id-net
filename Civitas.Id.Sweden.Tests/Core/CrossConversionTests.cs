@@ -1,5 +1,6 @@
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
 
@@ -8,10 +9,10 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class CrossConversionTests
 {
-    // Modern fixtures so round-trip via 10-digit ShortFormat preserves century inference
+    // Modern numbers so round-trip via 10-digit ShortFormat preserves century inference
     // (today >= 2026, sliding window resolves "00" → 2000, "00" coord → 2000).
-    private const string ValidPersonalId = "200001019801"; // 2000-01-01, female
-    private const string ValidCoordinationId = "200001612399"; // 2000-01-01 (coord day 61), male
+    private static readonly string ValidPersonalId = OfficialNumbers.Modern.Long;
+    private static readonly string ValidCoordinationId = OfficialNumbers.ModernSamordningsnummer.Long;
     private const string ValidOrganisationId = "5560160680"; // legal person — EuropakooperativEgtsEric
 
     public class PersonalToOrganisation

@@ -1,6 +1,7 @@
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Civitas.Id.Sweden.TypeConverters;
 
 namespace Civitas.Id.Sweden.Tests.TypeConverters;
@@ -10,9 +11,9 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 /// </summary>
 public class PersonalIdTypeConverterTests
 {
-    private const string ValidPin12 = "189001019802";
-    private const string ValidPin10 = "9001019802";
-    private const string ValidPinWithHyphen = "900101-9802";
+    private static readonly string ValidPin12 = OfficialNumbers.Centenarian.Long;
+    private static readonly string ValidPin10 = OfficialNumbers.Centenarian.Short;
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.Centenarian.ShortWithHyphen;
 
     public class CanConvertFrom
     {
@@ -50,10 +51,15 @@ public class PersonalIdTypeConverterTests
 
     public class ConvertFrom
     {
+        public static IEnumerable<string> ParsesValidStringInputs()
+        {
+            yield return ValidPin12;
+            yield return ValidPin10;
+            yield return ValidPinWithHyphen;
+        }
+
         [Test]
-        [Arguments(ValidPin12)]
-        [Arguments(ValidPin10)]
-        [Arguments(ValidPinWithHyphen)]
+        [MethodDataSource(nameof(ParsesValidStringInputs))]
         public async Task Parses_ValidString(string input)
         {
             var sut = new PersonalIdTypeConverter();

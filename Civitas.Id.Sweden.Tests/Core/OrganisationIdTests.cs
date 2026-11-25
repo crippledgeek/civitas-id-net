@@ -1,6 +1,7 @@
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Tests.Helpers;
 using Microsoft.Extensions.Time.Testing;
@@ -42,9 +43,14 @@ public class OrganisationIdTests
             await Assert.That(OrganisationId.IsValid(input)).IsFalse();
         }
 
+        public static IEnumerable<string> IsValidAcceptsEnskildFirmaInputs()
+        {
+            yield return OfficialNumbers.Modern.Long; // personnummer shape
+            yield return OfficialNumbers.CentenarianSamordningsnummer.Long; // samordningsnummer shape
+        }
+
         [Test]
-        [Arguments("198112189876")] // personnummer-shape (month=12, day=18) — Enskild firma
-        [Arguments("191401682396")] // samordningsnummer-shape (month=01, day=68) — Enskild firma
+        [MethodDataSource(nameof(IsValidAcceptsEnskildFirmaInputs))]
         public async Task IsValid_AcceptsEnskildFirma(string input)
         {
             // Re-classified from IsValid_RejectsInvalid: with Enskild firma support,
@@ -260,13 +266,11 @@ public class OrganisationIdTests
         [Test]
         public async Task Form_For_GenuineEuropakooperativRange_IsEuropakooperativEgtsEric()
         {
-            // Construct a Luhn-valid orgnummer in the genuine Europakooperativ sub-range
-            // (5500-5559, i.e. excluding the 556/559 Aktiebolag carve-outs).
-            // First 9 digits "552000000" — prefix 552 (Europakooperativ), positions 2-3 "20"
-            // satisfy the legal-person month >= 20 check. Compute checksum to make Luhn-valid.
-            const string nineDigits = "552000000";
-            var check = Civitas.Id.Sweden.Internal.SwedishLuhnAlgorithm.ComputeCheckDigit(nineDigits);
-            var tenDigits = nineDigits + check.ToString(CultureInfo.InvariantCulture);
+            // The faker's third and fourth digits are 21-32, so the number starts with 552 or 553: in the
+            // genuine Europakooperativ sub-range, outside the 556/559 Aktiebolag carve-outs.
+            var tenDigits = OrganisationIdFaker.WithSeed(1)
+                .Generate(OrganisationForm.EuropakooperativEgtsEric).LongFormat();
+            await Assert.That(tenDigits.AsSpan(0, 3) is "552" or "553").IsTrue();
 
             var id = OrganisationId.Parse(tenDigits);
             await Assert.That(id.Form).IsEqualTo(OrganisationForm.EuropakooperativEgtsEric);
@@ -276,11 +280,11 @@ public class OrganisationIdTests
 
     public class EnskildFirma
     {
-        // Personnummer-shape Enskild firma orgnummer — month 12, day 12 (a personnummer date).
-        private const string EnskildFirmaPersonShape = "191212121212";
+        // Personnummer-shape Enskild firma orgnummer, born 1890-01-01.
+        private static readonly string EnskildFirmaPersonShape = OfficialNumbers.Centenarian.Long;
 
-        // Samordningsnummer-shape Enskild firma — month 02, day 80 (encoded; real day 20).
-        private const string EnskildFirmaCoordShape = "199502809990";
+        // Samordningsnummer-shape Enskild firma, born 2000-06-06 (encoded day 66).
+        private static readonly string EnskildFirmaCoordShape = OfficialNumbers.ModernSamordningsnummer.Long;
 
         [Test]
         public async Task PersonnummerShape_Parses()
@@ -288,7 +292,7 @@ public class OrganisationIdTests
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.PhysicalPerson);
             await Assert.That(id.Form).IsEqualTo(OrganisationForm.None);
-            await Assert.That(id.ShortFormat()).IsEqualTo("1212121212");
+            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]
@@ -297,14 +301,14 @@ public class OrganisationIdTests
             var id = OrganisationId.Parse(EnskildFirmaCoordShape);
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.PhysicalPerson);
             await Assert.That(id.Form).IsEqualTo(OrganisationForm.None);
-            await Assert.That(id.ShortFormat()).IsEqualTo("9502809990");
+            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.ModernSamordningsnummer.Short);
         }
 
         [Test]
         public async Task PlusSeparator_Accepted()
         {
             // Bearer is 100+ years old — '+' is the Swedish convention.
-            var id = OrganisationId.Parse("19111230+0007");
+            var id = OrganisationId.Parse(OfficialNumbers.Centenarian.LongWithPlus);
             await Assert.That(id).IsNotNull();
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.PhysicalPerson);
         }
@@ -312,7 +316,7 @@ public class OrganisationIdTests
         [Test]
         public async Task SePrefix_Accepted()
         {
-            var id = OrganisationId.Parse("SE191112300007");
+            var id = OrganisationId.Parse($"SE{OfficialNumbers.Centenarian.Long}");
             await Assert.That(id).IsNotNull();
         }
 
@@ -320,7 +324,7 @@ public class OrganisationIdTests
         public async Task TenDigitForm_Rejected()
         {
             // 10-digit personnummer-shape input has no explicit century — reject as ambiguous.
-            await Assert.That(OrganisationId.IsValid("1212121212")).IsFalse();
+            await Assert.That(OrganisationId.IsValid(OfficialNumbers.Centenarian.Short)).IsFalse();
         }
 
         [Test]
@@ -336,7 +340,7 @@ public class OrganisationIdTests
             // Per Lag (1974:174) §4, organisationsnummer is always 10 digits.
             // The 12-digit personnummer view of Enskild firma is available via ToPhysicalPersonId().
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
-            await Assert.That(id.LongFormat()).IsEqualTo("1212121212");
+            await Assert.That(id.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]
@@ -353,7 +357,7 @@ public class OrganisationIdTests
             var org = OrganisationId.Parse(EnskildFirmaPersonShape);
             var person = org.ToPhysicalPersonId();
             await Assert.That(person).IsNotNull();
-            await Assert.That(person!.LongFormat()).IsEqualTo("191212121212");
+            await Assert.That(person!.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]
@@ -364,14 +368,14 @@ public class OrganisationIdTests
             var org = OrganisationId.Parse(EnskildFirmaPersonShape);
             var person = org.ToPhysicalPersonId();
             await Assert.That(person).IsTypeOf<PersonalId>();
-            await Assert.That(person!.BirthDate).IsEqualTo(new DateOnly(1912, 12, 12));
+            await Assert.That(person!.BirthDate).IsEqualTo(new DateOnly(1890, 1, 1));
         }
 
         [Test]
         public async Task ShortFormat_DropsCentury()
         {
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
-            await Assert.That(id.ShortFormat()).IsEqualTo("1212121212");
+            await Assert.That(id.ShortFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]
@@ -379,32 +383,32 @@ public class OrganisationIdTests
         {
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
             await Assert.That(id.Format(PnrFormat.LongFormatWithStandardSeparator))
-                .IsEqualTo("121212-1212");
+                .IsEqualTo(OfficialNumbers.Centenarian.ShortWithHyphen);
         }
 
         [Test]
         public async Task Format_LongFormatWithSeparator_PlusForCentenarianEnskildFirma()
         {
-            // 191212121212 — born 1912, age 113+ today → '+' separator (Swedish convention)
+            // Born 1890, age 136+ today → '+' separator (Swedish convention)
             var id = OrganisationId.Parse(EnskildFirmaPersonShape);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator);
-            await Assert.That(formatted).IsEqualTo("121212+1212");
+            await Assert.That(formatted).IsEqualTo(OfficialNumbers.Centenarian.ShortWithPlus);
         }
 
         [Test]
         public async Task SixteenPrefixOnPersonShape_Rejected()
         {
-            // "161212121212" — synthetic century "16" with personnummer-shape month/day.
+            // Century "16" with personnummer-shape month/day.
             // Must be rejected: no one is born in 1600-something.
-            await Assert.That(OrganisationId.IsValid("161212121212")).IsFalse();
+            await Assert.That(OrganisationId.IsValid($"16{OfficialNumbers.Centenarian.Short}")).IsFalse();
         }
     }
 
     public class TimeProviderFormatting
     {
-        // Enskild firma born 1925-06-01 — bears a real personnummer century;
-        // hits the centenarian "+" separator on/after 2025-06-01 (Stockholm).
-        private const string EnskildFirma19250601 = "192506010004";
+        // Enskild firma born 1895-06-01 — bears a real personnummer century;
+        // hits the centenarian "+" separator on/after 1995-06-01 (Stockholm).
+        private static readonly string EnskildFirmaHundredIn1995 = OfficialNumbers.HundredIn1995.Long;
 
         private static FakeTimeProvider StockholmFake(DateTimeOffset utcNow)
         {
@@ -414,9 +418,9 @@ public class OrganisationIdTests
         [Test]
         public async Task Format_LongFormatWithSeparator_BeforeCentenarianBirthday_UsesHyphen()
         {
-            // 2025-05-31 12:00 CEST (UTC 10:00) — age 99 in Stockholm, separator '-'.
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 10, 0, 0, TimeSpan.Zero));
-            var id = OrganisationId.Parse(EnskildFirma19250601);
+            // 1995-05-31 12:00 CEST (UTC 10:00) — age 99 in Stockholm, separator '-'.
+            var fake = StockholmFake(new DateTimeOffset(1995, 5, 31, 10, 0, 0, TimeSpan.Zero));
+            var id = OrganisationId.Parse(EnskildFirmaHundredIn1995);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
             await Assert.That(formatted).Contains("-");
@@ -426,10 +430,10 @@ public class OrganisationIdTests
         [Test]
         public async Task Format_LongFormatWithSeparator_OnCentenarianBirthdayStockholm_UsesPlus()
         {
-            // 2025-05-31 22:30 UTC = 2025-06-01 00:30 CEST — Stockholm crossed midnight,
+            // 1995-05-31 22:30 UTC = 1995-06-01 00:30 CEST — Stockholm crossed midnight,
             // age 100 in Stockholm, separator '+'.
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 22, 30, 0, TimeSpan.Zero));
-            var id = OrganisationId.Parse(EnskildFirma19250601);
+            var fake = StockholmFake(new DateTimeOffset(1995, 5, 31, 22, 30, 0, TimeSpan.Zero));
+            var id = OrganisationId.Parse(EnskildFirmaHundredIn1995);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
             await Assert.That(formatted).Contains("+");
@@ -438,7 +442,7 @@ public class OrganisationIdTests
         [Test]
         public async Task Format_NullTimeProvider_Throws()
         {
-            var id = OrganisationId.Parse(EnskildFirma19250601);
+            var id = OrganisationId.Parse(EnskildFirmaHundredIn1995);
             await Assert.That(() => id.Format(PnrFormat.LongFormatWithSeparator, null!))
                 .Throws<ArgumentNullException>();
         }
@@ -448,7 +452,7 @@ public class OrganisationIdTests
         {
             // Legal-person orgnummer never use '+' regardless of time provider —
             // the centenarian convention is Enskild-firma-only.
-            var fake = StockholmFake(new DateTimeOffset(2025, 5, 31, 22, 30, 0, TimeSpan.Zero));
+            var fake = StockholmFake(new DateTimeOffset(1995, 5, 31, 22, 30, 0, TimeSpan.Zero));
             var id = OrganisationId.Parse(ValidShort);
             var formatted = id.Format(PnrFormat.LongFormatWithSeparator, fake);
 
@@ -459,9 +463,9 @@ public class OrganisationIdTests
 
     public class ParsingWithExplicitToday
     {
-        // Enskild firma born 1925-06-01 — bears a real personnummer century;
-        // hits the centenarian "+" separator on/after 2025-06-01.
-        private const string EnskildFirma19250601 = "192506010004";
+        // Enskild firma born 1895-06-01 — bears a real personnummer century;
+        // hits the centenarian "+" separator on/after 1995-06-01.
+        private static readonly string EnskildFirmaHundredIn1995 = OfficialNumbers.HundredIn1995.Long;
 
         [Test]
         public async Task Parse_StringDateOnly_ReturnsValidOrganisationId()
@@ -513,10 +517,10 @@ public class OrganisationIdTests
         [Test]
         public async Task Format_EnskildFirmaCentenarian_DateOnly_BirthdaySeparatorFlip()
         {
-            var enskild = OrganisationId.Parse(EnskildFirma19250601);
+            var enskild = OrganisationId.Parse(EnskildFirmaHundredIn1995);
 
-            var dayBefore = enskild.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2025, 5, 31));
-            var birthday = enskild.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(2025, 6, 1));
+            var dayBefore = enskild.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(1995, 5, 31));
+            var birthday = enskild.Format(PnrFormat.LongFormatWithSeparator, new DateOnly(1995, 6, 1));
 
             await Assert.That(dayBefore).Contains("-");
             await Assert.That(birthday).Contains("+");

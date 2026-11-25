@@ -1,12 +1,13 @@
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Extensions;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Extensions;
 
 /// <summary>Tests for <see cref="NullableExtensions" />.</summary>
 public class NullableExtensionsTests
 {
-    private const string ValidPin = "189001019802";
+    private static readonly string ValidPin = OfficialNumbers.Centenarian.Long;
 
     public class MapTests
     {
@@ -15,7 +16,7 @@ public class NullableExtensionsTests
         {
             var id = PersonalId.Parse(ValidPin);
             var result = id.Map(x => x.LongFormat());
-            await Assert.That(result).IsEqualTo("189001019802");
+            await Assert.That(result).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]

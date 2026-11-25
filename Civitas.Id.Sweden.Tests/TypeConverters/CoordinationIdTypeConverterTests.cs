@@ -1,6 +1,7 @@
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Civitas.Id.Sweden.TypeConverters;
 
 namespace Civitas.Id.Sweden.Tests.TypeConverters;
@@ -10,8 +11,8 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 /// </summary>
 public class CoordinationIdTypeConverterTests
 {
-    private const string ValidPin12 = "191401682396";
-    private const string ValidPinWithHyphen = "140168-2396";
+    private static readonly string ValidPin12 = OfficialNumbers.CentenarianSamordningsnummer.Long;
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen;
 
     public class CanConvertFrom
     {
@@ -49,9 +50,14 @@ public class CoordinationIdTypeConverterTests
 
     public class ConvertFrom
     {
+        public static IEnumerable<string> ParsesValidStringInputs()
+        {
+            yield return ValidPin12;
+            yield return ValidPinWithHyphen;
+        }
+
         [Test]
-        [Arguments(ValidPin12)]
-        [Arguments(ValidPinWithHyphen)]
+        [MethodDataSource(nameof(ParsesValidStringInputs))]
         public async Task Parses_ValidString(string input)
         {
             var sut = new CoordinationIdTypeConverter();
@@ -82,7 +88,7 @@ public class CoordinationIdTypeConverterTests
         {
             // A valid personnummer (day 01) is NOT a valid samordningsnummer (day must be +60).
             var sut = new CoordinationIdTypeConverter();
-            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, "189001019802"))
+            await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, OfficialNumbers.Centenarian.Long))
                 .Throws<InvalidIdNumberException>();
         }
 
