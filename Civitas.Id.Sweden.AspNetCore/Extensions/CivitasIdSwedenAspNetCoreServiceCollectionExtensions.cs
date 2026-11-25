@@ -7,6 +7,7 @@ using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Json.Extensions;
 using Civitas.Id.Sweden.Json.Options;
 using JetBrains.Annotations;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Http.Json;
@@ -44,8 +45,11 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
     /// <remarks>
     /// Registers: <c>ProblemDetails</c>, the
     /// <see cref="InvalidIdNumberExceptionHandler"/>, the JSON package
-    /// converters bridged onto the ASP.NET Core JSON pipeline, and validation
-    /// for <see cref="CivitasIdSwedenAspNetCoreOptions"/>.
+    /// converters bridged onto the ASP.NET Core JSON pipeline, validation
+    /// for <see cref="CivitasIdSwedenAspNetCoreOptions"/>, and, for the whole app, a status
+    /// selector that answers <see cref="BadHttpRequestException"/> with its own status unless
+    /// the app configures <c>StatusCodeSelector</c>, <c>ExceptionHandler</c> or
+    /// <c>ExceptionHandlingPath</c>.
     /// <para>
     /// OpenAPI schema metadata is OPT-IN; call
     /// <c>builder.Services.AddOpenApi(opts =&gt; opts.AddCivitasIdSwedenSchemas())</c>
@@ -179,6 +183,10 @@ public static class CivitasIdSwedenAspNetCoreServiceCollectionExtensions
         services.TryAddEnumerable(ServiceDescriptor.Singleton<
             IExceptionHandler,
             InvalidIdNumberExceptionHandler>());
+
+        services.TryAddEnumerable(ServiceDescriptor.Singleton<
+            IPostConfigureOptions<ExceptionHandlerOptions>,
+            BadRequestStatusSetup>());
 
         services.TryAddEnumerable(ServiceDescriptor.Singleton<
             IValidateOptions<CivitasIdSwedenAspNetCoreOptions>,
