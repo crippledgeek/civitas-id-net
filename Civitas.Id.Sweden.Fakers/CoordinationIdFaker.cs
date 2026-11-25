@@ -68,7 +68,7 @@ public sealed class CoordinationIdFaker : IPersonIdFaker<CoordinationId>
     {
         var serial = Generation.RandomSerial(_next);
         var gender = Generation.RandomGenderDigit(_next, _next(0, 2) == 1);
-        var sn = Generation.BuildSamordningsnummer(birthDate, serial, gender);
+        var sn = Generation.DraftSamordningsnummer(birthDate, serial, gender).Render();
         return CoordinationId.FromValidated(sn);
     }
 
@@ -134,7 +134,7 @@ public sealed class CoordinationIdFaker : IPersonIdFaker<CoordinationId>
     {
         var serial = Generation.RandomSerial(_next);
         var gender = Generation.RandomGenderDigit(_next, male);
-        var sn = Generation.BuildSamordningsnummer(birthDate, serial, gender);
+        var sn = Generation.DraftSamordningsnummer(birthDate, serial, gender).Render();
         return CoordinationId.FromValidated(sn);
     }
 }

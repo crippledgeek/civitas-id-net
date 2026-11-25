@@ -1,6 +1,4 @@
-using System.Globalization;
 using Civitas.Id.Sweden.Errors;
-using Civitas.Id.Sweden.Internal;
 
 namespace Civitas.Id.Sweden.Fakers.Internal;
 
@@ -99,57 +97,41 @@ internal static class Generation
         return next(0, 999);
     }
 
-    /// <summary>
-    ///     Builds a 12-digit personnummer from <paramref name="birth" />, a 3-digit
-    ///     <paramref name="serial" /> (000–999) and a single <paramref name="genderDigit" />.
-    ///     The Luhn check digit is appended.
-    /// </summary>
+    /// <summary>Puts the given values into the parts of a personnummer.</summary>
     /// <param name="birth">The birth date.</param>
-    /// <param name="serial">The serial component (000–999).</param>
-    /// <param name="genderDigit">The gender digit (0–9).</param>
-    /// <returns>A 12-digit personnummer string.</returns>
-    public static string BuildPersonnummer(DateOnly birth, int serial, int genderDigit)
+    /// <param name="serial">The serial component (000–999), of which the last digit is dropped.</param>
+    /// <param name="genderDigit">The gender digit (0–9), which takes the place of that digit.</param>
+    /// <returns>The parts.</returns>
+    public static IdDraft DraftPersonnummer(DateOnly birth, int serial, int genderDigit)
     {
         ArgumentOutOfRangeException.ThrowIfLessThan(serial, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(serial, 999);
         ArgumentOutOfRangeException.ThrowIfLessThan(genderDigit, 0);
         ArgumentOutOfRangeException.ThrowIfGreaterThan(genderDigit, 9);
 
-        var yyyy = birth.Year.ToString("D4", CultureInfo.InvariantCulture);
-        var mm = birth.Month.ToString("D2", CultureInfo.InvariantCulture);
-        var dd = birth.Day.ToString("D2", CultureInfo.InvariantCulture);
-        var serial2 = (serial / 10).ToString("D2", CultureInfo.InvariantCulture);
-        var genderD = genderDigit.ToString(CultureInfo.InvariantCulture);
-
-        var body9 = $"{yyyy[2..]}{mm}{dd}{serial2}{genderD}";
-        var check = SwedishLuhnAlgorithm.ComputeCheckDigit(body9);
-        return $"{yyyy}{mm}{dd}{serial2}{genderD}{check}";
+        return new IdDraft
+        {
+            Century = birth.Year / IdDraft.YearsPerCentury,
+            Year = birth.Year % IdDraft.YearsPerCentury,
+            Month = birth.Month,
+            Day = birth.Day,
+            Serial = serial - serial % 10 + genderDigit
+        };
     }
 
     /// <summary>
-    ///     Builds a 12-digit samordningsnummer from <paramref name="birth" />,
-    ///     applying the day+60 encoding. Other parameters as in
-    ///     <see cref="BuildPersonnummer" />.
+    ///     Puts the given values into the parts of a samordningsnummer, as <see cref="DraftPersonnummer" /> does
+    ///     but with the day as a samordningsnummer writes it.
     /// </summary>
-    /// <param name="birth">The birth date (the +60 day offset is applied internally).</param>
+    /// <param name="birth">The birth date, without the offset.</param>
     /// <param name="serial">The serial component (000–999).</param>
     /// <param name="genderDigit">The gender digit (0–9).</param>
-    /// <returns>A 12-digit samordningsnummer string.</returns>
-    public static string BuildSamordningsnummer(DateOnly birth, int serial, int genderDigit)
+    /// <returns>The parts.</returns>
+    public static IdDraft DraftSamordningsnummer(DateOnly birth, int serial, int genderDigit)
     {
-        ArgumentOutOfRangeException.ThrowIfLessThan(serial, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(serial, 999);
-        ArgumentOutOfRangeException.ThrowIfLessThan(genderDigit, 0);
-        ArgumentOutOfRangeException.ThrowIfGreaterThan(genderDigit, 9);
-
-        var yyyy = birth.Year.ToString("D4", CultureInfo.InvariantCulture);
-        var mm = birth.Month.ToString("D2", CultureInfo.InvariantCulture);
-        var ddPlus60 = (birth.Day + 60).ToString("D2", CultureInfo.InvariantCulture);
-        var serial2 = (serial / 10).ToString("D2", CultureInfo.InvariantCulture);
-        var genderD = genderDigit.ToString(CultureInfo.InvariantCulture);
-
-        var body9 = $"{yyyy[2..]}{mm}{ddPlus60}{serial2}{genderD}";
-        var check = SwedishLuhnAlgorithm.ComputeCheckDigit(body9);
-        return $"{yyyy}{mm}{ddPlus60}{serial2}{genderD}{check}";
+        return DraftPersonnummer(birth, serial, genderDigit) with
+        {
+            Day = birth.Day + IdDraft.CoordinationDayOffset
+        };
     }
 }

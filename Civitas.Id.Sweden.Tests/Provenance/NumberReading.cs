@@ -1,4 +1,5 @@
 using System.Globalization;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Provenance;
 
@@ -9,7 +10,6 @@ namespace Civitas.Id.Sweden.Tests.Provenance;
 internal sealed record NumberReading
 {
     private const int LongLength = 12;
-    private const int ShortLength = 10;
     private const int CenturyLength = 2;
     private const int MonthsPerYear = 12;
     private const int FirstCoordinationDay = 60;
@@ -22,9 +22,6 @@ internal sealed record NumberReading
 
     // Latest first, the order in which a missing century is tried.
     private static readonly string[] Centuries = ["20", "19", "18"];
-
-    // The doubled digit's own digits summed, indexed by the digit.
-    private static readonly int[] DoubledDigitSums = [0, 2, 4, 6, 8, 1, 3, 5, 7, 9];
 
     public NumberReading(string digits)
     {
@@ -53,7 +50,7 @@ internal sealed record NumberReading
     public bool IsPersonShaped()
     {
         return Centuries.Contains(Digits[..CenturyLength], StringComparer.Ordinal)
-               && HasValidChecksum()
+               && IndependentLuhn.IsValid(Digits)
                && (IsCoordinationDate() || IsCalendarDate());
     }
 
@@ -72,13 +69,6 @@ internal sealed record NumberReading
     private bool IsCoordinationDate()
     {
         return Month <= MonthsPerYear && Day is >= FirstCoordinationDay and <= LastCoordinationDay;
-    }
-
-    private bool HasValidChecksum()
-    {
-        return Digits[^ShortLength..]
-            .Select((c, i) => i % 2 == 0 ? DoubledDigitSums[c - '0'] : c - '0')
-            .Sum() % 10 == 0;
     }
 
     private int Number(int start, int length)
