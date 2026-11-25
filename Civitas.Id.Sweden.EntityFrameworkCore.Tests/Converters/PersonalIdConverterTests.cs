@@ -81,6 +81,19 @@ public class PersonalIdConverterTests
         }
     }
 
+    public class Generated
+    {
+        [Test]
+        public async Task Valid_Converts_AndEveryDefectThrows()
+        {
+            var sut = new PersonalIdConverter();
+            await Assert.That(sut.ConvertFromProvider(GeneratedNumbers.ValidPersonnummer) is not null).IsTrue();
+
+            foreach (var text in GeneratedNumbers.InvalidPersonnummer())
+                await Assert.That(() => { _ = sut.ConvertFromProvider(text); }).Throws<InvalidIdNumberException>();
+        }
+    }
+
     public class MappingHints
     {
         [Test]

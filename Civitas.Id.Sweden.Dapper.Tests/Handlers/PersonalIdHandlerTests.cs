@@ -88,6 +88,19 @@ public class PersonalIdHandlerTests
         }
     }
 
+    public class Generated
+    {
+        [Test]
+        public async Task Valid_Parses_AndEveryDefectThrows()
+        {
+            await Assert.That(PersonalIdHandler.Default.Parse(GeneratedNumbers.ValidPersonnummer) is not null).IsTrue();
+
+            foreach (var text in GeneratedNumbers.InvalidPersonnummer())
+                await Assert.That(() => { _ = PersonalIdHandler.Default.Parse(text); })
+                    .Throws<InvalidIdNumberException>();
+        }
+    }
+
     public class DefaultSingleton
     {
         [Test]

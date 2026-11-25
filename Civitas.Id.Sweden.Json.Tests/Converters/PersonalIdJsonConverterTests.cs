@@ -1,5 +1,6 @@
 using System.Text.Json;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Json.Converters;
 
 namespace Civitas.Id.Sweden.Json.Tests.Converters;
@@ -51,6 +52,20 @@ public class PersonalIdJsonConverterTests
         {
             await Assert.That(() => JsonSerializer.Deserialize<PersonalId>("\"not-a-pnr\"", Opts))
                 .ThrowsException();
+        }
+    }
+
+    public class Generated
+    {
+        [Test]
+        public async Task Valid_Parses_AndEveryDefectThrows()
+        {
+            var valid = JsonSerializer.Serialize(GeneratedNumbers.ValidPersonnummer);
+            await Assert.That(JsonSerializer.Deserialize<PersonalId>(valid, Opts) is not null).IsTrue();
+
+            foreach (var json in GeneratedNumbers.InvalidPersonnummer().Select(text => JsonSerializer.Serialize(text)))
+                await Assert.That(() => { _ = JsonSerializer.Deserialize<PersonalId>(json, Opts); })
+                    .Throws<InvalidIdNumberException>();
         }
     }
 

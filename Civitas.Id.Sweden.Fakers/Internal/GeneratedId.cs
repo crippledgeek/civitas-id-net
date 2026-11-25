@@ -1,3 +1,5 @@
+using Civitas.Id.Sweden.Internal;
+
 namespace Civitas.Id.Sweden.Fakers.Internal;
 
 /// <summary>
@@ -38,6 +40,26 @@ internal sealed record ValidGeneratedId : GeneratedId
 
     /// <inheritdoc />
     public override string Text => _draft.Render();
+
+    /// <summary>Writes the number in a notation, on the current Swedish date.</summary>
+    /// <param name="notation">
+    ///     The notation. <see cref="IdNotation.ZeroSerialLegalPerson" /> gives another number; the rest give this one.
+    /// </param>
+    /// <returns>The text.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">This number cannot be written that way.</exception>
+    public string Render(IdNotation notation)
+    {
+        return Render(notation, SwedenClock.Today());
+    }
+
+    /// <inheritdoc cref="Render(IdNotation)" />
+    /// <summary>Writes the number in a notation, on a given date.</summary>
+    /// <param name="notation">The notation.</param>
+    /// <param name="today">The date that decides whether a plus is contradictory.</param>
+    public string Render(IdNotation notation, DateOnly today)
+    {
+        return NotationCatalog.Render(notation, _draft, today);
+    }
 
     private protected override string Describe()
     {

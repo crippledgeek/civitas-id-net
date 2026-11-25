@@ -10,8 +10,6 @@ namespace Civitas.Id.Sweden.Tests.Provenance;
 /// </summary>
 public class PersonNumberScannerTests
 {
-    private const int FakerSeed = 1;
-
     private static readonly RelativePath File = new("file.txt");
 
     // A birth date that no pinned official set covers, so no generated number can be official.
@@ -24,12 +22,12 @@ public class PersonNumberScannerTests
 
     private static PersonalId UnofficialPerson()
     {
-        return PersonalIdFaker.WithSeed(FakerSeed).Generate(BornOutsideTheSets);
+        return GeneratedNumbers.Person(BornOutsideTheSets);
     }
 
     private static CoordinationId UnofficialCoordination()
     {
-        return CoordinationIdFaker.WithSeed(FakerSeed).Generate(BornOutsideTheSets);
+        return GeneratedNumbers.CoordinationPerson(BornOutsideTheSets);
     }
 
     private static ScanResult Scan(string content)
@@ -119,7 +117,7 @@ public class PersonNumberScannerTests
         [Test]
         public async Task CentenarianShortForm_WithPlus()
         {
-            var number = PersonalIdFaker.WithSeed(FakerSeed).Generate(CentenarianOutsideTheSets).LongFormat();
+            var number = GeneratedNumbers.Person(CentenarianOutsideTheSets).LongFormat();
             await AssertReported(Join(number[2..], "+")).ConfigureAwait(false);
         }
 
@@ -216,7 +214,8 @@ public class PersonNumberScannerTests
         private static (string AsWhole, string AsVat) NumberWithTwoReadings()
         {
             const int daysPerYear = 365;
-            var faker = PersonalIdFaker.WithSeed(FakerSeed);
+            const int fakerSeed = 1;
+            var faker = PersonalIdFaker.WithSeed(fakerSeed);
             var firstDay = new DateOnly(1905, 1, 1);
             return Enumerable.Range(0, 1_000_000)
                 .Select(i => faker.Generate(firstDay.AddDays(i % daysPerYear)).LongFormat())
@@ -308,7 +307,7 @@ public class PersonNumberScannerTests
         [Test]
         public async Task LegalPersonNumber()
         {
-            var legal = OrganisationIdFaker.WithSeed(FakerSeed).GenerateLegalPerson().LongFormat();
+            var legal = LegalPersonNumbers.Aktiebolag.Digits;
             var result = Scan($"{legal} SE{legal}01 16{legal}");
             await Assert.That(result.Unofficial.Count).IsEqualTo(0);
         }
