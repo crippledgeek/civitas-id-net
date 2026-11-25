@@ -78,7 +78,7 @@ public sealed class PersonalIdFaker : IPersonIdFaker<PersonalId>
     /// <inheritdoc />
     public PersonalId Generate(int year, int month, int day)
     {
-        return Generate(Generation.ParseDateOrThrow(year, month, day));
+        return Generate(Generation.ParseBirthDateOrThrow(year, month, day));
     }
 
     /// <inheritdoc />
@@ -96,7 +96,7 @@ public sealed class PersonalIdFaker : IPersonIdFaker<PersonalId>
     /// <inheritdoc />
     public PersonalId GenerateMale(int year, int month, int day)
     {
-        return GenerateMale(Generation.ParseDateOrThrow(year, month, day));
+        return GenerateMale(Generation.ParseBirthDateOrThrow(year, month, day));
     }
 
     /// <inheritdoc />
@@ -114,7 +114,7 @@ public sealed class PersonalIdFaker : IPersonIdFaker<PersonalId>
     /// <inheritdoc />
     public PersonalId GenerateFemale(int year, int month, int day)
     {
-        return GenerateFemale(Generation.ParseDateOrThrow(year, month, day));
+        return GenerateFemale(Generation.ParseBirthDateOrThrow(year, month, day));
     }
 
     /// <inheritdoc />

@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Security.Cryptography;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Fakers.Internal;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Fakers;
@@ -83,8 +84,13 @@ public sealed class SwedishOfficialIdFaker
     ///     Generates a uniformly-random valid Swedish official ID for the given
     ///     <paramref name="date" />.
     /// </summary>
+    /// <param name="date">The birth date, or the registration date when a legal person's number is drawn.</param>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     <paramref name="date" /> is before 1800, whichever subtype would be drawn.
+    /// </exception>
     public SwedishOfficialId Generate(DateOnly date)
     {
+        ArgumentOutOfRangeException.ThrowIfLessThan(date, Generation.MinimumBirthDate);
         return _next(0, 3) switch
         {
             0 => _personalIdFaker.Generate(date),

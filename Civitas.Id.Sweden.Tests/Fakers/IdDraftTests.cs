@@ -64,6 +64,18 @@ public class IdDraftTests
     }
 
     [Test]
+    [Arguments(0)]
+    [Arguments(1799)]
+    [Arguments(9999)]
+    public async Task BornIn_ReplacesTheYearAlone(int year)
+    {
+        var draft = OfficialDrafts.Personnummer[0];
+
+        await Assert.That(draft.BornIn(year).FullYear).IsEqualTo(year);
+        await Assert.That(draft.BornIn(year).BornIn(draft.FullYear)).IsEqualTo(draft);
+    }
+
+    [Test]
     public async Task FullYear_OfALegalPerson_Throws()
     {
         await Assert.That(() => OfficialDrafts.LegalPersons[0].FullYear).Throws<InvalidOperationException>();

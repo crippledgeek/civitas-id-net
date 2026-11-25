@@ -235,12 +235,13 @@ public abstract record PhysicalPersonId : SwedishOfficialId, ISpanFormattable, I
         if (match.Month is < 1 or > 12) return false;
         if (!TSelf.IsDayValid(match.Day)) return false;
 
-        var century = SwedishIdParsing.ResolveCentury(
-            match.HasCentury ? match.CenturyValue : null,
-            match.Year,
-            currentYear,
-            match.Delimiter == '+');
-        var fullYear = century * 100 + match.Year;
+        var digits = new BirthYearDigits
+        {
+            ExplicitCentury = match.HasCentury ? match.CenturyValue : null,
+            TwoDigitYear = match.Year,
+            PlusSeparator = match.Delimiter == '+'
+        };
+        var fullYear = SwedishIdParsing.ResolveBirthYear(digits, currentYear);
         var realDay = TSelf.CalendarDay(match.Day);
 
         if (!SwedishIdParsing.TryValidatePersonShapedBody(in match, fullYear, realDay))

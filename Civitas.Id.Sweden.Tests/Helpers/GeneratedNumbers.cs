@@ -11,7 +11,7 @@ namespace Civitas.Id.Sweden.Tests.Helpers;
 internal static class GeneratedNumbers
 {
     private const int Seed = 1;
-    private const int PersonDefects = 8;
+    private const int PersonDefects = 9;
 
     /// <summary>A date whose short form resolves to the 1900s. No pinned set has a personnummer of 1926-1999.</summary>
     public static readonly DateOnly TwentiethCentury = new(1981, 12, 18);

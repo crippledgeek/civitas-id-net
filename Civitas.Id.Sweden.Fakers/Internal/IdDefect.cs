@@ -15,6 +15,9 @@ internal enum IdDefect
     /// <summary>29 February in a year without one.</summary>
     NonLeapFebruary29,
 
+    /// <summary>The date is a real one, in a year before the first accepted birth year. Year zero included.</summary>
+    BirthYearBelowMinimum,
+
     /// <summary>One digit is missing.</summary>
     TooShort,
 

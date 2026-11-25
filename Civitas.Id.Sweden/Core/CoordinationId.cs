@@ -14,6 +14,11 @@ namespace Civitas.Id.Sweden.Core;
 ///     A Swedish coordination number (samordningsnummer).
 ///     Issued to individuals without a Swedish personnummer; the day field is offset by +60.
 /// </summary>
+/// <remarks>
+///     A birth year before 1800 is not accepted, whether the century is written out or inferred. This is
+///     library policy, not law: Skatteverket's SKV 704 and the KU schema 12.0 give a person's number the centuries
+///     18, 19 and 20. There is no upper bound.
+/// </remarks>
 [TypeConverter(typeof(CoordinationIdTypeConverter))]
 public sealed record CoordinationId : PhysicalPersonId,
     ISwedishPersonIdHooks<CoordinationId>,
@@ -100,7 +105,7 @@ public sealed record CoordinationId : PhysicalPersonId,
     /// <summary>
     ///     Internal factory: constructs a <see cref="CoordinationId" /> from an already-validated
     ///     12-digit normalised string. Skips re-parsing — caller MUST guarantee validity
-    ///     (correct length, valid Luhn, valid calendar date with day +60-offset).
+    ///     (correct length, valid Luhn, valid calendar date with day +60-offset, accepted birth year).
     /// </summary>
     /// <param name="normalised12">A canonical 12-digit normalised samordningsnummer (YYYYMMDDXXXX, day still +60-offset).</param>
     /// <returns>A <see cref="CoordinationId" /> wrapping the provided digits.</returns>

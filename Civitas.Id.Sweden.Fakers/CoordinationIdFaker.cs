@@ -78,7 +78,7 @@ public sealed class CoordinationIdFaker : IPersonIdFaker<CoordinationId>
     /// <inheritdoc />
     public CoordinationId Generate(int year, int month, int day)
     {
-        return Generate(Generation.ParseDateOrThrow(year, month, day));
+        return Generate(Generation.ParseBirthDateOrThrow(year, month, day));
     }
 
     /// <inheritdoc />
@@ -96,7 +96,7 @@ public sealed class CoordinationIdFaker : IPersonIdFaker<CoordinationId>
     /// <inheritdoc />
     public CoordinationId GenerateMale(int year, int month, int day)
     {
-        return GenerateMale(Generation.ParseDateOrThrow(year, month, day));
+        return GenerateMale(Generation.ParseBirthDateOrThrow(year, month, day));
     }
 
     /// <inheritdoc />
@@ -114,7 +114,7 @@ public sealed class CoordinationIdFaker : IPersonIdFaker<CoordinationId>
     /// <inheritdoc />
     public CoordinationId GenerateFemale(int year, int month, int day)
     {
-        return GenerateFemale(Generation.ParseDateOrThrow(year, month, day));
+        return GenerateFemale(Generation.ParseBirthDateOrThrow(year, month, day));
     }
 
     /// <inheritdoc />

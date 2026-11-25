@@ -1,13 +1,13 @@
 <Project>
   <!-- The test numbers, for a test project outside Civitas.Id.Sweden.Tests: the sources that read the official
-       ones, the pinned files they read, and the source that generates others. Linked, so there is one copy
+       ones, the pinned files they read, and the sources that generate others. Linked, so there is one copy
        of each. A project lists any other helper it uses as an OfficialTestDataSource before the import, and
        references the Fakers. -->
   <ItemGroup>
     <OfficialTestDataSource Include="CsvLoader;FixtureFiles;FixtureSpec" />
     <OfficialTestDataSource Include="CheckDigits;LegalPersonNumber;LegalPersonNumbers" />
     <OfficialTestDataSource Include="OfficialNumber;OfficialNumbers;OfficialPersonnummer;OfficialSamordningsnummer" />
-    <OfficialTestDataSource Include="GeneratedNumbers" />
+    <OfficialTestDataSource Include="BirthYearCases;BirthYearSamples;GeneratedNumbers" />
     <Compile Include="@(OfficialTestDataSource->'$(MSBuildThisFileDirectory)Helpers\%(Identity).cs')" Link="OfficialTestData\%(Filename)%(Extension)" />
     <OfficialTestDataFile Include="Testpersonnummer 1890-1899.csv;Testpersonnummer_2000-2009_official.csv" />
     <OfficialTestDataFile Include="Testsamordningsnummer_2019_official.csv;Testsamordningsnummer_2020_official.csv" />

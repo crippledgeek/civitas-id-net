@@ -8,7 +8,7 @@ public abstract class PersonFakerGenerateTests
 {
     private const int Seed = 11;
     private const int Samples = 2000;
-    private const int Defects = 8;
+    private const int Defects = 9;
     private const int DateAndGenderCases = 8;
 
     private static readonly DateOnly LeapDay = new(2000, 2, 29);
@@ -136,6 +136,30 @@ public abstract class PersonFakerGenerateTests
     {
         await Assert.That(() => Create(Seed).GenerateDefect(IdDefect.NonLeapFebruary29, LeapDay, null))
             .ThrowsExactly<ArgumentException>();
+    }
+
+    /// <summary>The last date is a leap day, which the defect of another rule would be refused for.</summary>
+    [Test]
+    public async Task Generate_BirthDateBeforeTheFirstAccepted_ThrowsWithoutADraw()
+    {
+        IReadOnlyList<DateOnly> early =
+            [DateOnly.MinValue, new(BirthYearCases.FirstAcceptedYear - 1, 12, 31), new(1796, 2, 29)];
+        var calls = Enum.GetValues<IdValidity>()
+            .Select(validity => (Action<PersonGeneration, DateOnly>)((faker, date) => faker.Generate(validity, date, null)))
+            .Concat(Enum.GetValues<IdDefect>().Select(defect =>
+                (Action<PersonGeneration, DateOnly>)((faker, date) => faker.GenerateDefect(defect, date, null))))
+            .ToList();
+
+        foreach (var call in calls)
+            foreach (var date in early)
+            {
+                var faker = Create(Seed);
+
+                var thrown = await Assert.That(() => call(faker, date)).ThrowsExactly<ArgumentOutOfRangeException>();
+                await Assert.That(thrown!.ParamName).IsEqualTo("birthDate");
+                await Assert.That(faker.Generate(IdValidity.Valid, null, null))
+                    .IsEqualTo(Create(Seed).Generate(IdValidity.Valid, null, null));
+            }
     }
 
     [Test]

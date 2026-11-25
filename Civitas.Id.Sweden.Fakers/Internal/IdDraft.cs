@@ -17,9 +17,6 @@ internal readonly record struct IdDraft
     /// <summary>Digits after the separator in its legal position.</summary>
     public const int DigitsAfterSeparator = 4;
 
-    /// <summary>Splits a year into <see cref="Century" /> and <see cref="Year" />.</summary>
-    public const int YearsPerCentury = 100;
-
     private const int MaxTwoDigits = 99;
     private const int MaxThreeDigits = 999;
 
@@ -41,8 +38,20 @@ internal readonly record struct IdDraft
     /// <summary>The four-digit year of a person's number.</summary>
     /// <exception cref="InvalidOperationException">There is no century, so this is a legal person's number.</exception>
     public int FullYear => Century is { } century
-        ? century * YearsPerCentury + Year
+        ? SwedishIdParsing.ComposeYear(century, Year)
         : throw new InvalidOperationException("A legal person's number has no year of birth.");
+
+    /// <summary>The number of someone born in another year, which may be one that no calendar type holds.</summary>
+    /// <param name="year">The year, from 0 to 9999.</param>
+    /// <returns>The parts.</returns>
+    public IdDraft BornIn(int year)
+    {
+        return this with
+        {
+            Century = year / SwedishIdParsing.YearsPerCentury,
+            Year = year % SwedishIdParsing.YearsPerCentury
+        };
+    }
 
     /// <summary>Writes the parts as digits and appends the check digit that matches them.</summary>
     /// <returns>Twelve digits, or ten when there is no <see cref="Century" />.</returns>

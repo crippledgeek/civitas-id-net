@@ -100,14 +100,34 @@ modelBuilder.Entity<Company>()
 
 ## Migration from existing string columns
 
-If your column already stores the library's canonical form (12-digit for `PersonalId`/`CoordinationId`, 10-digit for legal-person `OrganisationId`, 12-digit for Enskild firma) — no migration needed. Add the converter and the column just starts being parsed/formatted automatically.
+If your column already stores the library's canonical form (12-digit for `PersonalId`/`CoordinationId`, 10-digit for legal-person `OrganisationId`, 12-digit for Enskild firma) — no migration needed, except for [birth years before 1800](#upgrading-from-version-1). Add the converter and the column just starts being parsed/formatted automatically.
 
 If your column stores a different format (hyphenated short, "16"-prefixed 12-digit, etc.) — write a one-off `migrationBuilder.Sql` to normalise before adding the converter.
+
+## Upgrading from version 1
+
+Version 2 accepts no birth year before 1800. Version 1 read and wrote values that a mistyped century had put
+before that year. Reading such a row now throws `InvalidIdNumberException`, which fails the whole query that the row
+is part of. Before upgrading, find and correct those rows. The comparison is between texts of digits, so it needs a
+column of canonical values:
+
+```sql
+-- PersonalId and CoordinationId
+SELECT * FROM Customer WHERE TaxpayerId < '1800';
+
+-- OrganisationId: the twelfth character singles out twelve-character values, and the last line keeps legal
+-- persons with the legacy prefix 16, which still read
+SELECT * FROM Company
+WHERE OrgId < '1800'
+  AND SUBSTRING(OrgId, 12, 1) BETWEEN '0' AND '9'
+  AND NOT (SUBSTRING(OrgId, 1, 2) = '16' AND SUBSTRING(OrgId, 5, 2) >= '20');
+```
 
 ## Corrupted DB row handling
 
 If a stored row contains a malformed Civitas ID string (e.g. from a legacy
-data migration, off-path writer, or DB corruption), EF Core's materialiser
+data migration, off-path writer, or DB corruption) or one with a birth year
+before 1800, EF Core's materialiser
 will throw `InvalidIdNumberException` (from `Civitas.Id.Sweden.Errors`) when
 the property is read.
 

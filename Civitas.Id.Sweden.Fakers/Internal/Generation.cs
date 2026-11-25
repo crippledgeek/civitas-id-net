@@ -1,4 +1,5 @@
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Internal;
 
 namespace Civitas.Id.Sweden.Fakers.Internal;
 
@@ -13,6 +14,15 @@ internal static class Generation
     ///     2020-01-01 exclusive (last valid year is 2019).
     /// </summary>
     private const int FakerMinYearInclusive = 1970;
+
+    /// <summary>What the public methods call the clock that <c>today</c> was read from.</summary>
+    private const string ClockParameter = "timeProvider";
+
+    private const int YoungestCentenarian = 100;
+    private const int OldestCentenarian = 110;
+
+    /// <summary>The first birth date a person's number is generated for.</summary>
+    public static readonly DateOnly MinimumBirthDate = new(SwedishIdParsing.MinimumBirthYear, 1, 1);
 
     /// <summary>The exclusive upper-bound year. Last actually-generated year: 2019.</summary>
     private const int FakerMaxYearExclusive = 2020;
@@ -45,6 +55,18 @@ internal static class Generation
         }
     }
 
+    /// <inheritdoc cref="ParseDateOrThrow" />
+    /// <summary>As <see cref="ParseDateOrThrow" />, for a date of birth.</summary>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when the components form a date before <see cref="MinimumBirthDate" />.
+    /// </exception>
+    public static DateOnly ParseBirthDateOrThrow(int year, int month, int day)
+    {
+        var date = ParseDateOrThrow(year, month, day);
+        ArgumentOutOfRangeException.ThrowIfLessThan(year, MinimumBirthDate.Year);
+        return date;
+    }
+
     /// <summary>
     ///     Picks a uniformly-random valid <see cref="DateOnly" /> in
     ///     [<see cref="FakerMinYearInclusive" />, <see cref="FakerMaxYearExclusive" />).
@@ -66,12 +88,18 @@ internal static class Generation
     /// </summary>
     /// <param name="next">A delegate matching <c>(minInclusive, maxExclusive) =&gt; int</c>; the random source.</param>
     /// <param name="today">The reference "today" used to compute the age window.</param>
-    /// <returns>A 1 January birth date in the centenarian range.</returns>
+    /// <returns>A 1 January birth date in the centenarian range, not before <see cref="MinimumBirthDate" />.</returns>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Everyone of that age on <paramref name="today" /> was born before <see cref="MinimumBirthDate" />.
+    /// </exception>
     public static DateOnly RandomCentenarianBirthDate(Func<int, int, int> next, DateOnly today)
     {
         ArgumentNullException.ThrowIfNull(next);
-        var ageYears = next(100, 111);
-        var year = today.Year - ageYears;
+        ArgumentOutOfRangeException.ThrowIfLessThan(
+            today, MinimumBirthDate.AddYears(YoungestCentenarian), ClockParameter);
+        var ageYears = next(YoungestCentenarian, OldestCentenarian + 1);
+        // Lowering the age, rather than drawing from fewer, keeps what a seed gives on every other clock.
+        var year = Math.Max(today.Year - ageYears, MinimumBirthDate.Year);
         return new DateOnly(year, 1, 1);
     }
 
@@ -111,8 +139,8 @@ internal static class Generation
 
         return new IdDraft
         {
-            Century = birth.Year / IdDraft.YearsPerCentury,
-            Year = birth.Year % IdDraft.YearsPerCentury,
+            Century = birth.Year / SwedishIdParsing.YearsPerCentury,
+            Year = birth.Year % SwedishIdParsing.YearsPerCentury,
             Month = birth.Month,
             Day = birth.Day,
             Serial = serial - serial % 10 + genderDigit

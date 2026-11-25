@@ -14,7 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <OfficialTestDataSource Include="UnprintedAssert" />
+    <OfficialTestDataSource Include="BirthYearFloorAssert;Rejections;UnprintedAssert" />
   </ItemGroup>
 
   <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />

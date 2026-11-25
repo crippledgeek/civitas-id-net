@@ -20,6 +20,10 @@
     <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052;CA2007;CA2000</NoWarn>
   </PropertyGroup>
 
+  <ItemGroup>
+    <OfficialTestDataSource Include="BirthYearFloorAssert;Rejections" />
+  </ItemGroup>
+
   <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
 
   <ItemGroup>

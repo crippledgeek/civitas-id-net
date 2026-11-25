@@ -38,6 +38,10 @@ public interface IIdFaker<out T>
     /// <exception cref="InvalidIdNumberException">
     ///     Thrown when the date cannot form a valid Swedish ID (invalid for the subtype).
     /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when a person's number is asked for and <paramref name="birthDate" /> is before 1800. A legal
+    ///     person's number has no birth date, so its registration date has no such limit.
+    /// </exception>
     T Generate(DateOnly birthDate);
 
     /// <summary>
@@ -45,6 +49,9 @@ public interface IIdFaker<out T>
     /// </summary>
     /// <exception cref="InvalidIdNumberException">
     ///     Thrown when the date components do not form a valid calendar date.
+    /// </exception>
+    /// <exception cref="ArgumentOutOfRangeException">
+    ///     Thrown when a person's number is asked for and the components form a calendar date before 1800.
     /// </exception>
     T Generate(int year, int month, int day);
 }

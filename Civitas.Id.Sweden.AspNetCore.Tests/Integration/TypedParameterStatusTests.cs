@@ -66,13 +66,38 @@ public class TypedParameterStatusTests
     [MethodDataSource(nameof(EnvironmentNames))]
     public async Task GeneratedNumber_ValidGives200_AndEveryDefect400(string environment)
     {
-        var valid = await GetUnloggedAsync(environment, GeneratedNumbers.ValidPersonnummer).ConfigureAwait(false);
+        var valid = await GetUnloggedAsync(environment, "/personal/" + GeneratedNumbers.ValidPersonnummer).ConfigureAwait(false);
         await Assert.That(valid.Status).IsEqualTo(HttpStatusCode.OK);
 
         foreach (var text in GeneratedNumbers.InvalidPersonnummer())
         {
-            var response = await GetUnloggedAsync(environment, text).ConfigureAwait(false);
+            var response = await GetUnloggedAsync(environment, "/personal/" + text).ConfigureAwait(false);
             await Assert.That(response.Status).IsEqualTo(HttpStatusCode.BadRequest);
+        }
+    }
+
+    [Test]
+    [MethodDataSource(nameof(EnvironmentNames))]
+    public async Task EarlyBirthYear_Gives400AsAWrongCheckDigitDoes(string environment)
+    {
+        IReadOnlyList<(string Route, BirthYearCases Cases)> routes =
+        [
+            ("/personal/", BirthYearCases.Personnummer), ("/coordination/", BirthYearCases.Samordningsnummer),
+            .. BirthYearCases.All.Select(static cases => ("/organisation/", cases))
+        ];
+        foreach (var (route, cases) in routes)
+        {
+            var accepted = await GetUnloggedAsync(environment, route + cases.Accepted).ConfigureAwait(false);
+            await Assert.That(accepted.Status).IsEqualTo(HttpStatusCode.OK);
+
+            var rejection = await GetUnloggedAsync(environment, route + cases.WithWrongCheckDigit).ConfigureAwait(false);
+            await Assert.That(rejection.Status).IsEqualTo(HttpStatusCode.BadRequest);
+            foreach (var text in cases.Early)
+            {
+                var response = await GetUnloggedAsync(environment, route + text).ConfigureAwait(false);
+                await Assert.That(response.Status).IsEqualTo(HttpStatusCode.BadRequest);
+                await UnprintedAssert.AreEqual(response.WithoutTraceId, rejection.WithoutTraceId).ConfigureAwait(false);
+            }
         }
     }
 
@@ -225,8 +250,8 @@ public class TypedParameterStatusTests
         => GetAsync(new TestHostSetup(environment) { Configure = configure }, path);
 
     /// <summary>Without logging, because the host logs the request path, which holds the number.</summary>
-    private static Task<ProbeResponse> GetUnloggedAsync(string environment, string number)
-        => GetAsync(environment, "/personal/" + number, static services =>
+    private static Task<ProbeResponse> GetUnloggedAsync(string environment, string path)
+        => GetAsync(environment, path, static services =>
             services.AddLogging(static logging => logging.ClearProviders()));
 
     private static Task<ProbeResponse> GetAsync(string environment, string path, Action<WebApplication> use)

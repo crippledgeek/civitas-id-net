@@ -13,6 +13,11 @@ namespace Civitas.Id.Sweden.Core;
 /// <summary>
 ///     A Swedish personal identification number (personnummer).
 /// </summary>
+/// <remarks>
+///     A birth year before 1800 is not accepted, whether the century is written out or inferred. This is
+///     library policy, not law: Skatteverket's SKV 704 and the KU schema 12.0 give a person's number the centuries
+///     18, 19 and 20. There is no upper bound.
+/// </remarks>
 [TypeConverter(typeof(PersonalIdTypeConverter))]
 public sealed record PersonalId : PhysicalPersonId,
     ISwedishPersonIdHooks<PersonalId>,
@@ -100,7 +105,7 @@ public sealed record PersonalId : PhysicalPersonId,
     /// <summary>
     ///     Internal factory: constructs a <see cref="PersonalId" /> from an already-validated
     ///     12-digit normalised string. Skips re-parsing — caller MUST guarantee validity
-    ///     (correct length, valid Luhn, valid calendar date).
+    ///     (correct length, valid Luhn, valid calendar date, accepted birth year).
     /// </summary>
     /// <param name="normalised12">A canonical 12-digit normalised personnummer (YYYYMMDDXXXX).</param>
     /// <returns>A <see cref="PersonalId" /> wrapping the provided digits.</returns>

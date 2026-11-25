@@ -11,7 +11,7 @@ public class OrganisationIdFakerGenerateTests
     private const int Seed = 11;
     private const int Samples = 2000;
     private const int Defects = 5;
-    private const int DateDefects = 3;
+    private const int DateDefects = 4;
 
     [Test]
     public async Task Generate_Valid_ParsesToALegalPerson()

@@ -9,53 +9,54 @@ namespace Civitas.Id.Sweden.Internal;
 /// </summary>
 /// <remarks>
 ///     <para>
-///         <see cref="ResolveCentury" /> centralises the sliding-100-year-window century
+///         <see cref="ResolveBirthYear" /> centralises the sliding-100-year-window century
 ///         inference that <see cref="Core.PersonalId" /> and <see cref="Core.CoordinationId" />
 ///         share textually. Inference is time-dependent: a 10-digit ID parsed near a year
 ///         boundary could resolve to different centuries on different days. For
-///         deterministic parsing, prefer the 12-digit form with explicit century, or wait
-///         for the planned <c>Parse(string, DateOnly today)</c> overload.
+///         deterministic parsing, prefer the 12-digit form with explicit century, or an overload
+///         that takes a <see cref="DateOnly" />.
 ///     </para>
 /// </remarks>
 internal static class SwedishIdParsing
 {
+    /// <summary>Splits a year into its century and its last two digits.</summary>
+    public const int YearsPerCentury = 100;
+
     /// <summary>
-    ///     Resolves the century for a parsed ID. If <paramref name="explicitCentury" />
-    ///     is provided, uses it directly. Otherwise infers from
-    ///     <paramref name="currentYear" /> using a sliding 100-year window, with a
-    ///     further adjustment for the <c>'+'</c> separator (person is 100+ years old).
+    ///     The first birth year accepted, for personnummer, samordningsnummer and sole traders. Library policy, not
+    ///     law: Skatteverket's SKV 704 and the KU schema 12.0 give a person's number the centuries 18, 19 and 20.
+    ///     There is no upper bound.
     /// </summary>
-    /// <param name="explicitCentury">
-    ///     The 2-digit explicit century if the input had one (e.g. 19 for a birth year of 1925); null if
-    ///     absent.
-    /// </param>
-    /// <param name="twoDigitYear">The 2-digit short year from the input.</param>
-    /// <param name="currentYear">
-    ///     The reference year (typically Sweden civil today's year) used as anchor for sliding-window
-    ///     inference.
-    /// </param>
-    /// <param name="plusSeparator">
-    ///     True if the input had a '+' separator (centenarian convention); false for '-' or no
-    ///     separator.
-    /// </param>
-    /// <returns>The resolved century (e.g. 19 or 20).</returns>
-    public static int ResolveCentury(int? explicitCentury, int twoDigitYear, int currentYear, bool plusSeparator)
+    public const int MinimumBirthYear = 1800;
+
+    /// <summary>The year of a century and its last two digits, as written.</summary>
+    [Pure]
+    public static int ComposeYear(int century, int twoDigitYear)
     {
-        if (explicitCentury is { } c) return c;
+        return century * YearsPerCentury + twoDigitYear;
+    }
 
-        var currentCentury = currentYear / 100;
-        var inferredYear = currentCentury * 100 + twoDigitYear;
+    /// <summary>
+    ///     Resolves the birth year of a person's number. An explicit century is used as it is. Otherwise the year is
+    ///     the latest one not after <paramref name="referenceYear" />, and a century earlier with a plus.
+    /// </summary>
+    /// <param name="digits">What the input says about the year.</param>
+    /// <param name="referenceYear">
+    ///     The year that inference starts from, normally the current one in Sweden. An <see cref="int" />, as in
+    ///     <see cref="DateOnly.Year" />.
+    /// </param>
+    /// <returns>
+    ///     The year, unchecked. It can be zero, or negative with a reference year below 200, and a calendar type
+    ///     throws on those, so it must be compared with <see cref="MinimumBirthYear" /> first.
+    /// </returns>
+    [Pure]
+    public static int ResolveBirthYear(BirthYearDigits digits, int referenceYear)
+    {
+        if (digits.ExplicitCentury is { } century) return ComposeYear(century, digits.TwoDigitYear);
 
-        // If inferred year is in the future, the person is from the previous century
-        if (inferredYear > currentYear) inferredYear -= 100;
-
-        var century = inferredYear / 100;
-
-        // '+' separator means person is 100+ years old, shift back another century
-        if (plusSeparator)
-            century -= 1;
-
-        return century;
+        var year = referenceYear - referenceYear % YearsPerCentury + digits.TwoDigitYear;
+        if (year > referenceYear) year -= YearsPerCentury;
+        return digits.PlusSeparator ? year - YearsPerCentury : year;
     }
 
     /// <summary>
@@ -219,22 +220,24 @@ internal static class SwedishIdParsing
         => span.Length >= 2 && span[0] == 'S' && span[1] == 'E';
 
     /// <summary>
-    ///     Shared leaf atomic: validates calendar-day-within-month plus Luhn-10 over
-    ///     the 10-digit body. Used by both the person-ID dispatcher and the Enskild
+    ///     Shared leaf atomic: validates the minimum birth year, calendar-day-within-month
+    ///     and Luhn-10 over the 10-digit body. Used by both the person-ID dispatcher and the Enskild
     ///     firma branch of OrganisationId parsing. Caller has already resolved
     ///     <paramref name="fullYear"/> and <paramref name="realDay"/>.
     /// </summary>
     /// <param name="match">The span match containing raw year/month/day/unique spans.</param>
-    /// <param name="fullYear">The 4-digit year (caller-resolved).</param>
+    /// <param name="fullYear">The resolved year, which may be no calendar year.</param>
     /// <param name="realDay">
     ///     The calendar day (1..31). For samordningsnummer the caller passes
     ///     <c>encodedDay - 60</c>; for personnummer the encoded day directly.
     /// </param>
-    /// <returns><see langword="true"/> if both calendar and Luhn checks pass.</returns>
+    /// <returns><see langword="true"/> if the year, calendar and Luhn checks pass.</returns>
     [Pure]
     internal static bool TryValidatePersonShapedBody(
         in SwedishIdSpanMatch match, int fullYear, int realDay)
     {
+        // First, because DaysInMonth throws for a year that no calendar type holds.
+        if (fullYear < MinimumBirthYear) return false;
         if (realDay < 1 || realDay > DateTime.DaysInMonth(fullYear, match.Month)) return false;
 
         Span<char> tenDigits = stackalloc char[10];
@@ -264,12 +267,6 @@ internal static class SwedishIdParsing
         result = null;
         if (s is null) return false;
         if (!TryMatchSpan(s.AsSpan(), out var match)) return false;
-
-        // PeOrgNr "16" prefix is for legal-person 12-digit input only — reject for person-shape.
-        // Century 16 with a calendar month and day is not a real birth year (no one born in 1600s).
-        // "16" can only appear as input prefix for legal-person orgnummer (month >= 20).
-        if (match is { HasCentury: true, CenturyValue: 16, Month: < 20 })
-            return false;
 
         var month = match.Month;
         var day = match.Day;
@@ -304,7 +301,7 @@ internal static class SwedishIdParsing
 
         if (isEnskildFirma)
         {
-            var fullYear = personCentury!.Value * 100 + match.Year;
+            var fullYear = ComposeYear(personCentury!.Value, match.Year);
             // Shared leaf atomic — calendar-day + Luhn in one call.
             if (!TryValidatePersonShapedBody(in match, fullYear, realDay)) return false;
         }

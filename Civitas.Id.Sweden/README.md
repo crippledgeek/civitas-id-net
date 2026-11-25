@@ -39,6 +39,12 @@ if (PersonalId.TryParse("198113180000", out var maybe))
 var any = SwedishOfficialId.ParseAny("5560160680");  // OrganisationId
 ```
 
+## Birth years
+
+A birth year before 1800 is not accepted in a personnummer, a samordningsnummer or a sole trader's organisation
+number, whether the century is written out or inferred. This is library policy, not law: SKV 704 and the KU schema
+12.0 give a person's number the centuries 18, 19 and 20. There is no upper bound.
+
 ## Documentation
 
 See the [main repository](https://github.com/crippledgeek/civitas-id-net) for the full overview,

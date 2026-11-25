@@ -7,9 +7,11 @@ public class DefectCatalogTests
 {
     private const int Seed = 7;
     private const int Samples = 2000;
-    private const int PersonDefects = 8;
+    private const int PersonDefects = 9;
     private const int LegalPersonDefects = 5;
     private const int LegalPersonKind = 2;
+    private const int Serial = 120;
+    private const int GenderDigit = 4;
 
     private static readonly DateOnly LeapDay = new(2000, 2, 29);
 
@@ -115,6 +117,40 @@ public class DefectCatalogTests
                 .Distinct().Order();
 
             await Assert.That(shifts.SequenceEqual(Enumerable.Range(1, 3))).IsTrue();
+        }
+
+        [Test]
+        [Arguments(0)]
+        [Arguments(1)]
+        public async Task BirthYearBelowMinimum_CoversEveryCenturyAndYear(int kind)
+        {
+            var years = SamplesOf(kind, IdDefect.BirthYearBelowMinimum)
+                .Select(s => DefectInspection.FullYear(s.Id.Text)).ToList();
+
+            await Assert.That(years.Select(year => year / 100).Distinct().Order().SequenceEqual(Enumerable.Range(0, 18)))
+                .IsTrue();
+            await Assert.That(years.Select(year => year % 100).Distinct().Order().SequenceEqual(Enumerable.Range(0, 100)))
+                .IsTrue();
+        }
+
+        /// <summary>The source is the lowest or the highest draw, so that both ends are reached.</summary>
+        [Test]
+        [Arguments(0, 28, new[] { 0, 1799 })]
+        [Arguments(1, 28, new[] { 0, 1799 })]
+        [Arguments(0, 29, new[] { 4, 1796 })]
+        [Arguments(1, 29, new[] { 4, 1796 })]
+        public async Task BirthYearBelowMinimum_ReachesTheEndsOfItsRange(int kind, int dayOfFebruary, int[] ends)
+        {
+            Func<DateOnly, int, int, IdDraft> draftOf =
+                kind == 0 ? Generation.DraftPersonnummer : Generation.DraftSamordningsnummer;
+            var draft = draftOf(new DateOnly(2000, 2, dayOfFebruary), Serial, GenderDigit);
+            var catalog = Kinds[kind].Catalog;
+
+            var lowest = catalog.Corrupt(IdDefect.BirthYearBelowMinimum, draft, (min, _) => min);
+            var highest = catalog.Corrupt(IdDefect.BirthYearBelowMinimum, draft, (_, max) => max - 1);
+
+            int[] years = [DefectInspection.FullYear(lowest.Text), DefectInspection.FullYear(highest.Text)];
+            await Assert.That(years.SequenceEqual(ends)).IsTrue();
         }
 
         [Test]

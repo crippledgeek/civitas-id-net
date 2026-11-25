@@ -14,6 +14,11 @@ namespace Civitas.Id.Sweden.Core;
 ///     A Swedish organisation number (organisationsnummer).
 ///     Always serialised in the canonical 10-digit form on the wire.
 /// </summary>
+/// <remarks>
+///     A sole trader's number (Enskild firma) with a birth year before 1800 is not accepted. This is library policy,
+///     not law: Skatteverket's SKV 704 and the KU schema 12.0 give a person's number the centuries 18, 19 and 20.
+///     There is no upper bound, and a legal person's number has no birth year.
+/// </remarks>
 [TypeConverter(typeof(OrganisationIdTypeConverter))]
 public sealed record OrganisationId : SwedishOfficialId,
     ISpanParsable<OrganisationId>,
@@ -130,7 +135,7 @@ public sealed record OrganisationId : SwedishOfficialId,
     /// <summary>
     ///     Internal factory for constructing an <see cref="OrganisationId" /> from a person
     ///     official ID (PersonalId or CoordinationId). Bypasses the month &gt;= 20 validation
-    ///     because the caller has already validated the digits as a person ID.
+    ///     because the caller has already validated the digits as a person ID, birth year included.
     /// </summary>
     /// <param name="tenDigits">The 10-digit canonical form (no separator, no "16" prefix).</param>
     /// <param name="personCentury">
@@ -170,7 +175,7 @@ public sealed record OrganisationId : SwedishOfficialId,
     /// <summary>
     ///     Internal factory: constructs an <see cref="OrganisationId"/> from an
     ///     already-validated 10-digit body and the optional person-century
-    ///     captured during Enskild firma parsing.
+    ///     captured during Enskild firma parsing, which gives an accepted birth year with it.
     /// </summary>
     /// <param name="tenDigitsNormalised">A valid 10-digit canonical body.</param>
     /// <param name="personCentury">
