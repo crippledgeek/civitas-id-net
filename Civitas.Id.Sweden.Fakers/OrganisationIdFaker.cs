@@ -4,6 +4,7 @@ using System.Security.Cryptography;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Fakers.Internal;
 using Civitas.Id.Sweden.Format;
+using Civitas.Id.Sweden.Internal;
 using JetBrains.Annotations;
 
 namespace Civitas.Id.Sweden.Fakers;
@@ -186,7 +187,7 @@ public sealed class OrganisationIdFaker : IOrganisationIdFaker
 
     private OrganisationId GenerateLegalPersonForRegistration(DateOnly registrationDate)
     {
-        var draft = DrawSerial(DrawForm(), registrationDate.Month, registrationDate.Year % IdDraft.YearsPerCentury);
+        var draft = DrawSerial(DrawForm(), registrationDate.Month, registrationDate.Year % SwedishIdParsing.YearsPerCentury);
         return OrganisationId.FromValidated(draft.Render());
     }
 
@@ -199,7 +200,7 @@ public sealed class OrganisationIdFaker : IOrganisationIdFaker
     private IdDraft DrawLegalPerson(OrganisationForm form)
     {
         var month = _next(1, MonthsPerYear + 1);
-        var year = _next(0, IdDraft.YearsPerCentury);
+        var year = _next(0, SwedishIdParsing.YearsPerCentury);
         return DrawSerial(form, month, year);
     }
 

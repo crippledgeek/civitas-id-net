@@ -240,7 +240,7 @@ public abstract record PhysicalPersonId : SwedishOfficialId, ISpanFormattable, I
             match.Year,
             currentYear,
             match.Delimiter == '+');
-        var fullYear = century * 100 + match.Year;
+        var fullYear = SwedishIdParsing.ComposeYear(century, match.Year);
         var realDay = TSelf.CalendarDay(match.Day);
 
         if (!SwedishIdParsing.TryValidatePersonShapedBody(in match, fullYear, realDay))

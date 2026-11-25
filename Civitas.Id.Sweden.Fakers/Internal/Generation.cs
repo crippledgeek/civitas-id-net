@@ -1,4 +1,5 @@
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Internal;
 
 namespace Civitas.Id.Sweden.Fakers.Internal;
 
@@ -111,8 +112,8 @@ internal static class Generation
 
         return new IdDraft
         {
-            Century = birth.Year / IdDraft.YearsPerCentury,
-            Year = birth.Year % IdDraft.YearsPerCentury,
+            Century = birth.Year / SwedishIdParsing.YearsPerCentury,
+            Year = birth.Year % SwedishIdParsing.YearsPerCentury,
             Month = birth.Month,
             Day = birth.Day,
             Serial = serial - serial % 10 + genderDigit

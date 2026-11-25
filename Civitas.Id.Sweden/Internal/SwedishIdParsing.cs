@@ -19,6 +19,16 @@ namespace Civitas.Id.Sweden.Internal;
 /// </remarks>
 internal static class SwedishIdParsing
 {
+    /// <summary>Splits a year into its century and its last two digits.</summary>
+    public const int YearsPerCentury = 100;
+
+    /// <summary>The year of a century and its last two digits, as written.</summary>
+    [Pure]
+    public static int ComposeYear(int century, int twoDigitYear)
+    {
+        return century * YearsPerCentury + twoDigitYear;
+    }
+
     /// <summary>
     ///     Resolves the century for a parsed ID. If <paramref name="explicitCentury" />
     ///     is provided, uses it directly. Otherwise infers from
@@ -304,7 +314,7 @@ internal static class SwedishIdParsing
 
         if (isEnskildFirma)
         {
-            var fullYear = personCentury!.Value * 100 + match.Year;
+            var fullYear = ComposeYear(personCentury!.Value, match.Year);
             // Shared leaf atomic — calendar-day + Luhn in one call.
             if (!TryValidatePersonShapedBody(in match, fullYear, realDay)) return false;
         }
