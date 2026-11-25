@@ -10,6 +10,8 @@ internal static class OfficialDrafts
 
     public static IReadOnlyList<IdDraft> Personnummer { get; } = Of<OfficialPersonnummer>();
 
+    public static IReadOnlyList<IdDraft> Samordningsnummer { get; } = Of<OfficialSamordningsnummer>();
+
     public static IReadOnlyList<IdDraft> LegalPersons { get; } =
     [
         Of(LegalPersonNumbers.Aktiebolag.Digits), Of(LegalPersonNumbers.OtherAktiebolag.Digits),

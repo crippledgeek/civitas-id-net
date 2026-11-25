@@ -7,23 +7,46 @@ public class DefectCatalogTests
 {
     private const int Seed = 7;
     private const int Samples = 2000;
+    private const int PersonDefects = 8;
     private const int LegalPersonDefects = 5;
-    private const int SeparatorIndexes = 6;
+    private const int LegalPersonKind = 2;
 
-    private static IReadOnlyList<(InvalidGeneratedId Id, string Valid)> SamplesOf(IdDefect defect)
+    private static readonly DateOnly LeapDay = new(2000, 2, 29);
+
+    /// <summary>1900 is divisible by four and yet no leap year.</summary>
+    private static readonly DateOnly CenturyWithoutLeapDay = new(1900, 2, 28);
+
+    private static readonly IReadOnlyList<(DefectCatalog Catalog, IReadOnlyList<IdDraft> Drafts)> Kinds =
+    [
+        (DefectCatalog.Personnummer, OfficialDrafts.Personnummer),
+        (DefectCatalog.Samordningsnummer, OfficialDrafts.Samordningsnummer),
+        (DefectCatalog.LegalPerson, OfficialDrafts.LegalPersons)
+    ];
+
+    private static IReadOnlyList<(InvalidGeneratedId Id, string Valid)> SamplesOf(int kind, IdDefect defect)
     {
-        var drafts = OfficialDrafts.LegalPersons;
+        var (catalog, drafts) = Kinds[kind];
         var random = new Random(Seed);
         return
         [
             .. Enumerable.Range(0, Samples)
                 .Select(i => drafts[i % drafts.Count])
-                .Select(draft => (DefectCatalog.LegalPerson.Corrupt(defect, draft, random.Next), draft.Render()))
+                .Select(draft => (catalog.Corrupt(defect, draft, random.Next), draft.Render()))
         ];
     }
 
     public class Supported
     {
+        [Test]
+        public async Task Persons_SupportEveryDefectInOrder()
+        {
+            var every = Enum.GetValues<IdDefect>();
+
+            await Assert.That(every.Length).IsEqualTo(PersonDefects);
+            await Assert.That(DefectCatalog.Personnummer.Supported.SequenceEqual(every)).IsTrue();
+            await Assert.That(DefectCatalog.Samordningsnummer.Supported.SequenceEqual(every)).IsTrue();
+        }
+
         [Test]
         public async Task LegalPersons_SupportTheTextualDefectsInOrder()
         {
@@ -42,9 +65,11 @@ public class DefectCatalogTests
         [Test]
         public async Task EverySample_BreaksOnlyItsRuleAndIsRejectedByEveryParser()
         {
-            var samples = DefectCatalog.LegalPerson.Supported.SelectMany(SamplesOf).ToList();
+            var samples = Enumerable.Range(0, Kinds.Count)
+                .SelectMany(kind => Kinds[kind].Catalog.Supported.SelectMany(defect => SamplesOf(kind, defect)))
+                .ToList();
 
-            await Assert.That(samples.Count).IsEqualTo(Samples * LegalPersonDefects);
+            await Assert.That(samples.Count).IsEqualTo(Samples * (2 * PersonDefects + LegalPersonDefects));
             await Assert.That(samples.IndexesWhere(s => !DefectInspection.BreaksOnlyItsRule(s.Id, s.Valid))).IsEmpty();
             await Assert.That(samples.IndexesWhere(s => ParserProbe.AcceptedBy(s.Id.Text).Count > 0)).IsEmpty();
         }
@@ -52,38 +77,75 @@ public class DefectCatalogTests
         [Test]
         public async Task Inspection_OfValidNumbers_FindsThemAcceptedAndBreakingNoRule()
         {
-            var text = OfficialDrafts.LegalPersons[0].Render();
-
-            await Assert.That(ParserProbe.AcceptedBy(text)).IsNotEmpty();
-            await Assert.That(DefectCatalog.LegalPerson.Supported.Count).IsEqualTo(LegalPersonDefects);
-            foreach (var defect in DefectCatalog.LegalPerson.Supported)
-                await Assert.That(DefectInspection.BreaksOnlyItsRule(new InvalidGeneratedId(text, defect), text))
-                    .IsFalse();
+            foreach (var (catalog, drafts) in Kinds)
+            {
+                var text = drafts[0].Render();
+                await Assert.That(ParserProbe.AcceptedBy(text)).IsNotEmpty();
+                foreach (var defect in catalog.Supported)
+                    await Assert.That(DefectInspection.BreaksOnlyItsRule(new InvalidGeneratedId(text, defect), text))
+                        .IsFalse();
+            }
         }
 
         [Test]
-        public async Task TextDefects_CoverTheirWholeRange()
+        [Arguments(0)]
+        [Arguments(1)]
+        public async Task FieldDefects_CoverTheirWholeRange(int kind)
         {
-            var separators = SamplesOf(IdDefect.MisplacedSeparator)
+            var expectedDays = kind == 0
+                ? DefectInspection.ImpossiblePersonalDays
+                : DefectInspection.ImpossibleCoordinationDays;
+            var months = SamplesOf(kind, IdDefect.ImpossibleMonth)
+                .Select(s => DefectInspection.Month(s.Id.Text)).Distinct().Order();
+            var days = SamplesOf(kind, IdDefect.ImpossibleDay)
+                .Select(s => DefectInspection.Day(s.Id.Text)).Distinct().Order();
+
+            await Assert.That(months.SequenceEqual(DefectInspection.ImpossibleMonths)).IsTrue();
+            await Assert.That(days.SequenceEqual(expectedDays)).IsTrue();
+        }
+
+        [Test]
+        [Arguments(0)]
+        [Arguments(1)]
+        public async Task NonLeapFebruary29_OfALeapYear_IsInAnyOfTheNextThreeYears(int kind)
+        {
+            var shifts = SamplesOf(kind, IdDefect.NonLeapFebruary29)
+                .Where(s => DateTime.IsLeapYear(DefectInspection.FullYear(s.Valid)))
+                .Select(s => DefectInspection.FullYear(s.Id.Text) - DefectInspection.FullYear(s.Valid))
+                .Distinct().Order();
+
+            await Assert.That(shifts.SequenceEqual(Enumerable.Range(1, 3))).IsTrue();
+        }
+
+        [Test]
+        [Arguments(0, 7)]
+        [Arguments(1, 7)]
+        [Arguments(2, 5)]
+        public async Task TextDefects_CoverTheirWholeRange(int kind, int lastSeparatorIndex)
+        {
+            var separators = SamplesOf(kind, IdDefect.MisplacedSeparator)
                 .Select(s => s.Id.Text.IndexOf('-', StringComparison.Ordinal)).Distinct().Order();
-            var checkDigitShifts = SamplesOf(IdDefect.WrongCheckDigit)
+            var checkDigitShifts = SamplesOf(kind, IdDefect.WrongCheckDigit)
                 .Select(s => (s.Id.Text[^1] - s.Valid[^1] + 10) % 10).Distinct().Order();
 
-            await Assert.That(separators.SequenceEqual(Enumerable.Range(0, SeparatorIndexes))).IsTrue();
+            await Assert.That(separators.SequenceEqual(Enumerable.Range(0, lastSeparatorIndex + 1))).IsTrue();
             await Assert.That(checkDigitShifts.SequenceEqual(Enumerable.Range(1, 9))).IsTrue();
         }
 
         [Test]
-        public async Task CharacterDefects_ReachEveryPositionAndDigit()
+        [Arguments(0)]
+        [Arguments(1)]
+        [Arguments(2)]
+        public async Task CharacterDefects_ReachEveryPositionAndDigit(int kind)
         {
-            var length = OfficialDrafts.LegalPersons[0].Render().Length;
-            var replaced = SamplesOf(IdDefect.NonAsciiDigit)
+            var length = Kinds[kind].Drafts[0].Render().Length;
+            var replaced = SamplesOf(kind, IdDefect.NonAsciiDigit)
                 .Select(s => s.Id.Text.Index().First(c => !char.IsAscii(c.Item)).Index).Distinct().Order();
-            var tooLong = SamplesOf(IdDefect.TooLong);
+            var tooLong = SamplesOf(kind, IdDefect.TooLong);
             var insertedDigits = tooLong.Select(s => InsertedDigit(s.Id.Text, s.Valid)).Distinct().Order();
             var insertedAt = tooLong.Where(s => HasOneInsertionPosition(s.Id.Text, s.Valid))
                 .Select(s => CommonPrefix(s.Id.Text, s.Valid)).Distinct().Order();
-            var tooShort = SamplesOf(IdDefect.TooShort);
+            var tooShort = SamplesOf(kind, IdDefect.TooShort);
             var removedAt = tooShort.Select(s => CommonPrefix(s.Id.Text, s.Valid)).Distinct().Order();
             var removable = tooShort.SelectMany(s => RunEnds(s.Valid)).Distinct().Order();
 
@@ -98,7 +160,7 @@ public class DefectCatalogTests
         public async Task IndependentLuhn_OfAMissingOrNonAsciiDigit_IsFalse()
         {
             IReadOnlyList<(InvalidGeneratedId Id, string Valid)> samples =
-                [.. SamplesOf(IdDefect.TooShort), .. SamplesOf(IdDefect.NonAsciiDigit)];
+                [.. SamplesOf(LegalPersonKind, IdDefect.TooShort), .. SamplesOf(LegalPersonKind, IdDefect.NonAsciiDigit)];
 
             await Assert.That(samples.Count).IsEqualTo(2 * Samples);
             await Assert.That(samples.IndexesWhere(s => IndependentLuhn.IsValid(s.Id.Text))).IsEmpty();
@@ -135,8 +197,54 @@ public class DefectCatalogTests
             await Assert.That(() =>
                     DefectCatalog.LegalPerson.Corrupt(IdDefect.ImpossibleMonth, draft, new Random(Seed).Next))
                 .Throws<ArgumentOutOfRangeException>();
-            await Assert.That(() => DefectCatalog.LegalPerson.Corrupt((IdDefect)(-1), draft, new Random(Seed).Next))
+            await Assert.That(() =>
+                    DefectCatalog.Personnummer.Corrupt((IdDefect)PersonDefects, draft, new Random(Seed).Next))
                 .Throws<ArgumentOutOfRangeException>();
+        }
+    }
+
+    public class Dates
+    {
+        [Test]
+        public async Task Allows_LeapYear_ExcludesOnlyNonLeapFebruary29()
+        {
+            var excluded = DefectCatalog.Personnummer.Supported
+                .Where(defect => !DefectCatalog.Personnummer.Allows(defect, LeapDay)).ToList();
+
+            await Assert.That(excluded).IsEquivalentTo([IdDefect.NonLeapFebruary29]);
+        }
+
+        [Test]
+        public async Task Allows_CenturyYearOrNoDate_ExcludesNothing()
+        {
+            var catalog = DefectCatalog.Samordningsnummer;
+
+            await Assert.That(catalog.Supported.Count(defect => catalog.Allows(defect, CenturyWithoutLeapDay)))
+                .IsEqualTo(PersonDefects);
+            await Assert.That(catalog.Supported.Count(defect => catalog.Allows(defect, null)))
+                .IsEqualTo(PersonDefects);
+        }
+
+        [Test]
+        public async Task Allows_UnsupportedDefect_Throws()
+        {
+            await Assert.That(() => DefectCatalog.LegalPerson.Allows(IdDefect.ImpossibleDay, null))
+                .Throws<ArgumentOutOfRangeException>();
+        }
+
+        [Test]
+        public async Task Pick_YieldsEveryDefectThatGoesWithTheDate()
+        {
+            var random = new Random(Seed);
+
+            var any = Enumerable.Range(0, Samples)
+                .Select(_ => DefectCatalog.Personnummer.Pick(null, random.Next)).Distinct().ToList();
+            var leap = Enumerable.Range(0, Samples)
+                .Select(_ => DefectCatalog.Personnummer.Pick(LeapDay, random.Next)).Distinct().ToList();
+
+            await Assert.That(any.Count).IsEqualTo(PersonDefects);
+            await Assert.That(leap.Count).IsEqualTo(PersonDefects - 1);
+            await Assert.That(leap).DoesNotContain(IdDefect.NonLeapFebruary29);
         }
     }
 }

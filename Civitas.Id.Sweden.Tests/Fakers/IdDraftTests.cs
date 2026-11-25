@@ -56,6 +56,20 @@ public class IdDraftTests
     }
 
     [Test]
+    public async Task FullYear_OfAPerson_IsTheYearOfBirth()
+    {
+        var number = OfficialNumbers.Centenarian;
+
+        await Assert.That(OfficialDrafts.Of(number.Long).FullYear).IsEqualTo(number.BirthDate.Year);
+    }
+
+    [Test]
+    public async Task FullYear_OfALegalPerson_Throws()
+    {
+        await Assert.That(() => OfficialDrafts.LegalPersons[0].FullYear).Throws<InvalidOperationException>();
+    }
+
+    [Test]
     public async Task IndependentLuhn_NineDigitsOrASeparator_IsRejected()
     {
         await Assert.That(OfficialNumbers.All.IndexesWhere(number => IndependentLuhn.IsValid(number.Body))).IsEmpty();
