@@ -13,6 +13,8 @@
     <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
   </PropertyGroup>
 
+  <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
+
   <ItemGroup>
     <PackageReference Include="TUnit" />
     <PackageReference Include="TUnit.FsCheck" />

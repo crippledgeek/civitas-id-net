@@ -42,17 +42,17 @@ public sealed class MvcJsonOptionsBridgeTests
         var client = host.GetTestClient();
 
         // Wire shape produced/consumed by the Civitas long-format string converter.
-        const string body = """{"id":"198112189876"}""";
+        var body = $$"""{"id":"{{OfficialNumbers.Modern.Long}}"}""";
         using var content = JsonContent(body);
         var resp = await client.PostAsync(new Uri("/mvc-bridge-test", UriKind.Relative), content);
         resp.EnsureSuccessStatusCode();
         var echoed = await resp.Content.ReadAsStringAsync();
 
         // Server-side: SystemTextJsonInputFormatter MUST use the Civitas converter
-        // to deserialize the string "198112189876" into a PersonalId — without the
+        // to deserialize the string into a PersonalId — without the
         // Mvc.JsonOptions bridge it would have failed with 400 model-binding error.
         // Server-side output formatter MUST round-trip the same wire shape.
-        await Assert.That(echoed).Contains("198112189876");
+        await Assert.That(echoed).Contains(OfficialNumbers.Modern.Long);
     }
 
     [Test]
@@ -93,22 +93,22 @@ public sealed class MvcJsonOptionsBridgeTests
                 .Configure(app => app.UseRouting().UseEndpoints(e =>
                 {
                     e.MapControllers();
-                    e.MapGet("/minimal-bridge-test", () => PersonalId.Parse("198112189876"));
+                    e.MapGet("/minimal-bridge-test", () => PersonalId.Parse(OfficialNumbers.Modern.Long));
                 })))
             .StartAsync();
         var client = host.GetTestClient();
 
         // MVC body deserializes 12-digit input and re-emits ShortFormat (10-digit).
-        const string requestBody = """{"id":"198112189876"}""";
+        var requestBody = $$"""{"id":"{{OfficialNumbers.Modern.Long}}"}""";
         using var content = JsonContent(requestBody);
         var mvcResp = await client.PostAsync(new Uri("/mvc-bridge-test", UriKind.Relative), content);
         mvcResp.EnsureSuccessStatusCode();
         var mvcBody = await mvcResp.Content.ReadAsStringAsync();
-        await Assert.That(mvcBody).Contains("8112189876");
+        await Assert.That(mvcBody).Contains(OfficialNumbers.Modern.Short);
 
         // Minimal API emits same ShortFormat — proves the SAME PnrFormat option drives both surfaces.
         var minimalBody = await client.GetStringAsync(new Uri("/minimal-bridge-test", UriKind.Relative));
-        await Assert.That(minimalBody).IsEqualTo("\"8112189876\"");
+        await Assert.That(minimalBody).IsEqualTo($"\"{OfficialNumbers.Modern.Short}\"");
     }
 
     /// <summary>DTO used by <see cref="MvcBridgeTestController"/> to exercise the [FromBody] formatter path.</summary>

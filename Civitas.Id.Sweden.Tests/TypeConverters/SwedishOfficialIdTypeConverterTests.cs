@@ -52,7 +52,7 @@ public class SwedishOfficialIdTypeConverterTests
         {
             yield return (OfficialNumbers.Centenarian.Long, typeof(PersonalId));
             yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
-            yield return ("5560160680", typeof(OrganisationId));
+            yield return (LegalPersonNumbers.Aktiebolag, typeof(OrganisationId));
         }
 
         [Test]

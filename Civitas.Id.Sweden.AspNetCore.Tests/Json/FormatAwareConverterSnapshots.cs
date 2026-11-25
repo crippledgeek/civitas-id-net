@@ -13,14 +13,14 @@ public sealed class FormatAwareConverterSnapshots
     [Test]
     public async Task LongFormat_PersonalId()
     {
-        var json = SerializeWith(PnrFormat.LongFormat, PersonalId.Parse("198112189876"));
+        var json = SerializeWith(PnrFormat.LongFormat, PersonalId.Parse(OfficialNumbers.Modern.Long));
         await Verify(json).UseFileName("LongFormat_PersonalId");
     }
 
     [Test]
     public async Task ShortFormat_PersonalId()
     {
-        var json = SerializeWith(PnrFormat.ShortFormat, PersonalId.Parse("198112189876"));
+        var json = SerializeWith(PnrFormat.ShortFormat, PersonalId.Parse(OfficialNumbers.Modern.Long));
         await Verify(json).UseFileName("ShortFormat_PersonalId");
     }
 
@@ -34,8 +34,8 @@ public sealed class FormatAwareConverterSnapshots
         // ShortFormatWithSeparator, this snapshot MUST be updated to include "+".
         // Until then, the absence of "+" is the locked-in expected behavior.
         //
-        // Skatteverket fixture 189001019802: born 1890-01-01, age >100 -> centenarian.
-        var pid = PersonalId.Parse("189001019802", new DateOnly(2026, 5, 19));
+        // Born 1890-01-01, age >100 -> centenarian.
+        var pid = PersonalId.Parse(OfficialNumbers.Centenarian.Long, new DateOnly(2026, 5, 19));
         var json = SerializeWith(PnrFormat.ShortFormat, pid);
         await Verify(json, "json")
             .UseFileName("ShortFormat_Centenarian_NoSeparator");

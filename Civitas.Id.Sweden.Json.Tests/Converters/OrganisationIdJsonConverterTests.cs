@@ -25,9 +25,9 @@ public class OrganisationIdJsonConverterTests
         public async Task WritesLongFormatString_ForEnskildFirma()
         {
             // Enskild firma orgnummer reuses a personnummer; LongFormat always returns 10 digits.
-            var id = OrganisationId.Parse("189001019802");
+            var id = OrganisationId.Parse(OfficialNumbers.Centenarian.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"9001019802\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Centenarian.Short}\"");
         }
     }
 
@@ -44,9 +44,9 @@ public class OrganisationIdJsonConverterTests
         [Test]
         public async Task ParsesEnskildFirmaPersonnummer()
         {
-            var id = JsonSerializer.Deserialize<OrganisationId>("\"189001019802\"", Opts);
+            var id = JsonSerializer.Deserialize<OrganisationId>($"\"{OfficialNumbers.Centenarian.Long}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("9001019802");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Short);
         }
 
         [Test]

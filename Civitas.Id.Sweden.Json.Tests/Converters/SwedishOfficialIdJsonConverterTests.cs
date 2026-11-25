@@ -13,10 +13,15 @@ public class SwedishOfficialIdJsonConverterTests
 
     public class Deserialize
     {
+        public static IEnumerable<(string Input, Type ExpectedType)> MaterializesCorrectSubtypeInputs()
+        {
+            yield return (OfficialNumbers.Centenarian.Long, typeof(PersonalId));
+            yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
+            yield return (LegalPersonNumbers.Aktiebolag, typeof(OrganisationId));
+        }
+
         [Test]
-        [Arguments("189001019802", typeof(PersonalId))]
-        [Arguments("191401682396", typeof(CoordinationId))]
-        [Arguments("5560160680", typeof(OrganisationId))]
+        [MethodDataSource(nameof(MaterializesCorrectSubtypeInputs))]
         public async Task MaterializesCorrectSubtype(string input, Type expectedType)
         {
             var id = JsonSerializer.Deserialize<SwedishOfficialId>($"\"{input}\"", Opts);
@@ -43,17 +48,17 @@ public class SwedishOfficialIdJsonConverterTests
         [Test]
         public async Task WritesLongFormat_ForPersonalId()
         {
-            SwedishOfficialId id = PersonalId.Parse("189001019802");
+            SwedishOfficialId id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"189001019802\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Centenarian.Long}\"");
         }
 
         [Test]
         public async Task WritesLongFormat_ForCoordinationId()
         {
-            SwedishOfficialId id = CoordinationId.Parse("191401682396");
+            SwedishOfficialId id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"191401682396\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.CentenarianSamordningsnummer.Long}\"");
         }
 
         [Test]

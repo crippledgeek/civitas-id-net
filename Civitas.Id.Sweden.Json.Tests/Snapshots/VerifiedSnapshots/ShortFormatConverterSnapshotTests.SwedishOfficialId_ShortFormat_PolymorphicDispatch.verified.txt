@@ -1,12 +1,12 @@
 ﻿PersonalId (via base type):
-  LongFormat (canonical) = 198806156603
-  JSON wire form         = "8806156603"
+  LongFormat (canonical) = 200001012384
+  JSON wire form         = "0001012384"
 
 CoordinationId (via base type):
-  LongFormat (canonical) = 197503806601
-  JSON wire form         = "7503806601"
+  LongFormat (canonical) = 200006662399
+  JSON wire form         = "0006662399"
 
 OrganisationId/LegalPerson (via base type, always LongFormat):
-  LongFormat (canonical) = 8722125229
-  JSON wire form         = "8722125229"
+  LongFormat (canonical) = 5560160680
+  JSON wire form         = "5560160680"
 

@@ -1,0 +1,18 @@
+<Project>
+  <!-- The official test numbers, for a test project outside Civitas.Id.Sweden.Tests: the sources that read
+       them, and the pinned files they read. Linked, so there is one copy of each. -->
+  <ItemGroup>
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\CsvLoader.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\FixtureFiles.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\FixtureSpec.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\LegalPersonNumbers.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialNumber.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialNumbers.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialPersonnummer.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\OfficialSamordningsnummer.cs" />
+    <OfficialTestDataSource Include="$(MSBuildThisFileDirectory)Helpers\RepositoryRoot.cs" />
+    <Compile Include="@(OfficialTestDataSource)" Link="OfficialTestData\%(Filename)%(Extension)" />
+    <None Include="$(MSBuildThisFileDirectory)Fixtures\*.*" Link="Fixtures\%(Filename)%(Extension)" CopyToOutputDirectory="PreserveNewest" />
+    <Using Include="Civitas.Id.Sweden.Tests.Helpers" />
+  </ItemGroup>
+</Project>

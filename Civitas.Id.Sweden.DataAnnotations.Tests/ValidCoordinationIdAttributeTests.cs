@@ -11,7 +11,7 @@ public class ValidCoordinationIdAttributeTests
         public async Task ValidCoordinationId_Passes()
         {
             var attr = new ValidCoordinationIdAttribute();
-            var result = attr.GetValidationResult("198112752384", new ValidationContext(this));
+            var result = attr.GetValidationResult(OfficialNumbers.CentenarianSamordningsnummer.Long, new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 
@@ -19,7 +19,7 @@ public class ValidCoordinationIdAttributeTests
         public async Task PersonalIdString_Fails()
         {
             var attr = new ValidCoordinationIdAttribute();
-            var result = attr.GetValidationResult("189001019802", new ValidationContext(this));
+            var result = attr.GetValidationResult(OfficialNumbers.Centenarian.Long, new ValidationContext(this));
             await Assert.That(result).IsNotNull();
         }
 
@@ -46,7 +46,7 @@ public class ValidCoordinationIdAttributeTests
         public async Task CoordinationId_Passes()
         {
             var attr = new ValidCoordinationIdAttribute();
-            var result = attr.GetValidationResult(CoordinationId.Parse("198112752384"), new ValidationContext(this));
+            var result = attr.GetValidationResult(CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long), new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 
@@ -54,7 +54,7 @@ public class ValidCoordinationIdAttributeTests
         public async Task PersonalIdInstance_Fails()
         {
             var attr = new ValidCoordinationIdAttribute();
-            var result = attr.GetValidationResult(PersonalId.Parse("189001019802"), new ValidationContext(this));
+            var result = attr.GetValidationResult(PersonalId.Parse(OfficialNumbers.Centenarian.Long), new ValidationContext(this));
             await Assert.That(result).IsNotNull();
         }
 

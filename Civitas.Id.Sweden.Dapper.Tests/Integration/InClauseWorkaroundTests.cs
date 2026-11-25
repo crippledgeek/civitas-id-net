@@ -43,9 +43,9 @@ public class InClauseWorkaroundTests
 
         var customers = new[]
         {
-            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001019802") },
-            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001029819") },
-            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse("189001039800") }
+            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse(OfficialNumbers.Centenarian.Long) },
+            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse(OfficialNumbers.CentenarianMale.Long) },
+            new Customer { Id = Guid.NewGuid(), TaxpayerId = PersonalId.Parse(OfficialNumbers.OtherCentenarian.Long) }
         };
         foreach (var cust in customers)
         {
@@ -82,9 +82,9 @@ public class InClauseWorkaroundTests
         await c.ExecuteAsync("CREATE TABLE Customer (Id TEXT PRIMARY KEY, TaxpayerId TEXT NOT NULL, OptionalSecondaryId TEXT NULL);");
         await c.ExecuteAsync(
             "INSERT INTO Customer (Id, TaxpayerId, OptionalSecondaryId) VALUES (@Id, @TaxpayerId, NULL);",
-            new { Id = Guid.NewGuid().ToString(), TaxpayerId = "189001019802" });
+            new { Id = Guid.NewGuid().ToString(), TaxpayerId = OfficialNumbers.Centenarian.Long });
 
-        var wantedIds = new[] { PersonalId.Parse("189001019802") };
+        var wantedIds = new[] { PersonalId.Parse(OfficialNumbers.Centenarian.Long) };
 
         // `c` is disposed at method-scope exit, AFTER Throws fully awaits the
         // lambda below, so the closure capture is safe.

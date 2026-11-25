@@ -1,4 +1,3 @@
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 
 namespace Civitas.Id.Sweden.AspNetCore.Tests.Architecture;
@@ -41,31 +40,13 @@ public sealed partial class SourceSyntaxRules
         }
     }
 
-    /// <summary>
-    /// Resolves the absolute path to the Civitas.Id.Sweden.AspNetCore source
-    /// tree by anchoring on <see cref="CallerFilePathAttribute"/>, which the
-    /// compiler resolves to the absolute path of THIS source file at compile
-    /// time. This is robust against MSBuild output-directory changes,
-    /// alternative build hosts, and `dotnet test` vs `dotnet run` invocation
-    /// differences — unlike anchoring on <see cref="AppContext.BaseDirectory"/>.
-    /// </summary>
-    private static string LocateAspNetCoreSourceRoot([CallerFilePath] string callerFilePath = "")
+    /// <summary>The absolute path to the Civitas.Id.Sweden.AspNetCore source tree.</summary>
+    private static string LocateAspNetCoreSourceRoot()
     {
-        // callerFilePath:
-        //   <repo>/Civitas.Id.Sweden.AspNetCore.Tests/Architecture/SourceSyntaxRules.cs
-        // Walk up to the test-project directory, then to repo root, then sibling-jump.
-        var architectureDir = Path.GetDirectoryName(callerFilePath)!;          // .../Architecture
-        var testProjectDir = Path.GetDirectoryName(architectureDir)!;          // .../Civitas.Id.Sweden.AspNetCore.Tests
-        var repoRoot = Path.GetDirectoryName(testProjectDir)!;                 // <repo>
-        var libRoot = Path.Combine(repoRoot, "Civitas.Id.Sweden.AspNetCore");
-
+        var libRoot = Path.Combine(RepositoryRoot.Locate().FullName, "Civitas.Id.Sweden.AspNetCore");
         if (!Directory.Exists(libRoot))
-        {
             throw new InvalidOperationException(
-                $"Could not locate Civitas.Id.Sweden.AspNetCore source. "
-                + $"Computed path: '{libRoot}'. "
-                + $"CallerFilePath: '{callerFilePath}'.");
-        }
+                $"Could not locate Civitas.Id.Sweden.AspNetCore source. Computed path: '{libRoot}'.");
 
         return libRoot;
     }

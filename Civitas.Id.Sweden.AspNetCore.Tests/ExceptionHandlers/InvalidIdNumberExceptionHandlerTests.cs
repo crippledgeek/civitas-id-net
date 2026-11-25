@@ -87,7 +87,7 @@ public class InvalidIdNumberExceptionHandlerTests
         {
             var handler = Make(_ => "REDACTED");
             var ctx = MakeContext();
-            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(OfficialNumbers.Modern.Long, InvalidIdNumberReason.InvalidChecksum);
 
             await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
@@ -101,7 +101,7 @@ public class InvalidIdNumberExceptionHandlerTests
         {
             var handler = Make();
             var ctx = MakeContext();
-            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(OfficialNumbers.Modern.Long, InvalidIdNumberReason.InvalidChecksum);
 
             await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
@@ -116,7 +116,7 @@ public class InvalidIdNumberExceptionHandlerTests
             var handler = Make();
             var ctx = MakeContext();
             ctx.TraceIdentifier = "test-trace-1234";
-            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(OfficialNumbers.Modern.Long, InvalidIdNumberReason.InvalidChecksum);
 
             await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
@@ -144,7 +144,7 @@ public class InvalidIdNumberExceptionHandlerTests
         public async Task NullHttpContext_Throws()
         {
             var handler = Make();
-            var ex = new InvalidIdNumberException("198112189876", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(OfficialNumbers.Modern.Long, InvalidIdNumberReason.InvalidChecksum);
 
             await Assert.That(async () =>
                     await handler.TryHandleAsync(null!, ex, CancellationToken.None))

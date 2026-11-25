@@ -13,10 +13,15 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
 
     public class Deserialize
     {
+        public static IEnumerable<(string Input, Type ExpectedType)> MaterializesCorrectSubtypeInputs()
+        {
+            yield return (OfficialNumbers.Modern.Long, typeof(PersonalId));
+            yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
+            yield return (LegalPersonNumbers.Aktiebolag, typeof(OrganisationId));
+        }
+
         [Test]
-        [Arguments("198112189876", typeof(PersonalId))]
-        [Arguments("191401682396", typeof(CoordinationId))]
-        [Arguments("5560160680", typeof(OrganisationId))]
+        [MethodDataSource(nameof(MaterializesCorrectSubtypeInputs))]
         public async Task MaterializesCorrectSubtype(string input, Type expectedType)
         {
             var id = JsonSerializer.Deserialize<SwedishOfficialId>($"\"{input}\"", Opts);
@@ -44,18 +49,18 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
         public async Task WritesShortFormat_ForPersonalId()
         {
             // PersonalId is written using PnrFormat.ShortFormat = 10-digit no-separator.
-            SwedishOfficialId id = PersonalId.Parse("198112189876");
+            SwedishOfficialId id = PersonalId.Parse(OfficialNumbers.Modern.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"8112189876\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Modern.Short}\"");
         }
 
         [Test]
         public async Task WritesShortFormat_ForCoordinationId()
         {
             // CoordinationId is also written as 10-digit no-separator short form.
-            SwedishOfficialId id = CoordinationId.Parse("191401682396");
+            SwedishOfficialId id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"1401682396\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.CentenarianSamordningsnummer.Short}\"");
         }
 
         [Test]
@@ -70,10 +75,15 @@ public class SwedishOfficialIdShortFormatJsonConverterTests
 
     public class RoundTrip
     {
+        public static IEnumerable<string> RoundTripsInputs()
+        {
+            yield return OfficialNumbers.Modern.Long; // PersonalId — modern, round-trips via 10-digit ShortFormat
+            yield return OfficialNumbers.ModernSamordningsnummer.Long; // CoordinationId — modern, round-trips
+            yield return LegalPersonNumbers.Aktiebolag; // OrganisationId — always 10-digit LongFormat, always round-trips
+        }
+
         [Test]
-        [Arguments("198112189876")]  // PersonalId — modern, round-trips via 10-digit ShortFormat
-        [Arguments("200805680006")]  // CoordinationId (born 2008-05-08) — modern, round-trips
-        [Arguments("5560160680")]    // OrganisationId — always 10-digit LongFormat, always round-trips
+        [MethodDataSource(nameof(RoundTripsInputs))]
         public async Task RoundTrips(string input)
         {
             var original = SwedishOfficialId.ParseAny(input);

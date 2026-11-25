@@ -47,7 +47,7 @@ public class SqliteRoundtripTests
             var expected = new Customer
             {
                 Id = Guid.NewGuid(),
-                TaxpayerId = PersonalId.Parse("189001019802")
+                TaxpayerId = PersonalId.Parse(OfficialNumbers.Centenarian.Long)
             };
             await c.ExecuteAsync(
                 "INSERT INTO Customer (Id, TaxpayerId, OptionalSecondaryId) VALUES (@Id, @TaxpayerId, @OptionalSecondaryId);",
@@ -68,7 +68,7 @@ public class SqliteRoundtripTests
             var expected = new Customer
             {
                 Id = Guid.NewGuid(),
-                TaxpayerId = PersonalId.Parse("189001019802"),
+                TaxpayerId = PersonalId.Parse(OfficialNumbers.Centenarian.Long),
                 OptionalSecondaryId = null
             };
             await c.ExecuteAsync(
@@ -89,8 +89,8 @@ public class SqliteRoundtripTests
             var expected = new Customer
             {
                 Id = Guid.NewGuid(),
-                TaxpayerId = PersonalId.Parse("189001019802"),
-                OptionalSecondaryId = PersonalId.Parse("189001029819")
+                TaxpayerId = PersonalId.Parse(OfficialNumbers.Centenarian.Long),
+                OptionalSecondaryId = PersonalId.Parse(OfficialNumbers.CentenarianMale.Long)
             };
             await c.ExecuteAsync(
                 "INSERT INTO Customer (Id, TaxpayerId, OptionalSecondaryId) VALUES (@Id, @TaxpayerId, @OptionalSecondaryId);",
@@ -113,7 +113,7 @@ public class SqliteRoundtripTests
             var expected = new CoordinationHolder
             {
                 Id = Guid.NewGuid(),
-                CoordId = CoordinationId.Parse("191401682396")
+                CoordId = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long)
             };
             await c.ExecuteAsync(
                 "INSERT INTO CoordinationHolder (Id, CoordId, OptionalCoord) VALUES (@Id, @CoordId, @OptionalCoord);",
@@ -133,7 +133,7 @@ public class SqliteRoundtripTests
             var expected = new CoordinationHolder
             {
                 Id = Guid.NewGuid(),
-                CoordId = CoordinationId.Parse("191401682396"),
+                CoordId = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long),
                 OptionalCoord = null
             };
             await c.ExecuteAsync(
@@ -181,7 +181,7 @@ public class SqliteRoundtripTests
             var expected = new Company
             {
                 Id = Guid.NewGuid(),
-                OrgId = OrganisationId.Parse("199001019802")
+                OrgId = OrganisationId.Parse(OfficialNumbers.Modern.Long)
             };
             await c.ExecuteAsync(
                 "INSERT INTO Company (Id, OrgId, OptionalSubsidiaryOrgId) VALUES (@Id, @OrgId, @OptionalSubsidiaryOrgId);",

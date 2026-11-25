@@ -38,13 +38,13 @@ public class OrganisationIdConverterTests
         [Test]
         public async Task ConvertToProvider_EnskildFirma_ReturnsTwelveDigitStringWithCentury()
         {
-            // 199001019802 is a valid Enskild firma (personnummer shape, day 01 in 1-31 range)
+            // A valid Enskild firma (personnummer shape, day 01 in 1-31 range)
             var sut = new OrganisationIdConverter();
-            var id = OrganisationId.Parse("199001019802");
+            var id = OrganisationId.Parse(OfficialNumbers.Modern.Long);
 
             var encoded = (string?)sut.ConvertToProvider(id);
 
-            await Assert.That(encoded).IsEqualTo("199001019802");
+            await Assert.That(encoded).IsEqualTo(OfficialNumbers.Modern.Long);
             await Assert.That(encoded!.Length).IsEqualTo(12);
         }
     }
@@ -71,7 +71,7 @@ public class OrganisationIdConverterTests
             // for Enskild firma, which drops the century — making re-parse impossible.
             // This test MUST fail against the naive implementation.
             var sut = new OrganisationIdConverter();
-            var original = OrganisationId.Parse("199001019802");
+            var original = OrganisationId.Parse(OfficialNumbers.Modern.Long);
 
             var encoded = (string?)sut.ConvertToProvider(original);
             var decoded = (OrganisationId?)sut.ConvertFromProvider(encoded);

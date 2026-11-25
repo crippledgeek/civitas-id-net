@@ -1,16 +1,16 @@
-﻿BirthDate=1920-05-08
-  LongFormat (canonical) = 192005086604
-  JSON wire form         = "2005086604"
+﻿BirthDate=1890-01-01
+  LongFormat (canonical) = 189001019802
+  JSON wire form         = "9001019802"
 
-BirthDate=1955-07-14
-  LongFormat (canonical) = 195507145224
-  JSON wire form         = "5507145224"
+BirthDate=1899-12-31
+  LongFormat (canonical) = 189912319812
+  JSON wire form         = "9912319812"
 
-BirthDate=1988-02-29
-  LongFormat (canonical) = 198802297211
-  JSON wire form         = "8802297211"
+BirthDate=2000-02-29
+  LongFormat (canonical) = 200002292399
+  JSON wire form         = "0002292399"
 
 BirthDate=2008-12-31
-  LongFormat (canonical) = 200812317626
-  JSON wire form         = "0812317626"
+  LongFormat (canonical) = 200812312395
+  JSON wire form         = "0812312395"
 

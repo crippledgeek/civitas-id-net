@@ -7,7 +7,7 @@ namespace Civitas.Id.Sweden.Dapper.Tests.Handlers;
 
 public class PersonalIdHandlerTests
 {
-    private const string Valid12 = "189001019802";
+    private static readonly string Valid12 = OfficialNumbers.Centenarian.Long;
 
     // Use SqliteParameter directly as a concrete IDbDataParameter for testing.
     // No connection needed — the parameter is exercised in isolation.

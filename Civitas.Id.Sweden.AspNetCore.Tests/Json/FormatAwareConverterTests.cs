@@ -16,9 +16,9 @@ public sealed class FormatAwareConverterTests
         services.AddCivitasIdSwedenAspNetCore(o => o.JsonFormat = PnrFormat.ShortFormat);
         var sp = services.BuildServiceProvider();
         var opts = sp.GetRequiredService<IOptions<JsonOptions>>().Value;
-        var personalId = PersonalId.Parse("198112189876", DateOnly.FromDateTime(DateTime.UtcNow));
+        var personalId = PersonalId.Parse(OfficialNumbers.Modern.Long, DateOnly.FromDateTime(DateTime.UtcNow));
         var json = JsonSerializer.Serialize(personalId, opts.SerializerOptions);
-        await Assert.That(json).IsEqualTo("\"8112189876\"");
+        await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Modern.Short}\"");
     }
 
     [Test]
@@ -28,9 +28,9 @@ public sealed class FormatAwareConverterTests
         services.AddCivitasIdSwedenAspNetCore();
         var sp = services.BuildServiceProvider();
         var opts = sp.GetRequiredService<IOptions<JsonOptions>>().Value;
-        var personalId = PersonalId.Parse("198112189876");
+        var personalId = PersonalId.Parse(OfficialNumbers.Modern.Long);
         var json = JsonSerializer.Serialize(personalId, opts.SerializerOptions);
-        await Assert.That(json).IsEqualTo("\"198112189876\"");
+        await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Modern.Long}\"");
     }
 
     [Test]
@@ -40,9 +40,9 @@ public sealed class FormatAwareConverterTests
         services.AddCivitasIdSwedenAspNetCore(o => o.JsonFormat = PnrFormat.ShortFormat);
         var sp = services.BuildServiceProvider();
         var opts = sp.GetRequiredService<IOptions<JsonOptions>>().Value;
-        var parsed = JsonSerializer.Deserialize<PersonalId>("\"198112189876\"", opts.SerializerOptions);
+        var parsed = JsonSerializer.Deserialize<PersonalId>($"\"{OfficialNumbers.Modern.Long}\"", opts.SerializerOptions);
         await Assert.That(parsed).IsNotNull();
-        await Assert.That(parsed!.LongFormat()).IsEqualTo("198112189876");
+        await Assert.That(parsed!.LongFormat()).IsEqualTo(OfficialNumbers.Modern.Long);
     }
 
     [Test]
@@ -53,8 +53,12 @@ public sealed class FormatAwareConverterTests
         var sp = services.BuildServiceProvider();
         var opts = sp.GetRequiredService<IOptions<JsonOptions>>().Value;
 
-        // 198112189876 = PersonalId; 191401682396 = CoordinationId; 5560160680 = OrganisationId (Aktiebolag).
-        foreach (var raw in new[] { "198112189876", "191401682396", "5560160680" })
+        // A PersonalId, a CoordinationId and an OrganisationId (Aktiebolag).
+        string[] inputs =
+        [
+            OfficialNumbers.Modern.Long, OfficialNumbers.CentenarianSamordningsnummer.Long, LegalPersonNumbers.Aktiebolag
+        ];
+        foreach (var raw in inputs)
         {
             var parsed = SwedishOfficialId.ParseAny(raw);
             var json = JsonSerializer.Serialize(parsed, parsed.GetType(), opts.SerializerOptions);

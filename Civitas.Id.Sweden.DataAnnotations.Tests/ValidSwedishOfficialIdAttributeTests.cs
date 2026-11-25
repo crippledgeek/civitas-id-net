@@ -7,10 +7,15 @@ public class ValidSwedishOfficialIdAttributeTests
 {
     public class StringInput
     {
+        public static IEnumerable<string> ValidPassesInputs()
+        {
+            yield return OfficialNumbers.Centenarian.Long; // personnummer
+            yield return OfficialNumbers.CentenarianSamordningsnummer.Long; // samordningsnummer
+            yield return LegalPersonNumbers.Aktiebolag; // organisationsnummer
+        }
+
         [Test]
-        [Arguments("189001019802")]   // personnummer (valid fixture)
-        [Arguments("198112752384")]   // samordningsnummer (valid fixture)
-        [Arguments("5560160680")]     // organisationsnummer (Aktiebolag — valid fixture)
+        [MethodDataSource(nameof(ValidPassesInputs))]
         public async Task Valid_Passes(string input)
         {
             var attr = new ValidSwedishOfficialIdAttribute();
@@ -41,7 +46,7 @@ public class ValidSwedishOfficialIdAttributeTests
         public async Task PersonalId_Passes()
         {
             var attr = new ValidSwedishOfficialIdAttribute();
-            var result = attr.GetValidationResult(PersonalId.Parse("189001019802"), new ValidationContext(this));
+            var result = attr.GetValidationResult(PersonalId.Parse(OfficialNumbers.Centenarian.Long), new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 
@@ -49,7 +54,7 @@ public class ValidSwedishOfficialIdAttributeTests
         public async Task CoordinationId_Passes()
         {
             var attr = new ValidSwedishOfficialIdAttribute();
-            var result = attr.GetValidationResult(CoordinationId.Parse("198112752384"), new ValidationContext(this));
+            var result = attr.GetValidationResult(CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long), new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 

@@ -22,7 +22,7 @@ public class SqliteRoundtripTests
         public async Task SaveAndReload_PersonalId_Roundtrips()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var original = PersonalId.Parse("189001019802");
+            var original = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             ctx.Customers.Add(new Customer { TaxpayerId = original });
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
@@ -42,7 +42,7 @@ public class SqliteRoundtripTests
             await using var ctx = SqliteFixture.NewInMemoryContext();
             ctx.Customers.Add(new Customer
             {
-                TaxpayerId = PersonalId.Parse("189001019802"),
+                TaxpayerId = PersonalId.Parse(OfficialNumbers.Centenarian.Long),
                 OptionalCoordinationId = null
             });
             await ctx.SaveChangesAsync();
@@ -61,10 +61,10 @@ public class SqliteRoundtripTests
         public async Task SaveAndReload_NonNullCoordinationId_Roundtrips()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var coord = CoordinationId.Parse("191401682396");
+            var coord = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             ctx.Customers.Add(new Customer
             {
-                TaxpayerId = PersonalId.Parse("189001019802"),
+                TaxpayerId = PersonalId.Parse(OfficialNumbers.Centenarian.Long),
                 OptionalCoordinationId = coord
             });
             await ctx.SaveChangesAsync();
@@ -107,7 +107,7 @@ public class SqliteRoundtripTests
         public async Task SaveAndReload_EnskildFirmaOrganisationId_Roundtrips()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var original = OrganisationId.Parse("199001019802");
+            var original = OrganisationId.Parse(OfficialNumbers.Modern.Long);
             ctx.Companies.Add(new Company { OrgId = original });
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
@@ -133,8 +133,8 @@ public class SqliteRoundtripTests
         public async Task Where_PersonalIdEquality_TranslatesToSql()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var target = PersonalId.Parse("189001019802");
-            var other = PersonalId.Parse("189001029819");
+            var target = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
+            var other = PersonalId.Parse(OfficialNumbers.CentenarianMale.Long);
             ctx.Customers.AddRange(
                 new Customer { TaxpayerId = target },
                 new Customer { TaxpayerId = other });
@@ -154,9 +154,9 @@ public class SqliteRoundtripTests
         public async Task Where_PersonalIdInClause_TranslatesToSql()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var a = PersonalId.Parse("189001019802");
-            var b = PersonalId.Parse("189001029819");
-            var c = PersonalId.Parse("189001039800");
+            var a = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
+            var b = PersonalId.Parse(OfficialNumbers.CentenarianMale.Long);
+            var c = PersonalId.Parse(OfficialNumbers.OtherCentenarian.Long);
             ctx.Customers.AddRange(
                 new Customer { TaxpayerId = a },
                 new Customer { TaxpayerId = b },
