@@ -14,30 +14,40 @@ namespace Civitas.Id.Sweden.Tests.Core;
 public class OrganisationIdTests
 {
     // From testorganisationsnummer_extended.csv:
-    // 5560160680 — Telefonaktiebolaget LM Ericsson, AktiebolagOvriga
+    // Telefonaktiebolaget LM Ericsson, AktiebolagOvriga
     // (556xxx is the pre-2015 Aktiebolag range — NOT EuropakooperativEgtsEric
     // despite the "55" first-two-digit prefix; see OrganisationId.Form remarks).
-    private const string ValidShort = "5560160680";
-    private const string ValidLong = "165560160680"; // 12-digit form
-    private const string ValidWithHyphen = "556016-0680"; // hyphen separator
+    private static readonly string ValidShort = LegalPersonNumbers.Aktiebolag.Digits;
+    private static readonly string ValidLong = LegalPersonNumbers.Aktiebolag.WithSixteenPrefix; // 12-digit form
+    private static readonly string ValidWithHyphen = LegalPersonNumbers.Aktiebolag.WithHyphen; // hyphen separator
 
     public class Parsing
     {
+        public static IEnumerable<string> IsValidAcceptsKnownValidInputs()
+        {
+            yield return ValidShort;
+            yield return ValidLong;
+            yield return ValidWithHyphen;
+        }
+
         [Test]
-        [Arguments(ValidShort)]
-        [Arguments(ValidLong)]
-        [Arguments(ValidWithHyphen)]
+        [MethodDataSource(nameof(IsValidAcceptsKnownValidInputs))]
         public async Task IsValid_AcceptsKnownValid(string input)
         {
             await Assert.That(OrganisationId.IsValid(input)).IsTrue();
         }
 
+        public static IEnumerable<string?> IsValidRejectsInvalidInputs()
+        {
+            yield return null;
+            yield return "";
+            yield return "abc";
+            yield return LegalPersonNumbers.Aktiebolag.WithWrongCheckDigit; // wrong checksum
+            yield return LegalPersonNumbers.Aktiebolag.WithPersonCentury; // 12-digit form but century is "19", not "16"
+        }
+
         [Test]
-        [Arguments(null)]
-        [Arguments("")]
-        [Arguments("abc")]
-        [Arguments("5560160681")] // wrong checksum (last digit changed) — from fixture row labeled false
-        [Arguments("195560160680")] // 12-digit form but century is "19", not "16"
+        [MethodDataSource(nameof(IsValidRejectsInvalidInputs))]
         public async Task IsValid_RejectsInvalid(string? input)
         {
             await Assert.That(OrganisationId.IsValid(input)).IsFalse();
@@ -143,7 +153,7 @@ public class OrganisationIdTests
         [Test]
         public async Task Form_DerivedFromFirstTwoDigits()
         {
-            // 5560160680 = Telefonaktiebolaget LM Ericsson. The 556xxx and 559xxx ranges are
+            // Telefonaktiebolaget LM Ericsson. The 556xxx and 559xxx ranges are
             // Aktiebolag (form 49), NOT EuropakooperativEgtsEric — see OrganisationId.Form remarks
             // and the 556/559 regression suite below.
             var id = OrganisationId.Parse(ValidShort);
@@ -160,10 +170,10 @@ public class OrganisationIdTests
         [Test]
         public async Task Form_LegalPersonWithPersonShapedMiddleDigits_NotMisclassifiedAsPhysical()
         {
-            // 5561034249 is a real Aktiebolag — positions 2-3 = "61" coincidentally falls
+            // An Aktiebolag — positions 2-3 = "61" coincidentally falls
             // in the [61,91] samordningsnummer day-offset range, but this is a legal-person
             // orgnummer (parsed without _personCentury). Form must NOT return None.
-            var id = OrganisationId.Parse("5561034249");
+            var id = OrganisationId.Parse(LegalPersonNumbers.OtherAktiebolag.Digits);
             await Assert.That(id.Form).IsNotEqualTo(OrganisationForm.None);
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.LegalPerson);
         }
@@ -176,7 +186,7 @@ public class OrganisationIdTests
         {
             var id = OrganisationId.Parse(ValidShort);
             // Per Lag 1974:174 §4, organisationsnummer is 10 digits; "16" is input-only legacy.
-            await Assert.That(id.LongFormat()).IsEqualTo("5560160680");
+            await Assert.That(id.LongFormat()).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
         }
 
         [Test]
@@ -198,7 +208,7 @@ public class OrganisationIdTests
         {
             var id = OrganisationId.Parse(ValidShort);
             await Assert.That(id.Format(PnrFormat.ShortFormatWithStandardSeparator))
-                .IsEqualTo("556016-0680");
+                .IsEqualTo(LegalPersonNumbers.Aktiebolag.WithHyphen);
         }
 
         [Test]
@@ -206,7 +216,7 @@ public class OrganisationIdTests
         {
             var id = OrganisationId.Parse(ValidShort);
             await Assert.That(id.Format(PnrFormat.LongFormatWithStandardSeparator))
-                .IsEqualTo("556016-0680");
+                .IsEqualTo(LegalPersonNumbers.Aktiebolag.WithHyphen);
         }
 
         [Test]
@@ -233,12 +243,12 @@ public class OrganisationIdTests
         [Test]
         public async Task FromValidated_ValidLegalPerson_ReturnsOrganisationId()
         {
-            // 5560160680 = Telefonaktiebolaget LM Ericsson. Pre-2015 Aktiebolag (form 49)
+            // Telefonaktiebolaget LM Ericsson. Pre-2015 Aktiebolag (form 49)
             // despite the "55" first-two-digit prefix.
-            var id = OrganisationId.FromValidated("5560160680");
+            var id = OrganisationId.FromValidated(LegalPersonNumbers.Aktiebolag.Digits);
 
             await Assert.That(id.Form).IsEqualTo(OrganisationForm.AktiebolagOvriga);
-            await Assert.That(id.LongFormat()).IsEqualTo("5560160680");
+            await Assert.That(id.LongFormat()).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
             await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.LegalPerson);
         }
     }
@@ -252,10 +262,15 @@ public class OrganisationIdTests
     /// </summary>
     public class FormRecognises556And559AsAktiebolag
     {
+        public static IEnumerable<string> FormFor556And559PrefixIsAktiebolagOvrigaInputs()
+        {
+            yield return LegalPersonNumbers.Aktiebolag.Digits; // Telefonaktiebolaget LM Ericsson (pre-2015)
+            yield return LegalPersonNumbers.OtherAktiebolag.Digits; // Synthetic 556 from fixture row
+            yield return LegalPersonNumbers.Aktiebolag559.Digits; // Post-2015 issuance from fixture row
+        }
+
         [Test]
-        [Arguments("5560160680")] // Telefonaktiebolaget LM Ericsson (pre-2015)
-        [Arguments("5561034249")] // Synthetic 556 from fixture row
-        [Arguments("5592440001")] // Post-2015 issuance from fixture row
+        [MethodDataSource(nameof(FormFor556And559PrefixIsAktiebolagOvrigaInputs))]
         public async Task Form_For_556_And_559_Prefix_Is_AktiebolagOvriga(string orgnr)
         {
             var id = OrganisationId.Parse(orgnr);
@@ -331,7 +346,7 @@ public class OrganisationIdTests
         public async Task InvalidCenturyForLegal_Rejected()
         {
             // Legal-person 12-digit form requires "16" prefix; "19" is not valid for a legal-person orgnummer.
-            await Assert.That(OrganisationId.IsValid("195560160680")).IsFalse();
+            await Assert.That(OrganisationId.IsValid(LegalPersonNumbers.Aktiebolag.WithPersonCentury)).IsFalse();
         }
 
         [Test]

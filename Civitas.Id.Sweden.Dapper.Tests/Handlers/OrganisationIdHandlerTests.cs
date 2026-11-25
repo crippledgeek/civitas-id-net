@@ -7,7 +7,7 @@ namespace Civitas.Id.Sweden.Dapper.Tests.Handlers;
 
 public class OrganisationIdHandlerTests
 {
-    private const string LegalAktiebolag = "5560360793";
+    private static readonly string LegalAktiebolag = LegalPersonNumbers.Aktiebolag.Digits;
     private static readonly string EnskildFirma12 = OfficialNumbers.Modern.Long;
 
     // Return type is the interface to mirror how the handler is invoked in production.

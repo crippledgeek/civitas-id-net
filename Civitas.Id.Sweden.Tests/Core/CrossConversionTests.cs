@@ -13,7 +13,7 @@ public class CrossConversionTests
     // (today >= 2026, sliding window resolves "00" → 2000, "00" coord → 2000).
     private static readonly string ValidPersonalId = OfficialNumbers.Modern.Long;
     private static readonly string ValidCoordinationId = OfficialNumbers.ModernSamordningsnummer.Long;
-    private const string ValidOrganisationId = "5560160680"; // legal person — EuropakooperativEgtsEric
+    private static readonly string ValidOrganisationId = LegalPersonNumbers.Aktiebolag.Digits; // legal person — EuropakooperativEgtsEric
 
     public class PersonalToOrganisation
     {
@@ -78,7 +78,7 @@ public class CrossConversionTests
         [Test]
         public async Task LegalPerson_ReturnsNull()
         {
-            // 5560160680 is a real legal-person orgnummer, not derived from any person ID.
+            // A legal-person orgnummer, not derived from any person ID.
             var org = OrganisationId.Parse(ValidOrganisationId);
             var asPerson = org.ToPhysicalPersonId();
             await Assert.That(asPerson).IsNull();

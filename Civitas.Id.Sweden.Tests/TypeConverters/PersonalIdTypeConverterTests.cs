@@ -89,7 +89,7 @@ public class PersonalIdTypeConverterTests
         public async Task Throws_InvalidIdNumberException_OnInvalidChecksum()
         {
             var sut = new PersonalIdTypeConverter();
-            const string input = "189001019800";
+            var input = OfficialNumbers.Centenarian.WithWrongCheckDigit;
             var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, input))
                 .Throws<InvalidIdNumberException>();
             // The current parser surfaces all failure modes as InvalidFormat;
@@ -99,7 +99,7 @@ public class PersonalIdTypeConverterTests
             // that the exception's redacted input preserves the original
             // prefix/suffix — a regression guard against the converter
             // swallowing the value before constructing the exception.
-            await Assert.That(ex!.RedactedInput).IsEqualTo("18******9800");
+            await Assert.That(ex!.RedactedInput).IsEqualTo($"18******{input[^4..]}");
         }
 
         [Test]

@@ -14,7 +14,7 @@ namespace Civitas.Id.Sweden.Tests.Core;
 public class SpanFormattableTests
 {
     private static readonly string ValidPersonal = OfficialNumbers.Modern.Long;   // 12-digit personnummer
-    private const string ValidOrg = "5560160680";          // 10-digit Aktiebolag
+    private static readonly string ValidOrg = LegalPersonNumbers.Aktiebolag.Digits;          // 10-digit Aktiebolag
 
     /// <summary>Default specifier (null) returns the LongFormat output for a person ID.</summary>
     [Test]

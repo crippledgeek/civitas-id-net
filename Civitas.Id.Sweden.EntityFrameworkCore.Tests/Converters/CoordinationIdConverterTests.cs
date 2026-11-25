@@ -64,9 +64,9 @@ public class CoordinationIdConverterTests
         public async Task ConvertFromProvider_LuhnTamperedString_Throws()
         {
             var sut = new CoordinationIdConverter();
-            // An official number with its last digit flipped (6 → 7):
+            // An official number with another last digit:
             // Luhn check digit for body 140168239 is 6; 7 fails the checksum.
-            const string tampered = "191401682397";
+            var tampered = OfficialNumbers.CentenarianSamordningsnummer.WithWrongCheckDigit;
 
             await Assert.That(() => sut.ConvertFromProvider(tampered))
                 .Throws<InvalidIdNumberException>();

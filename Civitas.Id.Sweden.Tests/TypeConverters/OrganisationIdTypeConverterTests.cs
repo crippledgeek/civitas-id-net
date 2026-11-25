@@ -11,8 +11,8 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 /// </summary>
 public class OrganisationIdTypeConverterTests
 {
-    private const string ValidLegalPerson = "5560160680"; // 10-digit Aktiebolag
-    private const string ValidLegalPersonWithHyphen = "556016-0680";
+    private static readonly string ValidLegalPerson = LegalPersonNumbers.Aktiebolag.Digits; // 10-digit Aktiebolag
+    private static readonly string ValidLegalPersonWithHyphen = LegalPersonNumbers.Aktiebolag.WithHyphen;
     private static readonly string ValidEnskildFirma = OfficialNumbers.Centenarian.Long; // 12-digit personnummer shape
 
     public class CanConvertFrom

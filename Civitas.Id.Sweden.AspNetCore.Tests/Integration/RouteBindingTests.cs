@@ -19,7 +19,7 @@ public class RouteBindingTests
         public async Task ValidOrganisationId_Returns200_LegalPerson()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/orgs/5560160680", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/orgs/{LegalPersonNumbers.Aktiebolag.Digits}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
             var body = await res.Content.ReadFromJsonAsync<JsonNode>();
@@ -43,7 +43,7 @@ public class RouteBindingTests
         public async Task PolymorphicId_DispatchesToOrganisationId()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/any/5560160680", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/any/{LegalPersonNumbers.Aktiebolag.Digits}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
             var body = await res.Content.ReadFromJsonAsync<JsonNode>();

@@ -87,7 +87,7 @@ public class SqliteRoundtripTests
         public async Task SaveAndReload_LegalPersonOrganisationId_Roundtrips()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var original = OrganisationId.Parse("5560360793");
+            var original = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             ctx.Companies.Add(new Company { OrgId = original });
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();
@@ -183,7 +183,7 @@ public class SqliteRoundtripTests
         public async Task Where_OrganisationIdEquality_LegalPerson_TranslatesToSql()
         {
             await using var ctx = SqliteFixture.NewInMemoryContext();
-            var target = OrganisationId.Parse("5560360793");
+            var target = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             ctx.Companies.Add(new Company { OrgId = target });
             await ctx.SaveChangesAsync();
             ctx.ChangeTracker.Clear();

@@ -14,7 +14,7 @@ public class SwedishOfficialIdTests
     // One valid number of each subtype; THIRD-PARTY-DATA.md says where the fixture files come from.
     private static readonly string ValidPersonalId = OfficialNumbers.Centenarian.Long;
     private static readonly string ValidCoordinationId = OfficialNumbers.CentenarianSamordningsnummer.Long;
-    private const string ValidOrganisationId = "5560160680"; // aktiebolag, in testorganisationsnummer_extended.csv
+    private static readonly string ValidOrganisationId = LegalPersonNumbers.Aktiebolag.Digits; // aktiebolag, in testorganisationsnummer_extended.csv
 
     public class TryParseAny
     {

@@ -27,11 +27,11 @@ public class OrganisationIdConverterTests
         {
             // An aktiebolag number; not from a fixture file.
             var sut = new OrganisationIdConverter();
-            var id = OrganisationId.Parse("5560360793");
+            var id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
 
             var encoded = (string?)sut.ConvertToProvider(id);
 
-            await Assert.That(encoded).IsEqualTo("5560360793");
+            await Assert.That(encoded).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
             await Assert.That(encoded!.Length).IsEqualTo(10);
         }
 
@@ -55,7 +55,7 @@ public class OrganisationIdConverterTests
         public async Task ConvertFromProvider_LegalPersonTenDigit_ReturnsEqualId()
         {
             var sut = new OrganisationIdConverter();
-            var original = OrganisationId.Parse("5560360793");
+            var original = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
 
             var encoded = (string?)sut.ConvertToProvider(original);
             var decoded = (OrganisationId?)sut.ConvertFromProvider(encoded);
@@ -85,8 +85,8 @@ public class OrganisationIdConverterTests
         public async Task ConvertFromProvider_LuhnTamperedString_Throws()
         {
             var sut = new OrganisationIdConverter();
-            // "5560360793" — flip last digit (3 → 4): breaks Luhn
-            const string tampered = "5560360794";
+            // Another last digit: breaks Luhn
+            var tampered = LegalPersonNumbers.Aktiebolag.WithWrongCheckDigit;
 
             await Assert.That(() => sut.ConvertFromProvider(tampered))
                 .Throws<InvalidIdNumberException>();
@@ -101,11 +101,11 @@ public class OrganisationIdConverterTests
             // Parse accepts the legacy "16" prefix (SCB PeOrgNr convention),
             // but output MUST strip it — canonical form is always 10 digits.
             var sut = new OrganisationIdConverter();
-            var id = OrganisationId.Parse("165560360793");
+            var id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.WithSixteenPrefix);
 
             var encoded = (string?)sut.ConvertToProvider(id);
 
-            await Assert.That(encoded).IsEqualTo("5560360793");
+            await Assert.That(encoded).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
             await Assert.That(encoded!.Length).IsEqualTo(10);
         }
     }

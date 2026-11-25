@@ -11,7 +11,7 @@ public class ValidOrganisationIdAttributeTests
         public async Task ValidOrganisationId_Passes()
         {
             var attr = new ValidOrganisationIdAttribute();
-            var result = attr.GetValidationResult("5560160680", new ValidationContext(this));
+            var result = attr.GetValidationResult(LegalPersonNumbers.Aktiebolag.Digits, new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 
@@ -42,7 +42,7 @@ public class ValidOrganisationIdAttributeTests
         public async Task OrganisationId_Passes()
         {
             var attr = new ValidOrganisationIdAttribute();
-            var result = attr.GetValidationResult(OrganisationId.Parse("5560160680"), new ValidationContext(this));
+            var result = attr.GetValidationResult(OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits), new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 

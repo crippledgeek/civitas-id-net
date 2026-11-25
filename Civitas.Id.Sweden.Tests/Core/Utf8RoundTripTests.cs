@@ -16,7 +16,7 @@ public class Utf8RoundTripTests
 {
     private static readonly string ValidPersonal = OfficialNumbers.Modern.Long;
     private static readonly string ValidCoordination = OfficialNumbers.ModernSamordningsnummer.Long;
-    private const string ValidOrg = "5560160680";
+    private static readonly string ValidOrg = LegalPersonNumbers.Aktiebolag.Digits;
 
     /// <summary>PersonalId UTF-8 parse + format round-trips bit-for-bit.</summary>
     [Test]

@@ -23,7 +23,7 @@ public class ConfigurationIntegrationTests
     [Test]
     public async Task Bind_PersonalId_FromJsonConfig_RoundTrips()
     {
-        var json = $$"""{"PersonId": "{{OfficialNumbers.Modern.Long}}", "OrgId": "5560160680"}""";
+        var json = $$"""{"PersonId": "{{OfficialNumbers.Modern.Long}}", "OrgId": "{{LegalPersonNumbers.Aktiebolag.Digits}}"}""";
         var config = new ConfigurationBuilder()
             .AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
             .Build();
@@ -34,6 +34,6 @@ public class ConfigurationIntegrationTests
         await Assert.That(opts.PersonId).IsNotNull();
         await Assert.That(opts.PersonId!.LongFormat()).IsEqualTo(OfficialNumbers.Modern.Long);
         await Assert.That(opts.OrgId).IsNotNull();
-        await Assert.That(opts.OrgId!.LongFormat()).IsEqualTo("5560160680");
+        await Assert.That(opts.OrgId!.LongFormat()).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
     }
 }

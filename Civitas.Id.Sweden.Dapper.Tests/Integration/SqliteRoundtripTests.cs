@@ -157,7 +157,7 @@ public class SqliteRoundtripTests
             var expected = new Company
             {
                 Id = Guid.NewGuid(),
-                OrgId = OrganisationId.Parse("5560360793")
+                OrgId = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits)
             };
             await c.ExecuteAsync(
                 "INSERT INTO Company (Id, OrgId, OptionalSubsidiaryOrgId) VALUES (@Id, @OrgId, @OptionalSubsidiaryOrgId);",
@@ -201,7 +201,7 @@ public class SqliteRoundtripTests
             var expected = new Company
             {
                 Id = Guid.NewGuid(),
-                OrgId = OrganisationId.Parse("5560360793"),
+                OrgId = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits),
                 OptionalSubsidiaryOrgId = null
             };
             await c.ExecuteAsync(
@@ -219,7 +219,7 @@ public class SqliteRoundtripTests
             await using var c = OpenInMemory();
             await c.ExecuteAsync("CREATE TABLE Company (Id TEXT PRIMARY KEY, OrgId TEXT NOT NULL, OptionalSubsidiaryOrgId TEXT NULL);");
 
-            var company = new Company { Id = Guid.NewGuid(), OrgId = OrganisationId.Parse("5560360793") };
+            var company = new Company { Id = Guid.NewGuid(), OrgId = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits) };
             await c.ExecuteAsync(
                 "INSERT INTO Company (Id, OrgId, OptionalSubsidiaryOrgId) VALUES (@Id, @OrgId, @OptionalSubsidiaryOrgId);",
                 company);

@@ -64,8 +64,8 @@ public class PersonalIdConverterTests
         public async Task ConvertFromProvider_LuhnTamperedString_Throws()
         {
             var sut = new PersonalIdConverter();
-            // An official number with its last digit flipped:
-            const string tampered = "189001019801";
+            // An official number with another last digit:
+            var tampered = OfficialNumbers.Centenarian.WithWrongCheckDigit;
 
             await Assert.That(() => sut.ConvertFromProvider(tampered))
                 .Throws<InvalidIdNumberException>();

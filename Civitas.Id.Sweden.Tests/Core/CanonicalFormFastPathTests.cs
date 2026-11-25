@@ -36,7 +36,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task OrganisationId_CanonicalInput_ReusesInputString()
     {
-        const string input = "5560160680";
+        var input = LegalPersonNumbers.Aktiebolag.Digits;
         var ok = OrganisationId.TryParse(input, out var oid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(oid!.LongFormat(), input)).IsTrue();
@@ -76,7 +76,7 @@ public class CanonicalFormFastPathTests
     [Test]
     public async Task OrganisationId_InputWithDelimiter_AllocatesNewString()
     {
-        const string input = "556016-0680";
+        var input = LegalPersonNumbers.Aktiebolag.WithHyphen;
         var ok = OrganisationId.TryParse(input, out var oid);
         await Assert.That(ok).IsTrue();
         await Assert.That(ReferenceEquals(oid!.LongFormat(), input)).IsFalse();
