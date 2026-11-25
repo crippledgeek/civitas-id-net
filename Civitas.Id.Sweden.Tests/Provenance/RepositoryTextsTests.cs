@@ -13,7 +13,8 @@ public class RepositoryTextsTests
     {
         using var directory = new TemporaryDirectory();
         var root = directory.Root;
-        await Assert.That(() => RepositoryTexts.Under(root)).ThrowsExactly<InvalidOperationException>();
+        var ex = await Assert.That(() => RepositoryTexts.Under(root)).ThrowsExactly<InvalidOperationException>();
+        await Assert.That(ex!.Message).Contains("exit code");
     }
 
     [Test]

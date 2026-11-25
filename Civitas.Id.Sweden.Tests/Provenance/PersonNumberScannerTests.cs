@@ -207,11 +207,11 @@ public class PersonNumberScannerTests
         // are a number. Checksum and month allow that only in the years 1901-1912.
         private static (string AsWhole, string AsVat) NumberWithTwoReadings()
         {
-            const int DaysPerYear = 365;
+            const int daysPerYear = 365;
             var faker = PersonalIdFaker.WithSeed(FakerSeed);
             var firstDay = new DateOnly(1905, 1, 1);
             return Enumerable.Range(0, 1_000_000)
-                .Select(i => faker.Generate(firstDay.AddDays(i % DaysPerYear)).LongFormat())
+                .Select(i => faker.Generate(firstDay.AddDays(i % daysPerYear)).LongFormat())
                 .Where(whole => whole.EndsWith("01", StringComparison.Ordinal))
                 .Select(whole => (Whole: whole, Vat: NumberReading.OfShort(whole[..10], false)))
                 .Where(pair => pair.Vat is not null)

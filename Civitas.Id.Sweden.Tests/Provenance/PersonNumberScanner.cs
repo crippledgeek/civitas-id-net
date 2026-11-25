@@ -54,7 +54,7 @@ internal sealed partial class PersonNumberScanner
     {
         var longSpans = Candidates(LongForm(), text.Text, LongReadings).ToList();
         var shortSpans = Candidates(ShortForm(), text.Text, ShortReadings)
-            .Where(candidate => !longSpans.Exists(whole => candidate.IsTailOf(whole)));
+            .Where(candidate => !longSpans.Exists(candidate.IsTailOf));
 
         // Candidates over the same digits are one finding, official only when every reading is.
         return
