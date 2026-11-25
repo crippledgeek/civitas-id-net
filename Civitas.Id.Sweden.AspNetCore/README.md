@@ -40,6 +40,10 @@ When the library returns a 400 for an invalid Swedish ID, the response body shap
 
 Row 1 surfaces through ASP.NET Core's status-code 400 path, which the library customizes via `CustomizeProblemDetails` to set the `type` URI to `{ProblemDetailsTypeBaseUri}bad-request`. Although [`aspnetcore#62066`](https://github.com/dotnet/aspnetcore/pull/62066) added `HttpValidationProblemDetails` for minimal-API endpoint-filter validation in .NET 10 GA, typed-route-parameter parse failures for `IParsable<T>` bindings do not go through that filter — they short-circuit to a 400 from the binding layer with no field-level `errors` dictionary.
 
+In Development, ASP.NET Core throws `BadHttpRequestException` for a malformed parameter instead, because `RouteHandlerOptions.ThrowOnBadRequest` is on there. `UseExceptionHandler()` alone then answers 500. `AddCivitasIdSwedenAspNetCore()` makes a `BadHttpRequestException` answer with its own status, on every endpoint of the app. If you configure `StatusCodeSelector`, `ExceptionHandler` or `ExceptionHandlingPath`, or pass settings directly to `UseExceptionHandler(...)`, your app decides the status, and ASP.NET Core's default there is still 500. Use `Configure<ExceptionHandlerOptions>` for that; a `PostConfigure` registered after `AddCivitasIdSwedenAspNetCore()` runs too late to be seen. An `IExceptionHandler` service starts from the exception's status instead of 500, and one that sets 404 without handling the exception is answered as 404.
+
+ASP.NET Core logs that exception at Error level with the submitted value, and its developer exception page shows it. Set `ThrowOnBadRequest = false` to avoid both; the binding failure is then logged at Debug level only. Independently of this, request logs at Information level contain the URL, and the request path is in the `RequestPath` log scope, which a provider that records scopes attaches to entries of every level. Both contain any ID in the route.
+
 Rows 2 and 4 share the `InvalidIdNumberException` handler path, which writes `reason` and (redacted) `input` extensions onto the `ProblemDetails`.
 
 ### Example responses

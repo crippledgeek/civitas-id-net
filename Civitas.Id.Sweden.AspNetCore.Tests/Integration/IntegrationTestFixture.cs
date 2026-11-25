@@ -26,7 +26,8 @@ internal sealed class IntegrationTestFixture : IAsyncDisposable
 
     public static async Task<IntegrationTestFixture> CreateAsync()
     {
-        var builder = WebApplication.CreateBuilder();
+        // Pinned: the environment decides which framework path reports a malformed parameter.
+        var builder = WebApplication.CreateBuilder(new WebApplicationOptions { EnvironmentName = Environments.Production });
         builder.WebHost.UseTestServer();
         builder.Services.AddCivitasIdSwedenAspNetCore(static o =>
         {

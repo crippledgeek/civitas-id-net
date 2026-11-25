@@ -17,7 +17,15 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
   the Stockholm-civil-time read happens only on **deserialization** (century inference for a
   2-digit-year input). Visible to consumers via IntelliSense; no behavior change. (#9)
 
+- **Civitas.Id.Sweden.AspNetCore**: a malformed value for a typed ID parameter now gives the
+  documented 400 in Development too with `UseExceptionHandler()`, where ASP.NET Core answered 500. (#41)
+
 ### Changed
+- **Civitas.Id.Sweden.AspNetCore**: with `AddCivitasIdSwedenAspNetCore()`, a
+  `BadHttpRequestException` that reaches `UseExceptionHandler()` answers with its own status instead
+  of 500, on every endpoint and in every environment. An app's own `StatusCodeSelector`,
+  `ExceptionHandler` or `ExceptionHandlingPath`, and settings passed to `UseExceptionHandler(...)`,
+  are kept. An `IExceptionHandler` service starts from the exception's status instead of 500. (#41)
 - **Civitas.Id.Sweden** (internal — no public API or behavior change): `SwedenClock`
   time-zone resolution was refactored to an injectable probe seam to make the fallback
   branches testable. The resolved zone (`Europe/Stockholm`), the probe order, and the
