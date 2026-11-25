@@ -138,6 +138,25 @@ CREATE TABLE Customer (
 
 `CHARACTER SET ascii` matches the `DbType.AnsiString` parameter we send. Without it, joins between ASCII parameter and `utf8mb4` column can raise collation-mismatch errors.
 
+## Upgrading from version 1
+
+Version 2 accepts no birth year before 1800. Version 1 read and wrote values that a mistyped century had put
+before that year. Reading such a row now throws `InvalidIdNumberException`, which fails the whole query that the row
+is part of. Before upgrading, find and correct those rows. The comparison is between texts of digits, so it needs a
+column of canonical values:
+
+```sql
+-- PersonalId and CoordinationId
+SELECT * FROM Customer WHERE TaxpayerId < '1800';
+
+-- OrganisationId: the twelfth character singles out twelve-character values, and the last line keeps legal
+-- persons with the legacy prefix 16, which still read
+SELECT * FROM Customer
+WHERE OrgId < '1800'
+  AND SUBSTRING(OrgId, 12, 1) BETWEEN '0' AND '9'
+  AND NOT (SUBSTRING(OrgId, 1, 2) = '16' AND SUBSTRING(OrgId, 5, 2) >= '20');
+```
+
 ## Known limitations
 
 ### `WHERE col IN @ids` with `IEnumerable<PersonalId>` — handler bypassed

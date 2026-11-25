@@ -71,6 +71,21 @@ public class TryValidatePersonShapedBodyTests
         await Assert.That(valid).IsFalse();
     }
 
+    /// <summary>The year is the caller's, and a calendar type throws on those below one.</summary>
+    [Test]
+    [Arguments(int.MinValue, false)]
+    [Arguments(-1, false)]
+    [Arguments(0, false)]
+    [Arguments(1799, false)]
+    [Arguments(1800, true)]
+    [Arguments(9999, true)]
+    public async Task BirthYear_IsAcceptedFrom1800(int fullYear, bool expected)
+    {
+        var (matched, valid) = Run(ValidLong12, fullYear, 1);
+        await Assert.That(matched).IsTrue();
+        await Assert.That(valid).IsEqualTo(expected);
+    }
+
     [Test]
     public async Task DayZero_ReturnsFalse()
     {

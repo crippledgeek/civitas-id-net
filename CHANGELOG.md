@@ -8,7 +8,21 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empty
 `## [Unreleased]` above it (Keep a Changelog convention)._
 
+### BREAKING CHANGES
+- **Civitas.Id.Sweden**: a personnummer, a samordningsnummer or a sole trader's organisation number with a birth
+  year before 1800 is no longer accepted, whether the century is written out or inferred. Every entry point, the
+  converters, attributes and endpoints included, rejects it as it rejects any other invalid number. This is
+  library policy, not law: SKV 704 and the KU schema 12.0 give a person's number the centuries 18, 19 and 20.
+  There is no upper bound, and legal persons' numbers are unaffected.
+  Earlier versions read and wrote such values, so stored ones no longer read: find and correct them before
+  upgrading. One such row fails the whole query with `Civitas.Id.Sweden.EntityFrameworkCore` or
+  `Civitas.Id.Sweden.Dapper`, whose READMEs have a query that finds them. (#50)
+
 ### Fixed
+- **Civitas.Id.Sweden**: a number with the year 0000, and a ten-digit number read on a date in one of the first
+  centuries, made `TryParse`, `IsValid` and `Parse` throw `ArgumentOutOfRangeException`. They are now rejected
+  as any invalid number. (#50)
+
 - **Civitas.Id.Sweden.Json**: corrected the XML doc comments on
   `PersonalIdShortFormatJsonConverter` and `CoordinationIdShortFormatJsonConverter`.
   They wrongly described the `PnrFormat.ShortFormat` wire form as carrying a hyphen or

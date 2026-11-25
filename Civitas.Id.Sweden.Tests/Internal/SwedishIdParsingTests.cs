@@ -4,36 +4,64 @@ namespace Civitas.Id.Sweden.Tests.Internal;
 
 public class SwedishIdParsingTests
 {
-    public class ResolveCenturyMethod
+    public class ResolveBirthYearMethod
     {
-        [Test]
-        [Arguments(2026, 8, false, 2008, "08 in 2026 with '-' → 2008")]
-        [Arguments(2026, 99, false, 1999, "99 in 2026 with '-' → 1999 (sliding window past)")]
-        [Arguments(2026, 26, true, 1926, "26 in 2026 with '+' → 1926 (centenarian convention)")]
-        public async Task ResolveCentury_NoExplicitCentury_UsesSlidingWindow(
-            int currentYear, int twoDigitYear, bool plusSeparator, int expected, string scenario)
+        private static BirthYearDigits Inferred(int twoDigitYear, bool plusSeparator)
         {
-            _ = scenario;
-            var century = SwedishIdParsing.ResolveCentury(
-                null,
-                twoDigitYear,
-                currentYear,
-                plusSeparator);
-
-            var fullYear = century * 100 + twoDigitYear;
-            await Assert.That(fullYear).IsEqualTo(expected);
+            return new BirthYearDigits
+            {
+                ExplicitCentury = null,
+                TwoDigitYear = twoDigitYear,
+                PlusSeparator = plusSeparator
+            };
         }
 
         [Test]
-        public async Task ResolveCentury_ExplicitCentury_OverridesSlidingWindow()
+        [Arguments(2026, 8, 2008)]
+        [Arguments(2026, 26, 2026)]
+        [Arguments(2026, 27, 1927)]
+        [Arguments(2026, 99, 1999)]
+        [Arguments(1800, 1, 1701)]
+        [Arguments(100, 0, 100)]
+        [Arguments(100, 1, 1)]
+        [Arguments(99, 99, 99)]
+        [Arguments(50, 51, -49)]
+        [Arguments(1, 99, -1)]
+        public async Task WithoutPlus_IsTheLatestYearNotAfterTheReference(
+            int referenceYear, int twoDigitYear, int expected)
         {
-            var century = SwedishIdParsing.ResolveCentury(
-                19,
-                25,
-                2026,
-                false);
+            var year = SwedishIdParsing.ResolveBirthYear(Inferred(twoDigitYear, false), referenceYear);
 
-            await Assert.That(century).IsEqualTo(19);
+            await Assert.That(year).IsEqualTo(expected);
+        }
+
+        [Test]
+        [Arguments(2026, 26, 1926)]
+        [Arguments(2026, 27, 1827)]
+        [Arguments(100, 0, 0)]
+        [Arguments(1, 0, -100)]
+        [Arguments(1, 99, -101)]
+        public async Task WithPlus_IsACenturyEarlier(int referenceYear, int twoDigitYear, int expected)
+        {
+            var year = SwedishIdParsing.ResolveBirthYear(Inferred(twoDigitYear, true), referenceYear);
+
+            await Assert.That(year).IsEqualTo(expected);
+        }
+
+        [Test]
+        [Arguments(19, 25, 1925)]
+        [Arguments(0, 0, 0)]
+        [Arguments(99, 99, 9999)]
+        public async Task ExplicitCentury_IsUsedAsItIs(int century, int twoDigitYear, int expected)
+        {
+            var digits = new BirthYearDigits
+            {
+                ExplicitCentury = century,
+                TwoDigitYear = twoDigitYear,
+                PlusSeparator = true
+            };
+
+            await Assert.That(SwedishIdParsing.ResolveBirthYear(digits, 2026)).IsEqualTo(expected);
         }
     }
 }
