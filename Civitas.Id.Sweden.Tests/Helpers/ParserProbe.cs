@@ -7,11 +7,13 @@ namespace Civitas.Id.Sweden.Tests.Helpers;
 /// <summary>Asks every parse and validity entry point that does not throw about a text.</summary>
 internal static class ParserProbe
 {
-    private static readonly DateOnly Today = new(2026, 6, 15);
+    /// <summary>The date that the probes read ten-digit numbers on.</summary>
+    public static readonly DateOnly Today = new(2026, 6, 15);
 
-    private static readonly TimeProvider Clock = new FakeTimeProvider(new DateTimeOffset(Today, TimeOnly.MinValue, TimeSpan.Zero));
+    /// <summary>A clock on <see cref="Today" />.</summary>
+    public static readonly TimeProvider Clock = new FakeTimeProvider(new DateTimeOffset(Today, TimeOnly.MinValue, TimeSpan.Zero));
 
-    private static readonly IReadOnlyList<EntryPoint> EntryPoints =
+    private static readonly IReadOnlyList<EntryPoint> Asked =
     [
         .. Contracts<PersonalId>(),
         new("PersonalId/plain", text => PersonalId.TryParse(text, out _)),
@@ -38,12 +40,12 @@ internal static class ParserProbe
     ];
 
     /// <summary>How many entry points are asked.</summary>
-    public static int Count => EntryPoints.Count;
+    public static int Count => Asked.Count;
 
     /// <summary>The names of the entry points that accept <paramref name="text" />.</summary>
     public static IReadOnlyList<string> AcceptedBy(string text)
     {
-        return [.. EntryPoints.Where(entryPoint => entryPoint.Accepts(text)).Select(entryPoint => entryPoint.Name)];
+        return [.. Asked.Where(entryPoint => entryPoint.Accepts(text)).Select(entryPoint => entryPoint.Name)];
     }
 
     private static IEnumerable<EntryPoint> Contracts<T>()

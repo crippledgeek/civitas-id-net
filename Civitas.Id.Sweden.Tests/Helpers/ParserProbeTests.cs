@@ -1,28 +1,12 @@
-using System.Reflection;
-using Civitas.Id.Sweden.Core;
-
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 public class ParserProbeTests
 {
-    private static readonly IReadOnlyList<Type> ParsedTypes =
-        [typeof(PersonalId), typeof(CoordinationId), typeof(OrganisationId), typeof(SwedishOfficialId)];
-
-    /// <summary>
-    ///     Counted from the types, so that a new entry point cannot be forgotten. The string form of
-    ///     <see cref="IParsable{TSelf}" /> is implemented explicitly, so it is not among the public methods.
-    /// </summary>
     [Test]
     public async Task AsksEveryEntryPointThatDoesNotThrow()
     {
-        const BindingFlags declaredStatic = BindingFlags.Public | BindingFlags.Static | BindingFlags.DeclaredOnly;
-        var publicMethods = ParsedTypes.SelectMany(type => type.GetMethods(declaredStatic))
-            .Count(method => method.Name is "TryParse" or "TryParseAny" or "IsValid");
-        var explicitMethods = ParsedTypes.Count(type => type.GetInterfaces().Any(contract =>
-            contract.IsGenericType && contract.GetGenericTypeDefinition() == typeof(IParsable<>)));
-
-        await Assert.That(explicitMethods).IsEqualTo(3);
-        await Assert.That(ParserProbe.Count).IsEqualTo(publicMethods + explicitMethods);
+        await Assert.That(EntryPoints.ExplicitCount).IsEqualTo(3);
+        await Assert.That(ParserProbe.Count).IsEqualTo(EntryPoints.CountOf("TryParse", "TryParseAny", "IsValid"));
     }
 
     [Test]
