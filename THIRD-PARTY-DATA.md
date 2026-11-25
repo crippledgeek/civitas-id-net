@@ -4,7 +4,7 @@ Known sources of the ID numbers in `Civitas.Id.Sweden.Tests/Fixtures/`.
 
 ## Skatteverket
 
-The numbers in the four files listed first below come from Skatteverket's published test data sets. Skatteverket
+The numbers in the six files listed first below come from Skatteverket's published test data sets. Skatteverket
 states that they are for use in test environments only. Both data sets are licensed CC0 1.0 in their metadata:
 
 - Testpersonnummer: <https://skatteverket.entryscape.net/store/9/metadata/147?recursive=dcat>
@@ -12,7 +12,7 @@ states that they are for use in test environments only. Both data sets are licen
 
 Each file below is pinned by hash and row count in `Civitas.Id.Sweden.Tests/Helpers/FixtureSpec.cs`.
 `.gitattributes` marks `Civitas.Id.Sweden.Tests/Fixtures/**` as `-text`, so Git never rewrites their line endings.
-Retrieval and comparison below were done on 2026-11-24.
+Retrieval and comparison below were done on 2026-11-24, and on 2026-11-25 for the two files of 2000-2009 and 2020.
 
 ## Testsamordningsnummer_2019_official.csv
 
@@ -21,6 +21,22 @@ Retrieval and comparison below were done on 2026-11-24.
   <https://skatteverket.entryscape.net/store/9/resource/2456>
 - Retrieved byte for byte: 20,995 bytes, ASCII, CRLF line endings, one header line and 1498 numbers
 - SHA-256: `54e3fe8b4bc9d6f51b67139266fb284f251af0003b9e3a152873c6ca570af838`
+
+## Testsamordningsnummer_2020_official.csv
+
+- File: `Civitas.Id.Sweden.Tests/Fixtures/Testsamordningsnummer_2020_official.csv`
+- Source: Skatteverket, "Testsamordningsnummer 2020",
+  <https://skatteverket.entryscape.net/store/9/resource/2458>
+- Retrieved byte for byte: 219 bytes, ASCII, CRLF line endings, one header line and 14 numbers
+- SHA-256: `4e22aef1f54a2e59f168558281b883f82c9eecd8258bde6efd1126677ac0e288`
+
+## Testpersonnummer_2000-2009_official.csv
+
+- File: `Civitas.Id.Sweden.Tests/Fixtures/Testpersonnummer_2000-2009_official.csv`
+- Source: Skatteverket, "Testpersonnummer 2000-2009",
+  <https://skatteverket.entryscape.net/store/9/resource/1939>
+- Retrieved byte for byte: 102,540 bytes, ASCII, CRLF line endings, one header line and 7323 numbers
+- SHA-256: `de273ddbbbbc5c13ff5017230f6d94a65f3df3f70d04b26de0769cf6f8daa50f`
 
 ## Testpersonnummer 1890-1899.csv
 

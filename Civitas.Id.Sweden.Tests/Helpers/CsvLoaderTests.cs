@@ -17,6 +17,8 @@ public class CsvLoaderTests
         yield return (Fixtures.OrganisationsnummerTextual, 10);
         yield return (Fixtures.InvalidIds, 9);
         yield return (Fixtures.SamordningsnummerOfficial, 1498);
+        yield return (Fixtures.Personnummer2000S, 7323);
+        yield return (Fixtures.Samordningsnummer2020, 14);
     }
 
     private const int FirstColumn = 0;
@@ -52,6 +54,8 @@ public class CsvLoaderTests
         yield return (Fixtures.OrganisationsnummerTextual, FirstColumn, 0);
         yield return (Fixtures.InvalidIds, FirstColumn, 0);
         yield return (Fixtures.SamordningsnummerOfficial, FirstColumn, 0);
+        yield return (Fixtures.Personnummer2000S, FirstColumn, 0);
+        yield return (Fixtures.Samordningsnummer2020, FirstColumn, 0);
     }
 
     // The one comparison used by every "this list covers every fixture" test: non-empty, same set as All.

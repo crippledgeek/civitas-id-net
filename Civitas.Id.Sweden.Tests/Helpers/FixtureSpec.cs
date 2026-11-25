@@ -77,9 +77,27 @@ internal static class Fixtures
         HasHeader = true
     };
 
+    /// <summary>Skatteverket's published 2000-2009 personnummer set, byte for byte (CRLF).</summary>
+    public static readonly FixtureSpec Personnummer2000S = new()
+    {
+        FileName = "Testpersonnummer_2000-2009_official.csv",
+        DataRows = 7323,
+        Sha256 = "de273ddbbbbc5c13ff5017230f6d94a65f3df3f70d04b26de0769cf6f8daa50f",
+        HasHeader = true
+    };
+
+    /// <summary>Skatteverket's published 2020 samordningsnummer set, byte for byte (CRLF).</summary>
+    public static readonly FixtureSpec Samordningsnummer2020 = new()
+    {
+        FileName = "Testsamordningsnummer_2020_official.csv",
+        DataRows = 14,
+        Sha256 = "4e22aef1f54a2e59f168558281b883f82c9eecd8258bde6efd1126677ac0e288",
+        HasHeader = true
+    };
+
     public static readonly IReadOnlyList<FixtureSpec> All =
     [
         Personnummer1890S, PersonnummerFinal, SamordningsnummerCorrected, OrganisationsnummerExtended,
-        OrganisationsnummerTextual, InvalidIds, SamordningsnummerOfficial
+        OrganisationsnummerTextual, InvalidIds, SamordningsnummerOfficial, Personnummer2000S, Samordningsnummer2020
     ];
 }

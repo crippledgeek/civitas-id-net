@@ -107,6 +107,36 @@ public class FixtureDrivenTests
         await Assert.That(id.IsChild(SamordningsnummerFixtureToday)).IsEqualTo(child);
     }
 
+    // ── Official 2000-2009 personnummer and 2020 samordningsnummer ──
+
+    public static IEnumerable<string> Personnummer2000S()
+    {
+        return CsvLoader.Column(Fixtures.Personnummer2000S);
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Personnummer2000S))]
+    public async Task PersonalId_2000sFixture_KeepsNumberAndBirthDate(string pin)
+    {
+        var id = PersonalId.Parse(pin);
+        await Assert.That(id.LongFormat()).IsEqualTo(pin);
+        await Assert.That(id.BirthDate).IsEqualTo(new OfficialPersonnummer(pin).BirthDate);
+    }
+
+    public static IEnumerable<string> Samordningsnummer2020()
+    {
+        return CsvLoader.Column(Fixtures.Samordningsnummer2020);
+    }
+
+    [Test]
+    [MethodDataSource(nameof(Samordningsnummer2020))]
+    public async Task CoordinationId_2020Fixture_KeepsNumberAndBirthDate(string pin)
+    {
+        var id = CoordinationId.Parse(pin);
+        await Assert.That(id.LongFormat()).IsEqualTo(pin);
+        await Assert.That(id.BirthDate).IsEqualTo(new OfficialSamordningsnummer(pin).BirthDate);
+    }
+
     // ── Organisationsnummer extended ──
 
     public static IEnumerable<(string Input, string LongFormatHyphenated, string ShortFormat, bool Valid, string Type)>
