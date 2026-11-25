@@ -11,11 +11,11 @@ public class ValidOrganisationIdAttributeTests
         public async Task ValidOrganisationId_Passes()
         {
             var attr = new ValidOrganisationIdAttribute();
-            var result = attr.GetValidationResult("5560160680", new ValidationContext(this));
+            var result = attr.GetValidationResult(LegalPersonNumbers.Aktiebolag.Digits, new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 
-        // Note: A 12-digit personnummer like "189001019802" intentionally parses as
+        // Note: A 12-digit personnummer intentionally parses as
         // OrganisationId (Enskild firma — sole proprietor) per Lag (1974:174). So
         // cross-type string rejection is only meaningful at the instance level here.
 
@@ -42,7 +42,7 @@ public class ValidOrganisationIdAttributeTests
         public async Task OrganisationId_Passes()
         {
             var attr = new ValidOrganisationIdAttribute();
-            var result = attr.GetValidationResult(OrganisationId.Parse("5560160680"), new ValidationContext(this));
+            var result = attr.GetValidationResult(OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits), new ValidationContext(this));
             await Assert.That(result).IsNull();
         }
 
@@ -50,7 +50,7 @@ public class ValidOrganisationIdAttributeTests
         public async Task PersonalIdInstance_Fails()
         {
             var attr = new ValidOrganisationIdAttribute();
-            var result = attr.GetValidationResult(PersonalId.Parse("189001019802"), new ValidationContext(this));
+            var result = attr.GetValidationResult(PersonalId.Parse(OfficialNumbers.Centenarian.Long), new ValidationContext(this));
             await Assert.That(result).IsNotNull();
         }
 
@@ -58,7 +58,7 @@ public class ValidOrganisationIdAttributeTests
         public async Task CoordinationIdInstance_Fails()
         {
             var attr = new ValidOrganisationIdAttribute();
-            var result = attr.GetValidationResult(CoordinationId.Parse("198112752384"), new ValidationContext(this));
+            var result = attr.GetValidationResult(CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long), new ValidationContext(this));
             await Assert.That(result).IsNotNull();
         }
     }

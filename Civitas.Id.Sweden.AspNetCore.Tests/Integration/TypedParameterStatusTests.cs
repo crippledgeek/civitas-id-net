@@ -4,7 +4,6 @@ using System.Text;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Fakers;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.TestHost;
@@ -19,7 +18,6 @@ namespace Civitas.Id.Sweden.AspNetCore.Tests.Integration;
 /// </summary>
 public class TypedParameterStatusTests
 {
-    private const int FakerSeed = 1;
     private const string AppErrorBody = "app-error";
     private const string AppErrorPath = "/app-error";
     private const string BodyPath = "/body";
@@ -206,7 +204,7 @@ public class TypedParameterStatusTests
             .ThrowsExactly<ArgumentNullException>();
     }
 
-    private static string ValidId() => PersonalIdFaker.WithSeed(FakerSeed).Generate().LongFormat();
+    private static string ValidId() => OfficialNumbers.Modern.Long;
 
     private static Task<ProbeResponse> GetAsync(
         string environment, string path, Action<IServiceCollection>? configure = null)

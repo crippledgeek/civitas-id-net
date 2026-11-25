@@ -6,7 +6,8 @@ using Civitas.Id.Sweden.Tests.Helpers;
 namespace Civitas.Id.Sweden.Tests;
 
 /// <summary>
-///     Fixture-driven tests over the test data files read below.
+///     Fixture-driven tests over the test data files read below. THIRD-PARTY-DATA.md says which of them
+///     come from Skatteverket. The official 2019 samordningsnummer file is not asserted here.
 /// </summary>
 public class FixtureDrivenTests
 {
@@ -14,8 +15,8 @@ public class FixtureDrivenTests
     ///     Reference "today" for personnummer age assertions. Calibrated empirically
     ///     by intersecting (yyyy+age, mm, dd) bounds across every valid row of
     ///     testpersonnummer_final.csv: the unique date satisfying every row is
-    ///     2025-04-23. The two Skatteverket-published CSVs unfortunately use
-    ///     slightly different reference dates, so each gets its own constant.
+    ///     2025-04-23. The two derived CSVs (numbers from Skatteverket, other
+    ///     columns added) use different reference dates, so each has its own.
     /// </summary>
     private static readonly DateOnly PersonnummerFixtureToday = new(2025, 4, 23);
 
@@ -106,44 +107,123 @@ public class FixtureDrivenTests
         await Assert.That(id.IsChild(SamordningsnummerFixtureToday)).IsEqualTo(child);
     }
 
-    // ── Organisationsnummer extended ──
+    // ── Official 2000-2009 personnummer and 2020 samordningsnummer ──
 
-    public static IEnumerable<(string Input, string LongFormatHyphenated, string ShortFormat, bool Valid, string Type)>
-        OrganisationsnummerExtended()
+    public static IEnumerable<string> Personnummer2000S()
     {
-        var rows = CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row => row.Cells);
-        foreach (var r in rows)
-            yield return (
-                r[0],
-                r[1],
-                r[2],
-                bool.Parse(r[3]),
-                r[4]);
+        return CsvLoader.Column(Fixtures.Personnummer2000S);
     }
 
     [Test]
-    [MethodDataSource(nameof(OrganisationsnummerExtended))]
-    public async Task OrganisationId_FixtureMatchesShape(
-        string input, string longFormatHyphenated, string shortFormat, bool valid, string type)
+    [MethodDataSource(nameof(Personnummer2000S))]
+    public async Task PersonalId_2000sFixture_KeepsNumberAndBirthDate(string pin)
     {
-        await Assert.That(OrganisationId.IsValid(input)).IsEqualTo(valid);
-        if (!valid) return;
+        var id = PersonalId.Parse(pin);
+        await Assert.That(id.LongFormat()).IsEqualTo(pin);
+        await Assert.That(id.BirthDate).IsEqualTo(new OfficialPersonnummer(pin).BirthDate);
+    }
 
-        var id = OrganisationId.Parse(input);
-        await Assert.That(id.ShortFormat()).IsEqualTo(shortFormat);
-        // The fixture's "long_format" column is the short-form-with-separator (e.g. "556016-0680",
-        // or "121212+1212" for centenarian Enskild firma). Assert against ShortFormatWithSeparator,
-        // which preserves the inferred separator ('+' for centenarians, '-' otherwise).
-        await Assert.That(id.Format(PnrFormat.ShortFormatWithSeparator))
-            .IsEqualTo(longFormatHyphenated);
+    public static IEnumerable<string> Samordningsnummer2020()
+    {
+        return CsvLoader.Column(Fixtures.Samordningsnummer2020);
+    }
 
-        // The fixture's "type" column is the layperson entity name ("Aktiebolag"
+    [Test]
+    [MethodDataSource(nameof(Samordningsnummer2020))]
+    public async Task CoordinationId_2020Fixture_KeepsNumberAndBirthDate(string pin)
+    {
+        var id = CoordinationId.Parse(pin);
+        await Assert.That(id.LongFormat()).IsEqualTo(pin);
+        await Assert.That(id.BirthDate).IsEqualTo(new OfficialSamordningsnummer(pin).BirthDate);
+    }
+
+    // ── Organisationsnummer extended, and the sole-trader rows without the columns that drop the century ──
+
+    private const int OrganisationLength = 10;
+
+    /// <summary>
+    ///     Where one organisation row is, only ever printed, and what it expects: the file's cells as raw text, with
+    ///     the short form taken from the input, and no VAT number, where the file has no such column.
+    /// </summary>
+    public sealed record OrganisationRow
+    {
+        public required string Source { get; init; }
+        public required string Input { get; init; }
+        public required string LongFormat { get; init; }
+        public required string ShortFormat { get; init; }
+        public string? VatNumber { get; init; }
+        public required bool Valid { get; init; }
+        public required string Type { get; init; }
+
+        /// <summary>The place of the row, because a short form can read as another person's number.</summary>
+        public override string ToString()
+        {
+            return Source;
+        }
+    }
+
+    public static IEnumerable<OrganisationRow> OrganisationsnummerRows()
+    {
+        return
+        [
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerExtended).Select(row =>
+                new OrganisationRow
+                {
+                    Source = SourceOf(row),
+                    Input = row.Cells[0],
+                    LongFormat = row.Cells[1],
+                    ShortFormat = row.Cells[2],
+                    Valid = bool.Parse(row.Cells[3]),
+                    Type = row.Cells[4],
+                    VatNumber = row.Cells[5]
+                }),
+            .. CsvLoader.Rows(Fixtures.OrganisationsnummerEnskildFirma).Select(row =>
+                new OrganisationRow
+                {
+                    Source = SourceOf(row),
+                    Input = row.Cells[0],
+                    LongFormat = row.Cells[1],
+                    ShortFormat = LastTenDigits(row.Cells[0]),
+                    Valid = bool.Parse(row.Cells[2]),
+                    Type = row.Cells[3]
+                })
+        ];
+    }
+
+    private static string SourceOf(FixtureRow row)
+    {
+        return $"{row.FileName}:{row.Line}";
+    }
+
+    private static string LastTenDigits(string input)
+    {
+        return string.Concat(input.Where(char.IsAsciiDigit))[^OrganisationLength..];
+    }
+
+    [Test]
+    [MethodDataSource(nameof(OrganisationsnummerRows))]
+    public async Task OrganisationId_FixtureMatchesShape(OrganisationRow row)
+    {
+        ArgumentNullException.ThrowIfNull(row);
+        await Assert.That(OrganisationId.IsValid(row.Input)).IsEqualTo(row.Valid);
+        if (!row.Valid) return;
+
+        var id = OrganisationId.Parse(row.Input);
+        await UnprintedAssert.AreEqual(id.ShortFormat(), row.ShortFormat).ConfigureAwait(false);
+        if (row.VatNumber is not null)
+            await UnprintedAssert.AreEqual($"SE{id.ShortFormat()}01", row.VatNumber).ConfigureAwait(false);
+        // The files' "long_format" column is the short form with a separator: "-", or "+" for an Enskild firma
+        // whose bearer is 100 or older. ShortFormatWithSeparator infers the same separator.
+        await UnprintedAssert.AreEqual(id.Format(PnrFormat.ShortFormatWithSeparator), row.LongFormat)
+            .ConfigureAwait(false);
+
+        // The files' "type" column is the layperson entity name ("Aktiebolag"
         // for legal persons, "Enskild firma" for physical persons). Map and assert.
-        var expectedNumberType = type switch
+        var expectedNumberType = row.Type switch
         {
             "Aktiebolag" => OrganisationNumberType.LegalPerson,
             "Enskild firma" => OrganisationNumberType.PhysicalPerson,
-            _ => throw new InvalidOperationException($"Unknown type column value: {type}")
+            _ => throw new InvalidOperationException($"Unknown type column value: {row.Type}")
         };
         await Assert.That(id.NumberType).IsEqualTo(expectedNumberType);
     }

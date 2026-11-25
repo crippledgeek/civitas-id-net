@@ -2,6 +2,7 @@ using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Format;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Fakers;
 
@@ -23,8 +24,8 @@ public class OrganisationIdFakerTests
             var a = new OrganisationIdFaker(42);
             var b = new OrganisationIdFaker(42);
             for (var i = 0; i < 50; i++)
-                await Assert.That(a.GenerateLegalPerson().LongFormat())
-                    .IsEqualTo(b.GenerateLegalPerson().LongFormat());
+                await UnprintedAssert.AreEqual(a.GenerateLegalPerson().LongFormat(), b.GenerateLegalPerson().LongFormat())
+                    .ConfigureAwait(false);
         }
     }
 
@@ -130,7 +131,7 @@ public class OrganisationIdFakerTests
 
             var parsed = OrganisationId.Parse(generated.LongFormat());
 
-            await Assert.That(parsed).IsEqualTo(generated);
+            await UnprintedAssert.AreEqual(parsed, generated).ConfigureAwait(false);
             await Assert.That(parsed.Form).IsEqualTo(form);
         }
 
@@ -250,7 +251,7 @@ public class OrganisationIdFakerTests
             {
                 var generated = faker.GenerateLegalPerson();
                 var parsed = OrganisationId.Parse(generated.LongFormat());
-                await Assert.That(parsed).IsEqualTo(generated);
+                await UnprintedAssert.AreEqual(parsed, generated).ConfigureAwait(false);
             }
         }
 
@@ -267,7 +268,7 @@ public class OrganisationIdFakerTests
                 var generated = faker.GeneratePhysicalPerson();
                 var twelve = generated.ToPhysicalPersonId()!.LongFormat();
                 var parsed = OrganisationId.Parse(twelve);
-                await Assert.That(parsed).IsEqualTo(generated);
+                await UnprintedAssert.AreEqual(parsed, generated).ConfigureAwait(false);
             }
         }
     }

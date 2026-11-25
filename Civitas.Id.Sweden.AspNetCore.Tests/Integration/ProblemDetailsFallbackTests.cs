@@ -2,13 +2,13 @@ using System.Globalization;
 using System.Net;
 using System.Net.Mime;
 using System.Text.Json.Serialization;
+using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.Json;
 using Civitas.Id.Sweden.AspNetCore.Options;
 using Civitas.Id.Sweden.AspNetCore.Tests.Integration.TestApp;
 using Civitas.Id.Sweden.Errors;
-using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Format;
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
@@ -30,7 +30,6 @@ public class ProblemDetailsFallbackTests
     private const string CommaDecimalCulture = "sv-SE";
     private const string HiddenValue = "must-not-be-sent";
     private const int DerivedCode = 7;
-    private const int FakerSeed = 1;
     private const double Fraction = 1.5;
     private static readonly int[] Numbers = [1, 2];
 
@@ -136,7 +135,7 @@ public class ProblemDetailsFallbackTests
     [MethodDataSource(nameof(AcceptedTypes))]
     public async Task ExtensionValues_KeepTheirJsonForm(string accept)
     {
-        var id = PersonalIdFaker.WithSeed(FakerSeed).Generate();
+        var id = PersonalId.Parse(OfficialNumbers.Modern.Long);
         var details = new Details(AppValue, HiddenValue);
         var configure = Customize(c =>
         {
@@ -163,7 +162,7 @@ public class ProblemDetailsFallbackTests
     [MethodDataSource(nameof(AcceptedTypes))]
     public async Task IdExtension_HasItsConfiguredForm(string accept)
     {
-        var id = PersonalIdFaker.WithSeed(FakerSeed).Generate();
+        var id = PersonalId.Parse(OfficialNumbers.Modern.Long);
 
         var response = await ThrowAsync(accept, services =>
         {

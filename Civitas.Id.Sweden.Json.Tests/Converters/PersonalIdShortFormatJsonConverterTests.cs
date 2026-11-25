@@ -17,9 +17,9 @@ public class PersonalIdShortFormatJsonConverterTests
         public async Task WritesShortFormatString_TenDigitsNoSeparator()
         {
             // ShortFormat = YYMMDDXXXX (10 digits, no separator), never a "+" centenarian sentinel.
-            var id = PersonalId.Parse("198112189876");
+            var id = PersonalId.Parse(OfficialNumbers.Modern.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"8112189876\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Modern.Short}\"");
         }
 
         [Test]
@@ -27,9 +27,9 @@ public class PersonalIdShortFormatJsonConverterTests
         {
             // Even for centenarians the converter emits 10-digit no-separator form
             // (PnrFormat.ShortFormat strips chars[2..] of the canonical 12-digit form).
-            var id = PersonalId.Parse("189001019802");
+            var id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"9001019802\"");
+            await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.Centenarian.Short}\"").ConfigureAwait(false);
         }
     }
 
@@ -38,17 +38,26 @@ public class PersonalIdShortFormatJsonConverterTests
         [Test]
         public async Task ParsesLongFormatString()
         {
-            var id = JsonSerializer.Deserialize<PersonalId>("\"198112189876\"", Opts);
+            var id = JsonSerializer.Deserialize<PersonalId>($"\"{OfficialNumbers.Modern.Long}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("198112189876");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.Modern.Long);
         }
 
         [Test]
         public async Task ParsesShortFormatString()
         {
-            var id = JsonSerializer.Deserialize<PersonalId>("\"8112189876\"", Opts);
+            var id = JsonSerializer.Deserialize<PersonalId>($"\"{OfficialNumbers.Modern.Short}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("198112189876");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.Modern.Long);
+        }
+
+        [Test]
+        public async Task ParsesShortFormatString_OfTheNineteenHundreds()
+        {
+            var person = TwentiethCenturyPerson.Create();
+            var id = JsonSerializer.Deserialize<PersonalId>($"\"{person.LongFormat()[2..]}\"", Opts);
+            await UnprintedAssert.AreEqual(id, person).ConfigureAwait(false);
+            await Assert.That(id!.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
         }
 
         [Test]
@@ -68,9 +77,14 @@ public class PersonalIdShortFormatJsonConverterTests
 
     public class RoundTrip
     {
+        public static IEnumerable<string> RoundTripsInputs()
+        {
+            yield return OfficialNumbers.Modern.Long;
+            yield return OfficialNumbers.EighteenIn2026.Long;
+        }
+
         [Test]
-        [Arguments("198112189876")]
-        [Arguments("200805080009")]
+        [MethodDataSource(nameof(RoundTripsInputs))]
         public async Task RoundTrips(string input)
         {
             // Round-trip via ShortFormat is only stable for IDs whose 2-digit year
@@ -81,6 +95,17 @@ public class PersonalIdShortFormatJsonConverterTests
             var json = JsonSerializer.Serialize(original, Opts);
             var roundTripped = JsonSerializer.Deserialize<PersonalId>(json, Opts);
             await Assert.That(roundTripped).IsEqualTo(original);
+            await Assert.That(roundTripped!.BirthDate).IsEqualTo(original.BirthDate);
+        }
+
+        [Test]
+        public async Task RoundTrips_PersonOfTheNineteenHundreds()
+        {
+            var original = TwentiethCenturyPerson.Create();
+            var json = JsonSerializer.Serialize(original, Opts);
+            var roundTripped = JsonSerializer.Deserialize<PersonalId>(json, Opts);
+            await UnprintedAssert.AreEqual(roundTripped, original).ConfigureAwait(false);
+            await Assert.That(roundTripped!.BirthDate).IsEqualTo(TwentiethCenturyPerson.BirthDate);
         }
     }
 }

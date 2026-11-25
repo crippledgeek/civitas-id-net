@@ -28,6 +28,7 @@ CLAUDE.md
 Thumbs.db
 
 ## Tooling output
+.nuget/
 *.log
 node_modules/
 BenchmarkDotNet.Artifacts/

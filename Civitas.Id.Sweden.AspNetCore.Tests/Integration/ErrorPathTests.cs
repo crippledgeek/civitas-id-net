@@ -19,7 +19,7 @@ public class ErrorPathTests
         public async Task Returns400_ForInvalidChecksum()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/customers/198112189870", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/customers/{OfficialNumbers.Modern.WithWrongCheckDigit}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.BadRequest);
         }
     }

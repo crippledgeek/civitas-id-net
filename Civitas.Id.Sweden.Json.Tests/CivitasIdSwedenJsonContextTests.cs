@@ -33,7 +33,7 @@ public class CivitasIdSwedenJsonContextTests
         };
         opts.TypeInfoResolverChain.Add(CivitasIdSwedenJsonContext.Default);
 
-        var id = PersonalId.Parse("189001019802");
+        var id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
         var json = JsonSerializer.Serialize(id, opts);
         var round = JsonSerializer.Deserialize<PersonalId>(json, opts);
         await Assert.That(round).IsEqualTo(id);

@@ -18,9 +18,10 @@ public class CoordinationIdShortFormatJsonConverterTests
         {
             // CoordinationId day component is +60; YYYYMMDDXXXX where DD is 61–91.
             // ShortFormat = YYMMDDXXXX (10 digits, no separator).
-            var id = CoordinationId.Parse("191401682396");
+            var id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"1401682396\"");
+            await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.CentenarianSamordningsnummer.Short}\"")
+                .ConfigureAwait(false);
         }
     }
 
@@ -29,19 +30,18 @@ public class CoordinationIdShortFormatJsonConverterTests
         [Test]
         public async Task ParsesLongFormatString()
         {
-            var id = JsonSerializer.Deserialize<CoordinationId>("\"191401682396\"", Opts);
+            var id = JsonSerializer.Deserialize<CoordinationId>($"\"{OfficialNumbers.CentenarianSamordningsnummer.Long}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("191401682396");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.Long);
         }
 
         [Test]
         public async Task ParsesShortFormatString()
         {
-            // "1401682396" short-form: century inferred by sliding window from today.
-            // Year "14" is within the last 100 years from 2026, so resolves to 2014.
-            var id = JsonSerializer.Deserialize<CoordinationId>("\"1401682396\"", Opts);
+            // Short form: the century is inferred by a sliding window from today, so year "81" resolves to 1981.
+            var id = JsonSerializer.Deserialize<CoordinationId>($"\"{OfficialNumbers.TwentiethCenturySamordningsnummer.Short}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("201401682396");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.TwentiethCenturySamordningsnummer.Long);
         }
 
         [Test]
@@ -61,13 +61,18 @@ public class CoordinationIdShortFormatJsonConverterTests
 
     public class RoundTrip
     {
+        public static IEnumerable<string> RoundTripsInputs()
+        {
+            yield return OfficialNumbers.ModernSamordningsnummer.Long;
+            yield return OfficialNumbers.TwentiethCenturySamordningsnummer.Long;
+        }
+
         [Test]
-        [Arguments("200805680006")]
+        [MethodDataSource(nameof(RoundTripsInputs))]
         public async Task RoundTrips(string input)
         {
             // Round-trip via ShortFormat is only stable for IDs whose 2-digit year
             // is unambiguous under the sliding 100-year window (within the last ~100 years).
-            // "200805680006" = born 2008-05-08 (day +60 = 68), Luhn-valid.
             var original = CoordinationId.Parse(input);
             var json = JsonSerializer.Serialize(original, Opts);
             var roundTripped = JsonSerializer.Deserialize<CoordinationId>(json, Opts);

@@ -2,6 +2,7 @@ using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
 using Civitas.Id.Sweden.Fakers;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Microsoft.Extensions.Time.Testing;
 
 namespace Civitas.Id.Sweden.Tests.Fakers;
@@ -24,7 +25,8 @@ public class CoordinationIdFakerTests
             var a = new CoordinationIdFaker(42);
             var b = new CoordinationIdFaker(42);
             for (var i = 0; i < 100; i++)
-                await Assert.That(a.Generate().LongFormat()).IsEqualTo(b.Generate().LongFormat());
+                await UnprintedAssert.AreEqual(a.Generate().LongFormat(), b.Generate().LongFormat())
+                    .ConfigureAwait(false);
         }
 
         [Test]
@@ -143,7 +145,7 @@ public class CoordinationIdFakerTests
             var generated = faker.Generate(new DateOnly(1985, 7, 15));
             var parsed = CoordinationId.Parse(generated.LongFormat());
 
-            await Assert.That(parsed).IsEqualTo(generated);
+            await UnprintedAssert.AreEqual(parsed, generated).ConfigureAwait(false);
         }
 
         [Test]
@@ -355,7 +357,7 @@ public class CoordinationIdFakerTests
             {
                 var generated = faker.Generate();
                 var parsed = CoordinationId.Parse(generated.LongFormat());
-                await Assert.That(parsed).IsEqualTo(generated);
+                await UnprintedAssert.AreEqual(parsed, generated).ConfigureAwait(false);
             }
         }
     }

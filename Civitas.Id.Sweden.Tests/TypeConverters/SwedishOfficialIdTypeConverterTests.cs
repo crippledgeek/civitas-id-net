@@ -1,6 +1,7 @@
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Civitas.Id.Sweden.TypeConverters;
 
 namespace Civitas.Id.Sweden.Tests.TypeConverters;
@@ -47,10 +48,15 @@ public class SwedishOfficialIdTypeConverterTests
 
     public class ConvertFrom
     {
+        public static IEnumerable<(string Input, Type ExpectedType)> DispatchesToCorrectSubtypeInputs()
+        {
+            yield return (OfficialNumbers.Centenarian.Long, typeof(PersonalId));
+            yield return (OfficialNumbers.CentenarianSamordningsnummer.Long, typeof(CoordinationId));
+            yield return (LegalPersonNumbers.Aktiebolag.Digits, typeof(OrganisationId));
+        }
+
         [Test]
-        [Arguments("189001019802", typeof(PersonalId))]
-        [Arguments("191401682396", typeof(CoordinationId))]
-        [Arguments("5560160680", typeof(OrganisationId))]
+        [MethodDataSource(nameof(DispatchesToCorrectSubtypeInputs))]
         public async Task DispatchesToCorrectSubtype(string input, Type expectedType)
         {
             var sut = new SwedishOfficialIdTypeConverter();
@@ -92,43 +98,43 @@ public class SwedishOfficialIdTypeConverterTests
         public async Task ReturnsLongFormat_ForPersonalId()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            SwedishOfficialId id = PersonalId.Parse("189001019802");
+            SwedishOfficialId id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(result).IsEqualTo("189001019802");
+            await Assert.That(result).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]
         public async Task ReturnsLongFormat_ForCoordinationId()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            SwedishOfficialId id = CoordinationId.Parse("191401682396");
+            SwedishOfficialId id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(result).IsEqualTo("191401682396");
+            await Assert.That(result).IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.Long);
         }
 
         [Test]
         public async Task ReturnsLongFormat_ForOrganisationId()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            SwedishOfficialId id = OrganisationId.Parse("5560160680");
+            SwedishOfficialId id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             var result = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(result).IsEqualTo("5560160680");
+            await Assert.That(result).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
         }
 
         [Test]
         public async Task RoundTrips_String_To_SwedishOfficialId_To_String()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            var id = (SwedishOfficialId?)sut.ConvertFrom(null, CultureInfo.InvariantCulture, "189001019802");
+            var id = (SwedishOfficialId?)sut.ConvertFrom(null, CultureInfo.InvariantCulture, OfficialNumbers.Centenarian.Long);
             var roundTripped = sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(string));
-            await Assert.That(roundTripped).IsEqualTo("189001019802");
+            await Assert.That(roundTripped).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]
         public async Task Delegates_ToBase_WhenDestinationTypeIsNotString()
         {
             var sut = new SwedishOfficialIdTypeConverter();
-            SwedishOfficialId id = PersonalId.Parse("189001019802");
+            SwedishOfficialId id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             await Assert.That(() => sut.ConvertTo(null, CultureInfo.InvariantCulture, id, typeof(int)))
                 .Throws<NotSupportedException>();
         }

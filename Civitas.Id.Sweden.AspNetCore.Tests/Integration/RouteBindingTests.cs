@@ -11,7 +11,7 @@ public class RouteBindingTests
         public async Task ValidPersonalId_Returns200()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/customers/198112189876", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/customers/{OfficialNumbers.Modern.Long}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
         }
 
@@ -19,7 +19,7 @@ public class RouteBindingTests
         public async Task ValidOrganisationId_Returns200_LegalPerson()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/orgs/5560160680", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/orgs/{LegalPersonNumbers.Aktiebolag.Digits}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
             var body = await res.Content.ReadFromJsonAsync<JsonNode>();
@@ -31,7 +31,7 @@ public class RouteBindingTests
         public async Task PolymorphicId_DispatchesToPersonalId()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/any/198112189876", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/any/{OfficialNumbers.Modern.Long}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
             var body = await res.Content.ReadFromJsonAsync<JsonNode>();
@@ -43,7 +43,7 @@ public class RouteBindingTests
         public async Task PolymorphicId_DispatchesToOrganisationId()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/any/5560160680", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/any/{LegalPersonNumbers.Aktiebolag.Digits}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
 
             var body = await res.Content.ReadFromJsonAsync<JsonNode>();
@@ -58,7 +58,7 @@ public class RouteBindingTests
         public async Task ValidPersonalId_Returns200()
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
-            var res = await fx.Client.GetAsync(new Uri("/lookup?id=198112189876", UriKind.Relative));
+            var res = await fx.Client.GetAsync(new Uri($"/lookup?id={OfficialNumbers.Modern.Long}", UriKind.Relative));
             await Assert.That(res.StatusCode).IsEqualTo(HttpStatusCode.OK);
         }
     }
@@ -73,7 +73,7 @@ public class RouteBindingTests
             // Top-level PersonalId in body — exercises CivitasIdSwedenJsonContext
             // via the chained TypeInfoResolver registered by AddCivitasIdSwedenAspNetCore.
             using var content = new StringContent(
-                "\"198112189876\"",
+                $"\"{OfficialNumbers.Modern.Long}\"",
                 System.Text.Encoding.UTF8,
                 "application/json");
             var res = await fx.Client.PostAsync(new Uri("/customers", UriKind.Relative), content);
@@ -86,7 +86,7 @@ public class RouteBindingTests
         {
             await using var fx = await IntegrationTestFixture.CreateAsync();
             using var content = new StringContent(
-                "\"198112189876\"",
+                $"\"{OfficialNumbers.Modern.Long}\"",
                 System.Text.Encoding.UTF8,
                 "application/json");
             var res = await fx.Client.PostAsync(new Uri("/customers", UriKind.Relative), content);
@@ -95,7 +95,7 @@ public class RouteBindingTests
 
             var body = await res.Content.ReadFromJsonAsync<JsonNode>();
             await Assert.That(body).IsNotNull();
-            await Assert.That(body!["id"]?.ToString()).IsEqualTo("198112189876");
+            await Assert.That(body!["id"]?.ToString()).IsEqualTo(OfficialNumbers.Modern.Long);
         }
     }
 }

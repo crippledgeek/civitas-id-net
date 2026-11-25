@@ -2,6 +2,7 @@ using System.Globalization;
 using System.Text;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
 
@@ -13,9 +14,9 @@ namespace Civitas.Id.Sweden.Tests.Core;
 /// </summary>
 public class Utf8RoundTripTests
 {
-    private const string ValidPersonal = "200001019801";
-    private const string ValidCoordination = "200001612399";
-    private const string ValidOrg = "5560160680";
+    private static readonly string ValidPersonal = OfficialNumbers.Modern.Long;
+    private static readonly string ValidCoordination = OfficialNumbers.ModernSamordningsnummer.Long;
+    private static readonly string ValidOrg = LegalPersonNumbers.Aktiebolag.Digits;
 
     /// <summary>PersonalId UTF-8 parse + format round-trips bit-for-bit.</summary>
     [Test]

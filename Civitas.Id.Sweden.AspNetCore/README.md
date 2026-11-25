@@ -91,7 +91,7 @@ Both return 400 with body:
 Row 2 — minimal API throw via the exception handler:
 
 ```http
-GET /customers-strict/198112180000 HTTP/1.1
+GET /customers-strict/198113180000 HTTP/1.1
 ```
 
 Returns 400 with body:

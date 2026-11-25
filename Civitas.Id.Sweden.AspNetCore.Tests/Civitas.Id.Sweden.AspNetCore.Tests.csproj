@@ -17,6 +17,13 @@
     <InterceptorsNamespaces>$(InterceptorsNamespaces);Microsoft.AspNetCore.OpenApi.Generated</InterceptorsNamespaces>
   </PropertyGroup>
 
+  <Import Project="..\Civitas.Id.Sweden.Tests\OfficialTestData.props" />
+
+  <ItemGroup>
+    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\RepositoryRoot.cs" Link="OfficialTestData\RepositoryRoot.cs" />
+    <Compile Include="..\Civitas.Id.Sweden.Tests\Helpers\UnprintedAssert.cs" Link="OfficialTestData\UnprintedAssert.cs" />
+  </ItemGroup>
+
   <ItemGroup>
     <PackageReference Include="TUnit" />
     <PackageReference Include="Verify.TUnit" />
@@ -30,7 +37,6 @@
     <ProjectReference Include="..\Civitas.Id.Sweden.Json\Civitas.Id.Sweden.Json.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.DataAnnotations\Civitas.Id.Sweden.DataAnnotations.csproj" />
     <ProjectReference Include="..\Civitas.Id.Sweden.AspNetCore\Civitas.Id.Sweden.AspNetCore.csproj" />
-    <ProjectReference Include="..\Civitas.Id.Sweden.Fakers\Civitas.Id.Sweden.Fakers.csproj" />
   </ItemGroup>
 
 

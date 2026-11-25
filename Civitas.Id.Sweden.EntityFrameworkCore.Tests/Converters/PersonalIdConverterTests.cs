@@ -24,11 +24,11 @@ public class PersonalIdConverterTests
         public async Task ConvertToProvider_ValidId_ReturnsTwelveDigitString()
         {
             var sut = new PersonalIdConverter();
-            var id = PersonalId.Parse("189001019802");
+            var id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
 
             var encoded = (string?)sut.ConvertToProvider(id);
 
-            await Assert.That(encoded).IsEqualTo("189001019802");
+            await Assert.That(encoded).IsEqualTo(OfficialNumbers.Centenarian.Long);
             await Assert.That(encoded!.Length).IsEqualTo(12);
         }
 
@@ -36,8 +36,8 @@ public class PersonalIdConverterTests
         public async Task ConvertToProvider_TwoInstancesSameValue_ProduceSameString()
         {
             var sut = new PersonalIdConverter();
-            var a = PersonalId.Parse("189001019802");
-            var b = PersonalId.Parse("189001019802");
+            var a = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
+            var b = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
 
             var encA = (string?)sut.ConvertToProvider(a);
             var encB = (string?)sut.ConvertToProvider(b);
@@ -52,7 +52,7 @@ public class PersonalIdConverterTests
         public async Task ConvertFromProvider_ValidString_ReturnsEqualId()
         {
             var sut = new PersonalIdConverter();
-            var original = PersonalId.Parse("189001019802");
+            var original = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
 
             var encoded = (string?)sut.ConvertToProvider(original);
             var decoded = (PersonalId?)sut.ConvertFromProvider(encoded);
@@ -64,8 +64,8 @@ public class PersonalIdConverterTests
         public async Task ConvertFromProvider_LuhnTamperedString_Throws()
         {
             var sut = new PersonalIdConverter();
-            // Original "189001019802" — flip the last digit:
-            const string tampered = "189001019801";
+            // An official number with another last digit:
+            var tampered = OfficialNumbers.Centenarian.WithWrongCheckDigit;
 
             await Assert.That(() => sut.ConvertFromProvider(tampered))
                 .Throws<InvalidIdNumberException>();

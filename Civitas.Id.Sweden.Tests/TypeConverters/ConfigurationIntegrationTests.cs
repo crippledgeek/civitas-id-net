@@ -1,8 +1,9 @@
-namespace Civitas.Id.Sweden.Tests.TypeConverters;
-
 using System.Diagnostics.CodeAnalysis;
 using Civitas.Id.Sweden.Core;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Microsoft.Extensions.Configuration;
+
+namespace Civitas.Id.Sweden.Tests.TypeConverters;
 
 public class ConfigurationIntegrationTests
 {
@@ -22,7 +23,7 @@ public class ConfigurationIntegrationTests
     [Test]
     public async Task Bind_PersonalId_FromJsonConfig_RoundTrips()
     {
-        const string json = """{"PersonId": "198112189876", "OrgId": "5560160680"}""";
+        var json = $$"""{"PersonId": "{{OfficialNumbers.Modern.Long}}", "OrgId": "{{LegalPersonNumbers.Aktiebolag.Digits}}"}""";
         var config = new ConfigurationBuilder()
             .AddJsonStream(new MemoryStream(System.Text.Encoding.UTF8.GetBytes(json)))
             .Build();
@@ -31,8 +32,8 @@ public class ConfigurationIntegrationTests
         config.Bind(opts);
 
         await Assert.That(opts.PersonId).IsNotNull();
-        await Assert.That(opts.PersonId!.LongFormat()).IsEqualTo("198112189876");
+        await Assert.That(opts.PersonId!.LongFormat()).IsEqualTo(OfficialNumbers.Modern.Long);
         await Assert.That(opts.OrgId).IsNotNull();
-        await Assert.That(opts.OrgId!.LongFormat()).IsEqualTo("5560160680");
+        await Assert.That(opts.OrgId!.LongFormat()).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
     }
 }

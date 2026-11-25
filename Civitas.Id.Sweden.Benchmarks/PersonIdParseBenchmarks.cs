@@ -16,15 +16,14 @@ namespace Civitas.Id.Sweden.Benchmarks;
 [ShortRunJob]
 public class PersonIdParseBenchmarks
 {
-    // Three forms of 1990-01-01 + one centenarian variant (1890-01-01 via "+"
-    // separator) — tests both the standard sliding-window century inference
-    // and the pre-1900 century inference path.
-    // Luhn check digit 9 holds for body 9001010009 regardless of century.
+    // Three forms of one number from Skatteverket's published test sets, born in 2000, and
+    // the "+" form of another, born in 1890: both the standard sliding-window century
+    // inference and the pre-1900 century inference path.
     [Params(
-        "199001010009",        // 12-digit long
-        "9001010009",          // 10-digit short
-        "900101-0009",         // 10-digit with hyphen
-        "900101+0009")]        // 10-digit centenarian (parses as 1890)
+        "200001012384",        // 12-digit long
+        "0001012384",          // 10-digit short
+        "000101-2384",         // 10-digit with hyphen
+        "900101+9802")]        // 10-digit centenarian (parses as 1890)
     public string Input { get; set; } = null!;
 
     [Benchmark(Baseline = true)]

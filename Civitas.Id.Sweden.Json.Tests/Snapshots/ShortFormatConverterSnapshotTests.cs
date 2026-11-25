@@ -2,7 +2,6 @@ using System.Globalization;
 using System.Text;
 using System.Text.Json;
 using Civitas.Id.Sweden.Core;
-using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Json.Converters;
 
 namespace Civitas.Id.Sweden.Json.Tests.Snapshots;
@@ -14,12 +13,21 @@ namespace Civitas.Id.Sweden.Json.Tests.Snapshots;
 /// </summary>
 public sealed class ShortFormatConverterSnapshotTests
 {
-    private static readonly DateOnly[] Dates =
+    private static readonly DateOnly[] PersonalDates =
     [
-        new(1920, 5, 8),   // centenarian boundary fixture
-        new(1955, 7, 14),
-        new(1988, 2, 29),  // leap-day birthday
+        new(2000, 1, 1),
+        new(2005, 7, 14),
+        new(2000, 2, 29),  // leap-day birthday
         new(2008, 12, 31)
+    ];
+
+    private static readonly DateOnly[] CoordinationDates =
+    [
+        new(1955, 8, 11),
+        new(1981, 12, 15),
+        new(2000, 6, 6),
+        new(2008, 12, 27),
+        new(2020, 2, 29)   // leap-day birthday
     ];
 
     /// <summary>a) PersonalIdShortFormatJsonConverter wire outputs across a representative date set.</summary>
@@ -27,11 +35,10 @@ public sealed class ShortFormatConverterSnapshotTests
     public Task PersonalId_ShortFormat()
     {
         var opts = new JsonSerializerOptions { Converters = { new PersonalIdShortFormatJsonConverter() } };
-        var faker = new PersonalIdFaker(42);
         var sb = new StringBuilder();
-        foreach (var date in Dates)
+        foreach (var date in PersonalDates)
         {
-            var id = faker.Generate(date);
+            var id = PersonalId.Parse(OfficialNumbers.Personnummer(date).Long);
             var serialized = JsonSerializer.Serialize(id, opts);
             sb.AppendLine(CultureInfo.InvariantCulture, $"BirthDate={date:yyyy-MM-dd}");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {id.LongFormat()}");
@@ -47,11 +54,10 @@ public sealed class ShortFormatConverterSnapshotTests
     public Task CoordinationId_ShortFormat()
     {
         var opts = new JsonSerializerOptions { Converters = { new CoordinationIdShortFormatJsonConverter() } };
-        var faker = new CoordinationIdFaker(42);
         var sb = new StringBuilder();
-        foreach (var date in Dates)
+        foreach (var date in CoordinationDates)
         {
-            var id = faker.Generate(date);
+            var id = CoordinationId.Parse(OfficialNumbers.Samordningsnummer(date).Long);
             var serialized = JsonSerializer.Serialize(id, opts);
             sb.AppendLine(CultureInfo.InvariantCulture, $"BirthDate={date:yyyy-MM-dd}");
             sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {id.LongFormat()}");
@@ -70,27 +76,23 @@ public sealed class ShortFormatConverterSnapshotTests
     public Task SwedishOfficialId_ShortFormat_PolymorphicDispatch()
     {
         var opts = new JsonSerializerOptions { Converters = { new SwedishOfficialIdShortFormatJsonConverter() } };
-        var personalFaker = new PersonalIdFaker(42);
-        var coordFaker = new CoordinationIdFaker(42);
-        var orgFaker = new OrganisationIdFaker(42);
-
         var sb = new StringBuilder();
 
-        var personalId = personalFaker.Generate(new DateOnly(1988, 6, 15));
+        var personalId = PersonalId.Parse(OfficialNumbers.Modern.Long);
         SwedishOfficialId asBase = personalId;
         sb.AppendLine("PersonalId (via base type):");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {personalId.LongFormat()}");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  JSON wire form         = {JsonSerializer.Serialize(asBase, opts)}");
         sb.AppendLine();
 
-        var coordId = coordFaker.Generate(new DateOnly(1975, 3, 20));
+        var coordId = CoordinationId.Parse(OfficialNumbers.TwentiethCenturySamordningsnummer.Long);
         asBase = coordId;
         sb.AppendLine("CoordinationId (via base type):");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {coordId.LongFormat()}");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  JSON wire form         = {JsonSerializer.Serialize(asBase, opts)}");
         sb.AppendLine();
 
-        var legalOrg = orgFaker.GenerateLegalPerson();
+        var legalOrg = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
         asBase = legalOrg;
         sb.AppendLine("OrganisationId/LegalPerson (via base type, always LongFormat):");
         sb.AppendLine(CultureInfo.InvariantCulture, $"  LongFormat (canonical) = {legalOrg.LongFormat()}");

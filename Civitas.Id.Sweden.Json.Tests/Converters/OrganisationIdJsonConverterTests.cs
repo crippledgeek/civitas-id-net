@@ -16,18 +16,18 @@ public class OrganisationIdJsonConverterTests
         [Test]
         public async Task WritesLongFormatString_ForLegalPerson()
         {
-            var id = OrganisationId.Parse("5560160680");
+            var id = OrganisationId.Parse(LegalPersonNumbers.Aktiebolag.Digits);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"5560160680\"");
+            await Assert.That(json).IsEqualTo($"\"{LegalPersonNumbers.Aktiebolag.Digits}\"");
         }
 
         [Test]
         public async Task WritesLongFormatString_ForEnskildFirma()
         {
             // Enskild firma orgnummer reuses a personnummer; LongFormat always returns 10 digits.
-            var id = OrganisationId.Parse("189001019802");
+            var id = OrganisationId.Parse(OfficialNumbers.Centenarian.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"9001019802\"");
+            await UnprintedAssert.AreEqual(json, $"\"{OfficialNumbers.Centenarian.Short}\"").ConfigureAwait(false);
         }
     }
 
@@ -36,17 +36,17 @@ public class OrganisationIdJsonConverterTests
         [Test]
         public async Task ParsesTenDigitString()
         {
-            var id = JsonSerializer.Deserialize<OrganisationId>("\"5560160680\"", Opts);
+            var id = JsonSerializer.Deserialize<OrganisationId>($"\"{LegalPersonNumbers.Aktiebolag.Digits}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("5560160680");
+            await Assert.That(id!.LongFormat()).IsEqualTo(LegalPersonNumbers.Aktiebolag.Digits);
         }
 
         [Test]
         public async Task ParsesEnskildFirmaPersonnummer()
         {
-            var id = JsonSerializer.Deserialize<OrganisationId>("\"189001019802\"", Opts);
+            var id = JsonSerializer.Deserialize<OrganisationId>($"\"{OfficialNumbers.Centenarian.Long}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("9001019802");
+            await UnprintedAssert.AreEqual(id!.LongFormat(), OfficialNumbers.Centenarian.Short).ConfigureAwait(false);
         }
 
         [Test]
@@ -66,9 +66,14 @@ public class OrganisationIdJsonConverterTests
 
     public class RoundTrip
     {
+        public static IEnumerable<string> RoundTripsInputs()
+        {
+            yield return LegalPersonNumbers.Aktiebolag.Digits;
+            yield return LegalPersonNumbers.Aktiebolag.WithHyphen;
+        }
+
         [Test]
-        [Arguments("5560160680")]
-        [Arguments("556016-0680")]
+        [MethodDataSource(nameof(RoundTripsInputs))]
         public async Task RoundTrips(string input)
         {
             var original = OrganisationId.Parse(input);

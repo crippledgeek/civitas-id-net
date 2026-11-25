@@ -16,9 +16,9 @@ public class CoordinationIdJsonConverterTests
         [Test]
         public async Task WritesLongFormatString()
         {
-            var id = CoordinationId.Parse("191401682396");
+            var id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"191401682396\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.CentenarianSamordningsnummer.Long}\"");
         }
     }
 
@@ -27,15 +27,15 @@ public class CoordinationIdJsonConverterTests
         [Test]
         public async Task ParsesLongFormatString()
         {
-            var id = JsonSerializer.Deserialize<CoordinationId>("\"191401682396\"", Opts);
+            var id = JsonSerializer.Deserialize<CoordinationId>($"\"{OfficialNumbers.CentenarianSamordningsnummer.Long}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("191401682396");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.Long);
         }
 
         [Test]
         public async Task ParsesShortFormatString()
         {
-            var id = JsonSerializer.Deserialize<CoordinationId>("\"140168-2396\"", Opts);
+            var id = JsonSerializer.Deserialize<CoordinationId>($"\"{OfficialNumbers.CentenarianSamordningsnummer.ShortWithHyphen}\"", Opts);
             await Assert.That(id).IsNotNull();
         }
 
@@ -56,9 +56,14 @@ public class CoordinationIdJsonConverterTests
 
     public class RoundTrip
     {
+        public static IEnumerable<string> RoundTripsInputs()
+        {
+            yield return OfficialNumbers.CentenarianSamordningsnummer.Long;
+            yield return OfficialNumbers.CentenarianSamordningsnummer.LongWithHyphen;
+        }
+
         [Test]
-        [Arguments("191401682396")]
-        [Arguments("19140168-2396")]
+        [MethodDataSource(nameof(RoundTripsInputs))]
         public async Task RoundTrips(string input)
         {
             var original = CoordinationId.Parse(input);

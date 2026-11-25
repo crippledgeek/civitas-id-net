@@ -16,9 +16,9 @@ public class PersonalIdJsonConverterTests
         [Test]
         public async Task WritesLongFormatString()
         {
-            var id = PersonalId.Parse("189001019802");
+            var id = PersonalId.Parse(OfficialNumbers.Centenarian.Long);
             var json = JsonSerializer.Serialize(id, Opts);
-            await Assert.That(json).IsEqualTo("\"189001019802\"");
+            await Assert.That(json).IsEqualTo($"\"{OfficialNumbers.Centenarian.Long}\"");
         }
     }
 
@@ -27,15 +27,15 @@ public class PersonalIdJsonConverterTests
         [Test]
         public async Task ParsesLongFormatString()
         {
-            var id = JsonSerializer.Deserialize<PersonalId>("\"189001019802\"", Opts);
+            var id = JsonSerializer.Deserialize<PersonalId>($"\"{OfficialNumbers.Centenarian.Long}\"", Opts);
             await Assert.That(id).IsNotNull();
-            await Assert.That(id!.LongFormat()).IsEqualTo("189001019802");
+            await Assert.That(id!.LongFormat()).IsEqualTo(OfficialNumbers.Centenarian.Long);
         }
 
         [Test]
         public async Task ParsesShortFormatString()
         {
-            var id = JsonSerializer.Deserialize<PersonalId>("\"900101-9802\"", Opts);
+            var id = JsonSerializer.Deserialize<PersonalId>($"\"{OfficialNumbers.Centenarian.ShortWithHyphen}\"", Opts);
             await Assert.That(id).IsNotNull();
         }
 
@@ -56,9 +56,14 @@ public class PersonalIdJsonConverterTests
 
     public class RoundTrip
     {
+        public static IEnumerable<string> RoundTripsInputs()
+        {
+            yield return OfficialNumbers.Centenarian.Long;
+            yield return OfficialNumbers.Centenarian.LongWithHyphen;
+        }
+
         [Test]
-        [Arguments("189001019802")]
-        [Arguments("18900101-9802")]
+        [MethodDataSource(nameof(RoundTripsInputs))]
         public async Task RoundTrips(string input)
         {
             var original = PersonalId.Parse(input);

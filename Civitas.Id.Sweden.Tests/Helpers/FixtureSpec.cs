@@ -47,16 +47,25 @@ internal static class Fixtures
     public static readonly FixtureSpec OrganisationsnummerExtended = new()
     {
         FileName = "testorganisationsnummer_extended.csv",
-        DataRows = 22,
-        Sha256 = "b6b2560cab4e5d183435669c4f82e72942c8c8428e81a69ea08526bb70f0011f",
+        DataRows = 10,
+        Sha256 = "6019d7905c294a45e7f3a91865a7653c703b8fb9af04cdbe2835c58dc4bb3ba8",
+        HasHeader = true
+    };
+
+    /// <summary>Official person numbers written as sole-trader organisation numbers. A column that drops the century is left out.</summary>
+    public static readonly FixtureSpec OrganisationsnummerEnskildFirma = new()
+    {
+        FileName = "testorganisationsnummer_enskild_firma.csv",
+        DataRows = 20,
+        Sha256 = "7e13959a21ef7535ace2e71fe5bfb866848e2cae67243c650db2f901f58cd01c",
         HasHeader = true
     };
 
     public static readonly FixtureSpec OrganisationsnummerTextual = new()
     {
         FileName = "testorganisationsnummer.txt",
-        DataRows = 10,
-        Sha256 = "0e4f3796883d3b18224ef1b71e352a5676a7ca5539fbbcf03bcfac990fdcaa54",
+        DataRows = 6,
+        Sha256 = "17fe314c5a642c3aabc4774e325e233d174c2306d70ac9b1461b2a3e1999085d",
         HasHeader = false
     };
 
@@ -68,9 +77,37 @@ internal static class Fixtures
         HasHeader = false
     };
 
+    /// <summary>Skatteverket's published 2019 samordningsnummer set, byte for byte (CRLF).</summary>
+    public static readonly FixtureSpec SamordningsnummerOfficial = new()
+    {
+        FileName = "Testsamordningsnummer_2019_official.csv",
+        DataRows = 1498,
+        Sha256 = "54e3fe8b4bc9d6f51b67139266fb284f251af0003b9e3a152873c6ca570af838",
+        HasHeader = true
+    };
+
+    /// <summary>Skatteverket's published 2000-2009 personnummer set, byte for byte (CRLF).</summary>
+    public static readonly FixtureSpec Personnummer2000S = new()
+    {
+        FileName = "Testpersonnummer_2000-2009_official.csv",
+        DataRows = 7323,
+        Sha256 = "de273ddbbbbc5c13ff5017230f6d94a65f3df3f70d04b26de0769cf6f8daa50f",
+        HasHeader = true
+    };
+
+    /// <summary>Skatteverket's published 2020 samordningsnummer set, byte for byte (CRLF).</summary>
+    public static readonly FixtureSpec Samordningsnummer2020 = new()
+    {
+        FileName = "Testsamordningsnummer_2020_official.csv",
+        DataRows = 14,
+        Sha256 = "4e22aef1f54a2e59f168558281b883f82c9eecd8258bde6efd1126677ac0e288",
+        HasHeader = true
+    };
+
     public static readonly IReadOnlyList<FixtureSpec> All =
     [
         Personnummer1890S, PersonnummerFinal, SamordningsnummerCorrected, OrganisationsnummerExtended,
-        OrganisationsnummerTextual, InvalidIds
+        OrganisationsnummerEnskildFirma, OrganisationsnummerTextual, InvalidIds, SamordningsnummerOfficial,
+        Personnummer2000S, Samordningsnummer2020
     ];
 }

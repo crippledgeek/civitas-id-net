@@ -24,11 +24,11 @@ public class CoordinationIdConverterTests
         public async Task ConvertToProvider_ValidId_ReturnsTwelveDigitString()
         {
             var sut = new CoordinationIdConverter();
-            var id = CoordinationId.Parse("191401682396");
+            var id = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
 
             var encoded = (string?)sut.ConvertToProvider(id);
 
-            await Assert.That(encoded).IsEqualTo("191401682396");
+            await Assert.That(encoded).IsEqualTo(OfficialNumbers.CentenarianSamordningsnummer.Long);
             await Assert.That(encoded!.Length).IsEqualTo(12);
         }
 
@@ -36,8 +36,8 @@ public class CoordinationIdConverterTests
         public async Task ConvertToProvider_TwoInstancesSameValue_ProduceSameString()
         {
             var sut = new CoordinationIdConverter();
-            var a = CoordinationId.Parse("191401682396");
-            var b = CoordinationId.Parse("191401682396");
+            var a = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
+            var b = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
 
             var encA = (string?)sut.ConvertToProvider(a);
             var encB = (string?)sut.ConvertToProvider(b);
@@ -52,7 +52,7 @@ public class CoordinationIdConverterTests
         public async Task ConvertFromProvider_ValidString_ReturnsEqualId()
         {
             var sut = new CoordinationIdConverter();
-            var original = CoordinationId.Parse("191401682396");
+            var original = CoordinationId.Parse(OfficialNumbers.CentenarianSamordningsnummer.Long);
 
             var encoded = (string?)sut.ConvertToProvider(original);
             var decoded = (CoordinationId?)sut.ConvertFromProvider(encoded);
@@ -64,9 +64,8 @@ public class CoordinationIdConverterTests
         public async Task ConvertFromProvider_LuhnTamperedString_Throws()
         {
             var sut = new CoordinationIdConverter();
-            // Original "191401682396" — flip the last digit (6 → 7):
-            // Luhn check digit for body 140168239 is 6; 7 fails the checksum.
-            const string tampered = "191401682397";
+            // An official number with another last digit.
+            var tampered = OfficialNumbers.CentenarianSamordningsnummer.WithWrongCheckDigit;
 
             await Assert.That(() => sut.ConvertFromProvider(tampered))
                 .Throws<InvalidIdNumberException>();
@@ -76,9 +75,9 @@ public class CoordinationIdConverterTests
         public async Task ConvertFromProvider_PersonShapedDay_Throws()
         {
             var sut = new CoordinationIdConverter();
-            // "189001019802" is a valid PersonalId (day=01, in 01-31 range),
+            // A valid PersonalId (day=01, in 01-31 range),
             // which is NOT a valid CoordinationId (day must be in 61-91 range).
-            const string personShaped = "189001019802";
+            var personShaped = OfficialNumbers.Centenarian.Long;
 
             await Assert.That(() => sut.ConvertFromProvider(personShaped))
                 .Throws<InvalidIdNumberException>();

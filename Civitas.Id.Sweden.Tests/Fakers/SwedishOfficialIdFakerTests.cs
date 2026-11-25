@@ -1,6 +1,7 @@
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Fakers;
 using Civitas.Id.Sweden.Format;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Fakers;
 
@@ -20,8 +21,8 @@ public class SwedishOfficialIdFakerTests
             var a = new SwedishOfficialIdFaker(42);
             var b = new SwedishOfficialIdFaker(42);
             for (var i = 0; i < 50; i++)
-                await Assert.That(a.Generate().LongFormat())
-                    .IsEqualTo(b.Generate().LongFormat());
+                await UnprintedAssert.AreEqual(a.Generate().LongFormat(), b.Generate().LongFormat())
+                    .ConfigureAwait(false);
         }
     }
 
@@ -132,7 +133,7 @@ public class SwedishOfficialIdFakerTests
                     continue;
 
                 var parsed = SwedishOfficialId.ParseAny(generated.LongFormat());
-                await Assert.That(parsed).IsEqualTo(generated);
+                await UnprintedAssert.AreEqual(parsed, generated).ConfigureAwait(false);
             }
         }
 

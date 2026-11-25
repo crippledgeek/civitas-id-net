@@ -1,6 +1,7 @@
 using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Tests.Helpers;
 using Civitas.Id.Sweden.TypeConverters;
 
 namespace Civitas.Id.Sweden.Tests.TypeConverters;
@@ -10,9 +11,9 @@ namespace Civitas.Id.Sweden.Tests.TypeConverters;
 /// </summary>
 public class PersonalIdTypeConverterTests
 {
-    private const string ValidPin12 = "189001019802";
-    private const string ValidPin10 = "9001019802";
-    private const string ValidPinWithHyphen = "900101-9802";
+    private static readonly string ValidPin12 = OfficialNumbers.Centenarian.Long;
+    private static readonly string ValidPin10 = OfficialNumbers.Modern.Short;
+    private static readonly string ValidPinWithHyphen = OfficialNumbers.Modern.ShortWithHyphen;
 
     public class CanConvertFrom
     {
@@ -50,10 +51,15 @@ public class PersonalIdTypeConverterTests
 
     public class ConvertFrom
     {
+        public static IEnumerable<string> ParsesValidStringInputs()
+        {
+            yield return ValidPin12;
+            yield return ValidPin10;
+            yield return ValidPinWithHyphen;
+        }
+
         [Test]
-        [Arguments(ValidPin12)]
-        [Arguments(ValidPin10)]
-        [Arguments(ValidPinWithHyphen)]
+        [MethodDataSource(nameof(ParsesValidStringInputs))]
         public async Task Parses_ValidString(string input)
         {
             var sut = new PersonalIdTypeConverter();
@@ -83,7 +89,7 @@ public class PersonalIdTypeConverterTests
         public async Task Throws_InvalidIdNumberException_OnInvalidChecksum()
         {
             var sut = new PersonalIdTypeConverter();
-            const string input = "189001019800";
+            var input = OfficialNumbers.Centenarian.WithWrongCheckDigit;
             var ex = await Assert.That(() => sut.ConvertFrom(null, CultureInfo.InvariantCulture, input))
                 .Throws<InvalidIdNumberException>();
             // The current parser surfaces all failure modes as InvalidFormat;
@@ -93,7 +99,7 @@ public class PersonalIdTypeConverterTests
             // that the exception's redacted input preserves the original
             // prefix/suffix — a regression guard against the converter
             // swallowing the value before constructing the exception.
-            await Assert.That(ex!.RedactedInput).IsEqualTo("18******9800");
+            await Assert.That(ex!.RedactedInput).IsEqualTo($"18******{input[^4..]}");
         }
 
         [Test]

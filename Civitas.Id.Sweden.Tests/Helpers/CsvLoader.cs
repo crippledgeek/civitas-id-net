@@ -33,10 +33,11 @@ internal static class CsvLoader
         return rows;
     }
 
-    /// <summary>The first cell of every data row of a verified fixture.</summary>
-    public static IReadOnlyList<string> Column(FixtureSpec spec)
+    /// <summary>The cell at <paramref name="index" /> (default: the first) of every data row of a verified fixture.
+    /// The index is a plain <see cref="int" />: a position in a test file, with no domain meaning or invariant.</summary>
+    public static IReadOnlyList<string> Column(FixtureSpec spec, int index = 0)
     {
-        return [.. Rows(spec).Select(row => row.Cells[0])];
+        return [.. Rows(spec).Select(row => row.Cells[index])];
     }
 
     private static List<FixtureRow> ParseLines(FixtureSpec spec, string text)

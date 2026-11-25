@@ -58,6 +58,25 @@ public class SwedishIdSchemaTransformerTests
             await Assert.That(schema.Format).IsEqualTo("swedish-official-id");
         }
 
+        /// <summary>Each described type with the number its example must be.</summary>
+        public static IEnumerable<(Type Type, string Example)> Examples()
+        {
+            yield return (typeof(PersonalId), OfficialNumbers.Centenarian.Long);
+            yield return (typeof(CoordinationId), OfficialNumbers.CentenarianSamordningsnummer.Long);
+            yield return (typeof(OrganisationId), LegalPersonNumbers.Aktiebolag.Digits);
+            yield return (typeof(SwedishOfficialId), OfficialNumbers.Centenarian.Long);
+        }
+
+        [Test]
+        [MethodDataSource(nameof(Examples))]
+        public async Task Example_IsAPinnedTestNumber(Type type, string example)
+        {
+            var schema = new OpenApiSchema();
+            SwedishIdSchemaTransformer.ApplyMetadata(schema, type);
+
+            await Assert.That(schema.Example!.GetValue<string>()).IsEqualTo(example);
+        }
+
         [Test]
         public async Task UnrelatedType_LeavesSchemaUntouched()
         {

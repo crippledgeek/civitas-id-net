@@ -1,5 +1,6 @@
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Core;
 
@@ -49,8 +50,8 @@ public class HookContractTests
         [Test]
         public async Task FromValidated_RoundTripsThroughLongFormat()
         {
-            var p = FromValidated<PersonalId>("198901010101");
-            await Assert.That(p.LongFormat()).IsEqualTo("198901010101");
+            var p = FromValidated<PersonalId>(OfficialNumbers.Modern.Long);
+            await Assert.That(p.LongFormat()).IsEqualTo(OfficialNumbers.Modern.Long);
         }
     }
 
@@ -79,10 +80,8 @@ public class HookContractTests
         [Test]
         public async Task FromValidated_RoundTripsThroughLongFormat()
         {
-            // Luhn-valid samordningsnummer: 1989-01-01 encoded as 1989-01-61 (day = 01 + 60).
-            // Body matches the ValidCoordination pin in PhysicalPersonIdEqualityTests.
-            var c = FromValidated<CoordinationId>("198901610006");
-            await Assert.That(c.LongFormat()).IsEqualTo("198901610006");
+            var c = FromValidated<CoordinationId>(OfficialNumbers.ModernSamordningsnummer.Long);
+            await Assert.That(c.LongFormat()).IsEqualTo(OfficialNumbers.ModernSamordningsnummer.Long);
         }
     }
 }
