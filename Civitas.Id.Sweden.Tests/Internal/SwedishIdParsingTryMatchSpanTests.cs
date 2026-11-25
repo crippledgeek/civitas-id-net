@@ -1,4 +1,5 @@
 using Civitas.Id.Sweden.Internal;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Internal;
 
@@ -12,6 +13,9 @@ namespace Civitas.Id.Sweden.Tests.Internal;
 /// </summary>
 public class SwedishIdParsingTryMatchSpanTests
 {
+    // Born on 15 December 1981; the day part is 75.
+    private static readonly OfficialSamordningsnummer Number = OfficialNumbers.TwentiethCenturySamordningsnummer;
+
     /// <summary>
     ///     Snapshot of a <see cref="SwedishIdSpanMatch"/> into plain fields so the
     ///     test method can <see langword="await"/> assertions afterwards. The
@@ -69,20 +73,20 @@ public class SwedishIdParsingTryMatchSpanTests
     [Test]
     public async Task TryMatchSpan_TwelveDigit_CapturesCenturyAndDate()
     {
-        var snap = Snapshot("198501019876");
+        var snap = Snapshot(Number.Long);
         await Assert.That(snap.Ok).IsTrue();
         await Assert.That(snap.HasCentury).IsTrue();
         await Assert.That(snap.CenturyValue).IsEqualTo(19);
-        await Assert.That(snap.Year).IsEqualTo(85);
-        await Assert.That(snap.Month).IsEqualTo(1);
-        await Assert.That(snap.Day).IsEqualTo(1);
-        await Assert.That(snap.Unique).IsEqualTo("9876");
+        await Assert.That(snap.Year).IsEqualTo(81);
+        await Assert.That(snap.Month).IsEqualTo(12);
+        await Assert.That(snap.Day).IsEqualTo(75);
+        await Assert.That(snap.Unique).IsEqualTo(Number.Serial);
     }
 
     [Test]
     public async Task TryMatchSpan_TenDigitNoSeparator_CapturesNoCentury()
     {
-        var snap = Snapshot("8501019876");
+        var snap = Snapshot(Number.Short);
         await Assert.That(snap.Ok).IsTrue();
         await Assert.That(snap.HasCentury).IsFalse();
         await Assert.That(snap.Delimiter).IsEqualTo('\0');
@@ -91,7 +95,7 @@ public class SwedishIdParsingTryMatchSpanTests
     [Test]
     public async Task TryMatchSpan_TenDigitWithSeparator_CapturesDelimiter()
     {
-        var snap = Snapshot("850101-9876");
+        var snap = Snapshot(Number.ShortWithHyphen);
         await Assert.That(snap.Ok).IsTrue();
         await Assert.That(snap.Delimiter).IsEqualTo('-');
     }
@@ -99,7 +103,7 @@ public class SwedishIdParsingTryMatchSpanTests
     [Test]
     public async Task TryMatchSpan_PlusSeparator_CapturedAsDelimiter()
     {
-        var snap = Snapshot("850101+9876");
+        var snap = Snapshot(OfficialNumbers.Centenarian.ShortWithPlus);
         await Assert.That(snap.Ok).IsTrue();
         await Assert.That(snap.Delimiter).IsEqualTo('+');
     }
@@ -113,7 +117,7 @@ public class SwedishIdParsingTryMatchSpanTests
     [Test]
     public async Task TryMatchSpan_WithSePrefix_Matches()
     {
-        var snap = Snapshot("SE198501019876");
+        var snap = Snapshot($"SE{Number.Long}");
         await Assert.That(snap.Ok).IsTrue();
         await Assert.That(snap.HasCentury).IsTrue();
         await Assert.That(snap.CenturyValue).IsEqualTo(19);
@@ -122,9 +126,9 @@ public class SwedishIdParsingTryMatchSpanTests
     [Test]
     public async Task TryMatchSpan_LeadingTrailingWhitespace_Matches()
     {
-        var snap = Snapshot("  198501019876  ");
+        var snap = Snapshot($"  {Number.Long}  ");
         await Assert.That(snap.Ok).IsTrue();
-        await Assert.That(snap.Year).IsEqualTo(85);
+        await Assert.That(snap.Year).IsEqualTo(81);
     }
 
     [Test]

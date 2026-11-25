@@ -1,9 +1,12 @@
 using Civitas.Id.Sweden.Errors;
+using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Errors;
 
 public class InvalidIdNumberExceptionTests
 {
+    private static readonly string WrongChecksum = OfficialNumbers.Modern.WithWrongCheckDigit;
+
     public class Construction
     {
         [Test]
@@ -25,9 +28,9 @@ public class InvalidIdNumberExceptionTests
         [Test]
         public async Task FullCtor_PreservesRedactedInputAndReason()
         {
-            var ex = new InvalidIdNumberException("200805080001", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(WrongChecksum, InvalidIdNumberReason.InvalidChecksum);
             await Assert.That(ex.Message).Contains("checksum");
-            await Assert.That(ex.RedactedInput).IsEqualTo("20******0001");
+            await Assert.That(ex.RedactedInput).IsEqualTo($"20******{WrongChecksum[^4..]}");
             await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.InvalidChecksum);
         }
 
@@ -44,9 +47,9 @@ public class InvalidIdNumberExceptionTests
         {
             var inner = new InvalidOperationException("root");
             var ex = new InvalidIdNumberException(
-                "200805080001", InvalidIdNumberReason.InvalidChecksum, inner);
+                WrongChecksum, InvalidIdNumberReason.InvalidChecksum, inner);
             await Assert.That(ex.Message).Contains("checksum");
-            await Assert.That(ex.RedactedInput).IsEqualTo("20******0001");
+            await Assert.That(ex.RedactedInput).IsEqualTo($"20******{WrongChecksum[^4..]}");
             await Assert.That(ex.Reason).IsEqualTo(InvalidIdNumberReason.InvalidChecksum);
             await Assert.That(ex.InnerException).IsEqualTo(inner);
         }
@@ -57,19 +60,17 @@ public class InvalidIdNumberExceptionTests
         [Test]
         public async Task Message_DoesNotContainRawInput()
         {
-            const string raw = "200805080001"; // wrong Luhn check digit
-            var ex = new InvalidIdNumberException(raw, InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(WrongChecksum, InvalidIdNumberReason.InvalidChecksum);
 
-            await Assert.That(ex.Message).DoesNotContain(raw);
+            await Assert.That(ex.Message).DoesNotContain(WrongChecksum);
         }
 
         [Test]
         public async Task RedactedInput_PreservesPrefixAndSuffix_MasksMiddle()
         {
-            const string raw = "200805080001";
-            var ex = new InvalidIdNumberException(raw, InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(WrongChecksum, InvalidIdNumberReason.InvalidChecksum);
 
-            await Assert.That(ex.RedactedInput).IsEqualTo("20******0001");
+            await Assert.That(ex.RedactedInput).IsEqualTo($"20******{WrongChecksum[^4..]}");
         }
 
         [Test]
@@ -96,7 +97,7 @@ public class InvalidIdNumberExceptionTests
         [Test]
         public async Task Message_DescribesReason()
         {
-            var ex = new InvalidIdNumberException("200805080001", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(WrongChecksum, InvalidIdNumberReason.InvalidChecksum);
             await Assert.That(ex.Message).Contains("checksum");
         }
     }

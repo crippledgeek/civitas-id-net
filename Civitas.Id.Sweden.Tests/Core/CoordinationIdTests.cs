@@ -71,8 +71,8 @@ public class CoordinationIdTests
         [Test]
         public async Task RejectsPersonalIdDay()
         {
-            // Encoded day 18 (a real day, not 78) — would be a personnummer, not coordination
-            await Assert.That(CoordinationId.IsValid("191401182396")).IsFalse();
+            // A real day, not one + 60 — a personnummer, not coordination
+            await Assert.That(CoordinationId.IsValid(OfficialNumbers.Centenarian.Long)).IsFalse();
         }
 
         [Test]

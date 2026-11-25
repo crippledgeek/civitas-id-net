@@ -66,8 +66,7 @@ public class TryValidatePersonShapedBodyTests
     [Test]
     public async Task InvalidLuhn_ReturnsFalse()
     {
-        // Body 890101010 has check digit 1, not 2 — Luhn-invalid.
-        var (matched, valid) = Run("198901010102", 1989, 1);
+        var (matched, valid) = Run(OfficialNumbers.Modern.WithWrongCheckDigit, 2000, 1);
         await Assert.That(matched).IsTrue();
         await Assert.That(valid).IsFalse();
     }

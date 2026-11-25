@@ -107,8 +107,8 @@ public class PersonalIdTests
         [Test]
         public async Task RejectsCoordinationDay()
         {
-            // Day 78 = real day 18 + 60 (samordningsnummer territory)
-            await Assert.That(PersonalId.IsValid("189001789802")).IsFalse();
+            // Valid but for its day, which is the real day + 60 (samordningsnummer territory)
+            await Assert.That(PersonalId.IsValid(OfficialNumbers.CentenarianSamordningsnummer.Long)).IsFalse();
         }
 
         [Test]

@@ -41,7 +41,7 @@ public sealed partial class ProblemDetailsSnapshotTests
     public async Task PersonalId_InvalidChecksum()
     {
         await using var fx = await IntegrationTestFixture.CreateAsync();
-        var resp = await fx.Client.GetAsync(new Uri("/customers-strict/198112180000", UriKind.Relative));
+        var resp = await fx.Client.GetAsync(new Uri($"/customers-strict/{OfficialNumbers.Modern.WithWrongCheckDigit}", UriKind.Relative));
         var body = await resp.Content.ReadAsStringAsync();
         await Verify(ScrubTraceId(body), "json")
             .UseFileName("PersonalId_InvalidChecksum_ProblemDetails");

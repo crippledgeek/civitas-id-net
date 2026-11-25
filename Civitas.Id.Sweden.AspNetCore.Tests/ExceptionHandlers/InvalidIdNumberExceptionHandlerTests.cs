@@ -196,7 +196,7 @@ public class InvalidIdNumberExceptionHandlerTests
             };
             ctx.Request.Headers.Accept = "application/problem+json";
 
-            var ex = new InvalidIdNumberException("198112180000", InvalidIdNumberReason.InvalidChecksum);
+            var ex = new InvalidIdNumberException(OfficialNumbers.Modern.WithWrongCheckDigit, InvalidIdNumberReason.InvalidChecksum);
             var handled = await handler.TryHandleAsync(ctx, ex, CancellationToken.None);
 
             await Assert.That(handled).IsTrue();
