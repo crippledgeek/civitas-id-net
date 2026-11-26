@@ -10,14 +10,14 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 /// <remarks>
 ///     A <see cref="ValidationContext" /> is optional. <see cref="ValidationAttribute.IsValid(object)" /> calls the
 ///     context overload with <see langword="null" /> and reads only whether the result is
-///     <see cref="ValidationResult.Success" />, so a failure without a context carries no message.
+///     <see cref="ValidationResult.Success" />, so a failure without a context carries no message. With a context a
+///     failure names the field by <see cref="ValidationContext.DisplayName" /> and carries
+///     <see cref="ValidationContext.MemberName" />, as the base class does for its own failures.
 /// </remarks>
 /// <typeparam name="T">The ID type the attribute accepts as an instance.</typeparam>
 internal sealed class IdAttributeRule<T>
     where T : SwedishOfficialId
 {
-    private const string FallbackName = "value";
-
     private readonly Func<string, bool> _parses;
 
     /// <summary>Creates a rule.</summary>
@@ -41,8 +41,11 @@ internal sealed class IdAttributeRule<T>
 
     private static ValidationResult Rejected(ValidationContext? validationContext, ValidationAttribute attribute)
     {
-        return validationContext is null
-            ? new ValidationResult(null)
-            : new ValidationResult(attribute.FormatErrorMessage(validationContext.MemberName ?? FallbackName));
+        if (validationContext is null) return new ValidationResult(null);
+
+        var message = attribute.FormatErrorMessage(validationContext.DisplayName);
+        return validationContext.MemberName is { } member
+            ? new ValidationResult(message, [member])
+            : new ValidationResult(message);
     }
 }

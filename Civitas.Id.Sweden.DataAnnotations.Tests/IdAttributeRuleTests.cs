@@ -14,6 +14,7 @@ public class IdAttributeRuleTests
     private const string Custom = "Bad {0}.";
     private const string CustomForField = "Bad Field.";
     private const string ResourceForField = "Resource Field.";
+    private const string Shown = "Shown name";
 
     private static ValidationContext Named => new(new object()) { MemberName = MemberName };
 
@@ -41,7 +42,7 @@ public class IdAttributeRuleTests
         await Assert.That(sut.GetValidationResult(kind.AcceptedInstance, Named) is null).IsTrue();
         await Assert.That(sut.GetValidationResult(null, Named) is null).IsTrue();
         await Assert.That(sut.GetValidationResult(Malformed, Named)?.ErrorMessage).IsEqualTo(kind.DefaultText(MemberName));
-        await Assert.That(sut.GetValidationResult(Malformed, unnamed)?.ErrorMessage).IsEqualTo(kind.DefaultText("value"));
+        await Assert.That(sut.GetValidationResult(Malformed, unnamed)?.ErrorMessage).IsEqualTo(kind.DefaultText(unnamed.DisplayName));
         await Assert.That(sut.GetValidationResult(42, Named)?.ErrorMessage).IsEqualTo(kind.DefaultText(MemberName));
     }
 
@@ -93,6 +94,47 @@ public class IdAttributeRuleTests
         await Assert.That(sut.IsValid(kind.Accepted)).IsTrue();
         await Assert.That(sut.IsValid(Malformed)).IsFalse();
         await Assert.That(sut.IsValid(42)).IsFalse();
+    }
+
+    private static async Task AssertDisplayedAsync(AttributeKind kind, string member)
+    {
+        var result = Validate(new Annotated()).Single(r => r.MemberNames.Contains(member));
+
+        await Assert.That(result.ErrorMessage).IsEqualTo(kind.DefaultText(Shown));
+        await Assert.That(result.MemberNames.Single()).IsEqualTo(member);
+    }
+
+    private static async Task AssertPlainAsync(AttributeKind kind, string member)
+    {
+        var result = Validate(new Plain()).Single(r => r.MemberNames.Contains(member));
+
+        await Assert.That(result.ErrorMessage).IsEqualTo(kind.DefaultText(member));
+        await Assert.That(result.MemberNames.Single()).IsEqualTo(member);
+    }
+
+    private static async Task AssertExplicitDisplayNameAsync(AttributeKind kind)
+    {
+        var context = new ValidationContext(new object()) { DisplayName = Shown };
+        var result = kind.Create().GetValidationResult(Malformed, context);
+
+        await Assert.That(result?.ErrorMessage).IsEqualTo(kind.DefaultText(Shown));
+        await Assert.That(result!.MemberNames.Any()).IsFalse();
+    }
+
+    private static async Task AssertMismatchNamesTheMemberAsync(AttributeKind kind)
+    {
+        var shown = new ValidationContext(new object()) { DisplayName = Shown, MemberName = MemberName };
+        var result = kind.Create().GetValidationResult(42, shown);
+
+        await Assert.That(result?.ErrorMessage).IsEqualTo(kind.DefaultText(Shown));
+        await Assert.That(result!.MemberNames.Single()).IsEqualTo(MemberName);
+    }
+
+    private static List<ValidationResult> Validate(object instance)
+    {
+        var results = new List<ValidationResult>();
+        Validator.TryValidateObject(instance, new ValidationContext(instance), results, true);
+        return results;
     }
 
     public class WithoutContext
@@ -164,7 +206,7 @@ public class IdAttributeRuleTests
         }
 
         [Test]
-        public async Task Validator_NamesTheFieldInTheMessage()
+        public async Task Validator_NamesTheFieldAndTheMember()
         {
             var dto = new Dto { Person = Malformed };
             var results = new List<ValidationResult>();
@@ -172,6 +214,7 @@ public class IdAttributeRuleTests
 
             await Assert.That(ok).IsFalse();
             await Assert.That(results.Single().ErrorMessage).IsEqualTo(AttributeKind.Personal.DefaultText(nameof(Dto.Person)));
+            await Assert.That(results.Single().MemberNames.Single()).IsEqualTo(nameof(Dto.Person));
         }
     }
 
@@ -305,6 +348,136 @@ public class IdAttributeRuleTests
         {
             await AssertVerdictIgnoresMisconfigurationAsync(AttributeKind.Official).ConfigureAwait(false);
         }
+    }
+
+    public class WithDisplayName
+    {
+        [Test]
+        public async Task PersonalId_UsesTheDisplayName()
+        {
+            await AssertDisplayedAsync(AttributeKind.Personal, nameof(Annotated.Personal)).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_UsesTheDisplayName()
+        {
+            await AssertDisplayedAsync(AttributeKind.Coordination, nameof(Annotated.Coordination)).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_UsesTheDisplayName()
+        {
+            await AssertDisplayedAsync(AttributeKind.Organisation, nameof(Annotated.Organisation)).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_UsesTheDisplayName()
+        {
+            await AssertDisplayedAsync(AttributeKind.Official, nameof(Annotated.Official)).ConfigureAwait(false);
+        }
+    }
+
+    public class WithoutDisplayName
+    {
+        [Test]
+        public async Task PersonalId_UsesTheMemberName()
+        {
+            await AssertPlainAsync(AttributeKind.Personal, nameof(Plain.Personal)).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_UsesTheMemberName()
+        {
+            await AssertPlainAsync(AttributeKind.Coordination, nameof(Plain.Coordination)).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_UsesTheMemberName()
+        {
+            await AssertPlainAsync(AttributeKind.Organisation, nameof(Plain.Organisation)).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_UsesTheMemberName()
+        {
+            await AssertPlainAsync(AttributeKind.Official, nameof(Plain.Official)).ConfigureAwait(false);
+        }
+    }
+
+    public class WithoutMemberName
+    {
+        [Test]
+        public async Task PersonalId_UsesTheDisplayNameAndNamesNoMember()
+        {
+            await AssertExplicitDisplayNameAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_UsesTheDisplayNameAndNamesNoMember()
+        {
+            await AssertExplicitDisplayNameAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_UsesTheDisplayNameAndNamesNoMember()
+        {
+            await AssertExplicitDisplayNameAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_UsesTheDisplayNameAndNamesNoMember()
+        {
+            await AssertExplicitDisplayNameAsync(AttributeKind.Official).ConfigureAwait(false);
+        }
+    }
+
+    public class TypeMismatch
+    {
+        [Test]
+        public async Task PersonalId_NamesTheMember()
+        {
+            await AssertMismatchNamesTheMemberAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_NamesTheMember()
+        {
+            await AssertMismatchNamesTheMemberAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_NamesTheMember()
+        {
+            await AssertMismatchNamesTheMemberAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_NamesTheMember()
+        {
+            await AssertMismatchNamesTheMemberAsync(AttributeKind.Official).ConfigureAwait(false);
+        }
+    }
+
+    private sealed class Annotated
+    {
+        [Display(Name = Shown)][ValidPersonalId] public string Personal { get; init; } = Malformed;
+
+        [Display(Name = Shown)][ValidCoordinationId] public string Coordination { get; init; } = Malformed;
+
+        [Display(Name = Shown)][ValidOrganisationId] public string Organisation { get; init; } = Malformed;
+
+        [Display(Name = Shown)][ValidSwedishOfficialId] public string Official { get; init; } = Malformed;
+    }
+
+    private sealed class Plain
+    {
+        [ValidPersonalId] public string Personal { get; init; } = Malformed;
+
+        [ValidCoordinationId] public string Coordination { get; init; } = Malformed;
+
+        [ValidOrganisationId] public string Organisation { get; init; } = Malformed;
+
+        [ValidSwedishOfficialId] public string Official { get; init; } = Malformed;
     }
 
     private sealed class Dto

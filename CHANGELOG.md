@@ -24,6 +24,12 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
 - **Civitas.Id.Sweden.DataAnnotations**: a value of the wrong type, such as an `int`, now fails the four `Valid*Id`
   attributes with the attribute's error message, as it does for any `ValidationAttribute`, where it gave
   "Type Int32 is not a PersonalId." and its like. (#57)
+- **Civitas.Id.Sweden.DataAnnotations**: the four `Valid*Id` attributes now name the field in their default message
+  by the context's `DisplayName`, as `ValidationAttribute` does, and the `ValidationResult` carries the context's
+  `MemberName` in `MemberNames`. The text changes where the display name differs from the member name: a property
+  with `[Display(Name = ...)]` under MVC, minimal APIs or `Validator`, and a `ValidationContext` with no
+  `MemberName`, which gave "value" and now gives its display name, by default the type name. Error keys in
+  ProblemDetails responses are unchanged. (#57)
 
 ### Fixed
 - **Civitas.Id.Sweden**: a number with the year 0000, and a ten-digit number read on a date in one of the first
