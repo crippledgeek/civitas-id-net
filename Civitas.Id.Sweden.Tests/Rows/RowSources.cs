@@ -17,7 +17,12 @@ internal static class RowSources
         Of<OfficialSamordningsnummerRows>(nameof(OfficialSamordningsnummerRows.Of2020),
             Fixtures.Samordningsnummer2020, 14),
         Of<SamordningsnummerCorrectedRows>(nameof(SamordningsnummerCorrectedRows.Rows),
-            Fixtures.SamordningsnummerCorrected, 1306)
+            Fixtures.SamordningsnummerCorrected, 1306),
+        Of<OrganisationRows>(nameof(OrganisationRows.ExtendedValid), Fixtures.OrganisationsnummerExtended, 6),
+        Of<OrganisationRows>(nameof(OrganisationRows.ExtendedInvalid), Fixtures.OrganisationsnummerExtended, 4),
+        Of<OrganisationRows>(nameof(OrganisationRows.SoleTraders), Fixtures.OrganisationsnummerEnskildFirma, 20),
+        Of<OrganisationRows>(nameof(OrganisationRows.Textual), Fixtures.OrganisationsnummerTextual, 6),
+        Of<InvalidNumberRows>(nameof(InvalidNumberRows.Rows), Fixtures.InvalidIds, 9)
     ];
 
     private static RowSource Of<TProvider>(string method, FixtureSpec file, int rows)

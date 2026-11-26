@@ -19,6 +19,15 @@ internal static class ReferenceDates
     public static readonly DateOnly SamordningsnummerCorrected = new(2025, 5, 1);
 
     /// <summary>
+    ///     A day on which every sole trader of <c>testorganisationsnummer_enskild_firma.csv</c> has the separator the
+    ///     file gives: the rows' birth dates allow any day from the 100th birthday of the youngest bearer written with
+    ///     <c>+</c> to the day before that of the oldest written with <c>-</c>. A test derives that window from the rows
+    ///     and checks this day lies inside it. The extended organisation file holds only legal persons, which take no
+    ///     <c>+</c>.
+    /// </summary>
+    public static readonly DateOnly SoleTrader = PersonnummerFinal;
+
+    /// <summary>
     ///     The day for files with no column that depends on it: every row carries its century, so the day decides
     ///     nothing.
     /// </summary>

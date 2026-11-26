@@ -55,6 +55,16 @@ public class RowSourcesTests
         await Assert.That(wrong).IsEmpty();
     }
 
+    [Test]
+    public async Task Sources_ReadEveryDataFile()
+    {
+        var read = RowSources.All.Select(source => source.File.FileName).ToHashSet();
+        var files = Fixtures.All.Select(spec => spec.FileName).ToHashSet();
+
+        await Assert.That(files.Count).IsGreaterThan(0);
+        await Assert.That(read.SetEquals(files)).IsTrue();
+    }
+
     private static HashSet<(Type? Provider, string Method)> DataSourcesOfTests()
     {
         return

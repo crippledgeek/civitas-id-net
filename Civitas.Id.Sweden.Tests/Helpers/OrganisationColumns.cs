@@ -13,8 +13,8 @@ internal sealed record OrganisationColumns
     /// <summary>The columns of <c>testorganisationsnummer_enskild_firma.csv</c>.</summary>
     public static readonly OrganisationColumns SoleTrader = new() { Valid = 2, Type = 3 };
 
-    public int? Short { get; init; }
+    public int? Short { get; private init; }
     public required int Valid { get; init; }
     public required int Type { get; init; }
-    public int? Vat { get; init; }
+    public int? Vat { get; private init; }
 }

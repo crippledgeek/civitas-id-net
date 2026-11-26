@@ -24,11 +24,17 @@ internal sealed record ExpectedRejection(Type Parsed, InvalidIdNumberReason Reas
         new(typeof(SwedishOfficialId), InvalidIdNumberReason.UnsupportedIdType);
 
     /// <summary>A text that every type rejects as of the wrong form.</summary>
-    public static IReadOnlyList<ExpectedRejection> ByEveryType { get; } =
-    [
-        InvalidFormatFor<PersonalId>(), InvalidFormatFor<CoordinationId>(), InvalidFormatFor<OrganisationId>(),
-        UnsupportedByAny
-    ];
+    public static IReadOnlyList<ExpectedRejection> ByEveryType { get; } = ByEveryTypeAs(InvalidIdNumberReason.InvalidFormat);
+
+    /// <summary>A text that every type rejects, the types of a person or an organisation for <paramref name="reason" />.</summary>
+    public static IReadOnlyList<ExpectedRejection> ByEveryTypeAs(InvalidIdNumberReason reason)
+    {
+        return
+        [
+            new ExpectedRejection(typeof(PersonalId), reason), new ExpectedRejection(typeof(CoordinationId), reason),
+            new ExpectedRejection(typeof(OrganisationId), reason), UnsupportedByAny
+        ];
+    }
 
     /// <summary>
     ///     The entry points, by name and how they answer, that do not reject <paramref name="text" /> as expected: those
