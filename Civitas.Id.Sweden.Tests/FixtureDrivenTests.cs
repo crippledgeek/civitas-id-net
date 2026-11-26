@@ -1,4 +1,3 @@
-using System.Globalization;
 using Civitas.Id.Sweden.Core;
 using Civitas.Id.Sweden.Format;
 using Civitas.Id.Sweden.Tests.Helpers;
@@ -6,67 +5,11 @@ using Civitas.Id.Sweden.Tests.Helpers;
 namespace Civitas.Id.Sweden.Tests;
 
 /// <summary>
-///     Fixture-driven tests over the test data files read below. THIRD-PARTY-DATA.md says which of them
-///     come from Skatteverket. The official 2019 samordningsnummer file is not asserted here.
+///     Fixture-driven tests over the organisation and invalid number files. THIRD-PARTY-DATA.md says which of
+///     the data files come from Skatteverket; the person number files are asserted in the Rows namespace.
 /// </summary>
 public class FixtureDrivenTests
 {
-    /// <summary>
-    ///     Reference "today" for samordningsnummer age assertions. Calibrated
-    ///     empirically against Testsamordningsnummer_2019_corrected.csv: the
-    ///     unique date satisfying every valid row is 2025-05-01.
-    /// </summary>
-    private static readonly DateOnly SamordningsnummerFixtureToday = new(2025, 5, 1);
-
-    // ── Samordningsnummer (column order differs!) ──
-
-    public static IEnumerable<(string Pin, bool Female, bool Male, int Age, bool Adult, bool Child, bool Valid)>
-        Samordningsnummer()
-    {
-        var rows = CsvLoader.Rows(Fixtures.SamordningsnummerCorrected).Select(row => row.Cells);
-        foreach (var r in rows)
-            yield return (
-                r[0],
-                bool.Parse(r[1]),
-                bool.Parse(r[2]),
-                int.Parse(r[3], CultureInfo.InvariantCulture),
-                bool.Parse(r[4]),
-                bool.Parse(r[5]),
-                bool.Parse(r[6]));
-    }
-
-    [Test]
-    [MethodDataSource(nameof(Samordningsnummer))]
-    public async Task CoordinationId_FixtureMatchesAllColumns(
-        string pin, bool female, bool male, int age, bool adult, bool child, bool valid)
-    {
-        await Assert.That(CoordinationId.IsValid(pin)).IsEqualTo(valid);
-        if (!valid) return;
-
-        var id = CoordinationId.Parse(pin);
-        await Assert.That(id.IsFemale).IsEqualTo(female);
-        await Assert.That(id.IsMale).IsEqualTo(male);
-        await Assert.That(id.GetAge(SamordningsnummerFixtureToday)).IsEqualTo(age);
-        await Assert.That(id.IsAdult(SamordningsnummerFixtureToday)).IsEqualTo(adult);
-        await Assert.That(id.IsChild(SamordningsnummerFixtureToday)).IsEqualTo(child);
-    }
-
-    // ── Official 2020 samordningsnummer ──
-
-    public static IEnumerable<string> Samordningsnummer2020()
-    {
-        return CsvLoader.Column(Fixtures.Samordningsnummer2020);
-    }
-
-    [Test]
-    [MethodDataSource(nameof(Samordningsnummer2020))]
-    public async Task CoordinationId_2020Fixture_KeepsNumberAndBirthDate(string pin)
-    {
-        var id = CoordinationId.Parse(pin);
-        await Assert.That(id.LongFormat()).IsEqualTo(pin);
-        await Assert.That(id.BirthDate).IsEqualTo(new OfficialSamordningsnummer(pin).BirthDate);
-    }
-
     // ── Organisationsnummer extended, and the sole-trader rows without the columns that drop the century ──
 
     private const int OrganisationLength = 10;

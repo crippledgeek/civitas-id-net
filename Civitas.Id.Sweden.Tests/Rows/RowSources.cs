@@ -9,7 +9,15 @@ internal static class RowSources
     [
         Of<OfficialPersonnummerRows>(nameof(OfficialPersonnummerRows.Of1890S), Fixtures.Personnummer1890S, 3653),
         Of<OfficialPersonnummerRows>(nameof(OfficialPersonnummerRows.Of2000S), Fixtures.Personnummer2000S, 7323),
-        Of<PersonnummerFinalRows>(nameof(PersonnummerFinalRows.Rows), Fixtures.PersonnummerFinal, 3653)
+        Of<PersonnummerFinalRows>(nameof(PersonnummerFinalRows.Rows), Fixtures.PersonnummerFinal, 3653),
+        Of<OfficialSamordningsnummerRows>(nameof(OfficialSamordningsnummerRows.Of2019WithDate),
+            Fixtures.SamordningsnummerOfficial, 1306),
+        Of<OfficialSamordningsnummerRows>(nameof(OfficialSamordningsnummerRows.Of2019WithoutDate),
+            Fixtures.SamordningsnummerOfficial, 192),
+        Of<OfficialSamordningsnummerRows>(nameof(OfficialSamordningsnummerRows.Of2020),
+            Fixtures.Samordningsnummer2020, 14),
+        Of<SamordningsnummerCorrectedRows>(nameof(SamordningsnummerCorrectedRows.Rows),
+            Fixtures.SamordningsnummerCorrected, 1306)
     ];
 
     private static RowSource Of<TProvider>(string method, FixtureSpec file, int rows)

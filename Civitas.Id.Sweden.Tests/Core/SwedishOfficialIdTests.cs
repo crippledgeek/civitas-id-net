@@ -333,11 +333,6 @@ public class SwedishOfficialIdTests
     {
         // ── Data sources ────────────────────────────────────────────────
 
-        public static IEnumerable<string> Samordningsnummer()
-        {
-            return CsvLoader.Column(Fixtures.SamordningsnummerCorrected);
-        }
-
         public static IEnumerable<string> OrganisationsnummerTextual()
         {
             return CsvLoader.Column(Fixtures.OrganisationsnummerTextual);
@@ -349,13 +344,6 @@ public class SwedishOfficialIdTests
         }
 
         // ── IsValid fan-out ─────────────────────────────────────────────
-
-        [Test]
-        [MethodDataSource(nameof(Samordningsnummer))]
-        public async Task IsValid_Samordningsnummer_ReturnsTrue(string pin)
-        {
-            await Assert.That(SwedishOfficialId.IsValid(pin)).IsTrue();
-        }
 
         [Test]
         [MethodDataSource(nameof(OrganisationsnummerTextual))]
@@ -372,15 +360,6 @@ public class SwedishOfficialIdTests
         }
 
         // ── TryParseAny fan-out (mirrors Java parseAny) ────────────────
-
-        [Test]
-        [MethodDataSource(nameof(Samordningsnummer))]
-        public async Task TryParseAny_Samordningsnummer_ReturnsCoordinationId(string pin)
-        {
-            var ok = SwedishOfficialId.TryParseAny(pin, out var id);
-            await Assert.That(ok).IsTrue();
-            await Assert.That(id).IsTypeOf<CoordinationId>();
-        }
 
         [Test]
         [MethodDataSource(nameof(OrganisationsnummerTextual))]
@@ -403,14 +382,6 @@ public class SwedishOfficialIdTests
         }
 
         // ── ParseAny fan-out (mirrors Java parseAnyOrThrow) ────────────
-
-        [Test]
-        [MethodDataSource(nameof(Samordningsnummer))]
-        public async Task ParseAny_Samordningsnummer_ReturnsCoordinationId(string pin)
-        {
-            var id = SwedishOfficialId.ParseAny(pin);
-            await Assert.That(id).IsTypeOf<CoordinationId>();
-        }
 
         [Test]
         [MethodDataSource(nameof(OrganisationsnummerTextual))]

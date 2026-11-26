@@ -597,49 +597,4 @@ public class CoordinationIdTests
             await Assert.That(id.GetAge(sunday)).IsEqualTo(18);
         }
     }
-
-    /// <summary>
-    ///     Fixture-driven fan-out mirroring the Java sibling's
-    ///     <c>CoordinationIdTest.shouldBeAValidSwedishPersonalIdWithCorrectAgeAndGender</c>.
-    ///     Uses a per-row reference date computed from <c>BirthDate + expectedAge</c>
-    ///     (rather than a single fixture-wide pinned date) — mirrors Java's
-    ///     <c>clockForExpectedAge</c> helper.
-    /// </summary>
-    public class FixtureDriven
-    {
-        public static IEnumerable<(string Pin, bool Female, bool Male, int Age, bool Adult, bool Child, bool Valid)>
-            Samordningsnummer()
-        {
-            var rows = CsvLoader.Rows(Fixtures.SamordningsnummerCorrected).Select(row => row.Cells);
-            foreach (var r in rows)
-                yield return (
-                    r[0],
-                    bool.Parse(r[1]),
-                    bool.Parse(r[2]),
-                    int.Parse(r[3], CultureInfo.InvariantCulture),
-                    bool.Parse(r[4]),
-                    bool.Parse(r[5]),
-                    bool.Parse(r[6]));
-        }
-
-        [Test]
-        [MethodDataSource(nameof(Samordningsnummer))]
-        public async Task ValidSamordningsnummer_HaveCorrectAgeAndGender_PerRowClock(
-            string pin, bool female, bool male, int age, bool adult, bool child, bool valid)
-        {
-            await Assert.That(CoordinationId.IsValid(pin)).IsEqualTo(valid);
-            if (!valid) return;
-
-            var id = CoordinationId.Parse(pin);
-
-            // Per-row reference date: birth + (age + 1) years - 1 day. Matches Java helper.
-            var refDate = id.BirthDate.AddYears(age + 1).AddDays(-1);
-
-            await Assert.That(id.IsFemale).IsEqualTo(female);
-            await Assert.That(id.IsMale).IsEqualTo(male);
-            await Assert.That(id.GetAge(refDate)).IsEqualTo(age);
-            await Assert.That(id.IsAdult(refDate)).IsEqualTo(adult);
-            await Assert.That(id.IsChild(refDate)).IsEqualTo(child);
-        }
-    }
 }
