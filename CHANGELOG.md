@@ -41,6 +41,11 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
 - **Civitas.Id.Sweden**: the README example called `ShortFormat` with a format, which does not compile, and
   now calls `Format`. Its valid numbers are from published test data. (#23)
 
+- **Civitas.Id.Sweden.DataAnnotations**: `IsValid(object)` on `ValidPersonalIdAttribute`,
+  `ValidCoordinationIdAttribute`, `ValidOrganisationIdAttribute` and `ValidSwedishOfficialIdAttribute` threw
+  `ArgumentNullException` for any non-null value, because `ValidationAttribute` calls the context overload with no
+  context. It now returns the verdict. Results with a context are unchanged. (#54)
+
 - **Civitas.Id.Sweden.AspNetCore**: a malformed value for a typed ID parameter now gives the
   documented 400 in Development too with `UseExceptionHandler()`, where ASP.NET Core answered 500. (#41)
 

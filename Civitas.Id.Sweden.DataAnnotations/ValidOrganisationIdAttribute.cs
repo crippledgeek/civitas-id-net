@@ -26,18 +26,12 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 [PublicAPI]
 public sealed class ValidOrganisationIdAttribute : ValidationAttribute
 {
+    private static readonly IdAttributeRule<OrganisationId> Rule = new(OrganisationId.IsValid, "an OrganisationId");
+
     /// <inheritdoc />
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
     {
-        ArgumentNullException.ThrowIfNull(validationContext);
-        if (value is null) return ValidationResult.Success;
-        return value switch
-        {
-            string s when OrganisationId.TryParse(s, out _) => ValidationResult.Success,
-            OrganisationId => ValidationResult.Success,
-            string => new ValidationResult(FormatErrorMessage(validationContext.MemberName ?? "value")),
-            _ => new ValidationResult($"Type {value.GetType().Name} is not an OrganisationId.")
-        };
+        return Rule.Evaluate(value, validationContext, this);
     }
 
     /// <inheritdoc />

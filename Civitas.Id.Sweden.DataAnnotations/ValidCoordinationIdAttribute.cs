@@ -18,18 +18,12 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 [PublicAPI]
 public sealed class ValidCoordinationIdAttribute : ValidationAttribute
 {
+    private static readonly IdAttributeRule<CoordinationId> Rule = new(CoordinationId.IsValid, "a CoordinationId");
+
     /// <inheritdoc />
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
     {
-        ArgumentNullException.ThrowIfNull(validationContext);
-        if (value is null) return ValidationResult.Success;
-        return value switch
-        {
-            string s when CoordinationId.TryParse(s, out _) => ValidationResult.Success,
-            CoordinationId => ValidationResult.Success,
-            string => new ValidationResult(FormatErrorMessage(validationContext.MemberName ?? "value")),
-            _ => new ValidationResult($"Type {value.GetType().Name} is not a CoordinationId.")
-        };
+        return Rule.Evaluate(value, validationContext, this);
     }
 
     /// <inheritdoc />

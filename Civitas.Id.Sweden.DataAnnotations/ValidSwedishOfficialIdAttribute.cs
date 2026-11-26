@@ -18,18 +18,12 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 [PublicAPI]
 public sealed class ValidSwedishOfficialIdAttribute : ValidationAttribute
 {
+    private static readonly IdAttributeRule<SwedishOfficialId> Rule = new(SwedishOfficialId.IsValid, "a Swedish official ID");
+
     /// <inheritdoc />
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
+    protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
     {
-        ArgumentNullException.ThrowIfNull(validationContext);
-        if (value is null) return ValidationResult.Success;
-        return value switch
-        {
-            string s when SwedishOfficialId.TryParseAny(s, out _) => ValidationResult.Success,
-            SwedishOfficialId => ValidationResult.Success,
-            string => new ValidationResult(FormatErrorMessage(validationContext.MemberName ?? "value")),
-            _ => new ValidationResult($"Type {value.GetType().Name} is not a Swedish official ID.")
-        };
+        return Rule.Evaluate(value, validationContext, this);
     }
 
     /// <inheritdoc />
