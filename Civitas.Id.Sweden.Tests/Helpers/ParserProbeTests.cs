@@ -1,3 +1,5 @@
+using Civitas.Id.Sweden.Core;
+
 namespace Civitas.Id.Sweden.Tests.Helpers;
 
 public class ParserProbeTests
@@ -5,8 +7,10 @@ public class ParserProbeTests
     [Test]
     public async Task AsksEveryEntryPointThatDoesNotThrow()
     {
-        await Assert.That(EntryPoints.ExplicitCount).IsEqualTo(3);
-        await Assert.That(ParserProbe.Count).IsEqualTo(EntryPoints.CountOf("TryParse", "TryParseAny", "IsValid"));
+        var methods = EntryPoints.Named(nameof(PersonalId.TryParse), nameof(SwedishOfficialId.TryParseAny),
+            nameof(SwedishOfficialId.IsValid));
+
+        await Assert.That(ParseSignature.Differences(methods, ParserProbe.Covered)).IsEmpty();
     }
 
     [Test]

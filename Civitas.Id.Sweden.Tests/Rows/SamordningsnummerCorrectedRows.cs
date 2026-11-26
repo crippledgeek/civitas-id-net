@@ -11,13 +11,21 @@ namespace Civitas.Id.Sweden.Tests.Rows;
 /// </summary>
 public class SamordningsnummerCorrectedRows
 {
-    public static IEnumerable<PersonRow> Rows()
+    /// <summary>Every row of the file.</summary>
+    public abstract class All : IRowSource<PersonRow>
     {
-        return FileRows.ValidPersons(Fixtures.SamordningsnummerCorrected, PersonColumns.Samordningsnummer);
+        public static FixtureSpec File => Fixtures.SamordningsnummerCorrected;
+        public static int Pinned => 1306;
+        public static int Consumers => 1;
+
+        public static IEnumerable<PersonRow> Read()
+        {
+            return FileRows.ValidPersons(File, PersonColumns.Samordningsnummer);
+        }
     }
 
     [Test]
-    [MethodDataSource(nameof(Rows))]
+    [RowsOf<All, PersonRow>]
     public async Task Accepted_WithEveryColumn(PersonRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -34,8 +42,8 @@ public class SamordningsnummerCorrectedRows
     [Test]
     public async Task Numbers_AreTheOfficialFilesNumbersWithADateInOrder()
     {
-        var official = OfficialSamordningsnummerRows.Of2019WithDate().Select(row => row.Number);
-        var corrected = Rows().Select(row => row.Number);
+        var official = OfficialSamordningsnummerRows.Of2019WithDate.Read().Select(row => row.Number);
+        var corrected = All.Read().Select(row => row.Number);
         await Assert.That(official.SequenceEqual(corrected)).IsTrue();
     }
 

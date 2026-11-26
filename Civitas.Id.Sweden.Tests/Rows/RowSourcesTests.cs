@@ -1,85 +1,193 @@
-using System.Reflection;
 using Civitas.Id.Sweden.Tests.Helpers;
 
 namespace Civitas.Id.Sweden.Tests.Rows;
 
 /// <summary>
-///     That the data files are read by row tests, and that no source can be emptied: a test that has no rows does not
-///     run, and passes.
+///     That the listed sources of the row tests read every row of every data file once, through their pins, and the
+///     check that <see cref="RowDiscovery" /> makes of the discovered tests. That each source supplies its pinned rows
+///     is also checked by <see cref="RowsOfAttribute{TSource, TRow}" /> on every test it feeds.
 /// </summary>
 public class RowSourcesTests
 {
-    [Test]
-    public async Task EverySource_SuppliesExactlyItsPinnedRows()
-    {
-        var wrong = RowSources.All
-            .Select(source => (source.Name, Supplied: source.Supplied(), Pinned: source.Rows))
-            .Where(source => source.Supplied != source.Pinned)
-            .Select(source => $"{source.Name} supplies {source.Supplied} rows, expected {source.Pinned}");
+    private static readonly FixtureSpec SoleTraderFile = OrganisationRows.SoleTraders.File;
 
-        await Assert.That(RowSources.All.Count).IsGreaterThan(0);
-        await Assert.That(RowSources.All.Where(source => source.Rows <= 0).Select(source => source.Name)).IsEmpty();
-        await Assert.That(wrong).IsEmpty();
+    public class Files
+    {
+        [Test]
+        public async Task SourcesOfAFile_SupplyEveryRowOfItExactlyOnce()
+        {
+            await Assert.That(ListedRowSource.FilesNotSuppliedExactlyOnce(RowSources.All)).IsEmpty();
+        }
+
+        [Test]
+        public async Task SourcesOfAFile_OneSourceLeftOut_NameTheFile()
+        {
+            var withoutDated = RowSources.All.Where(source => source.File != Fixtures.SamordningsnummerOfficial)
+                .Append(ListedRowSource.Of<OfficialSamordningsnummerRows.Of2019WithoutDate, UnsupportedRow>());
+
+            await Assert.That(ListedRowSource.FilesNotSuppliedExactlyOnce(withoutDated))
+                .IsEquivalentTo([Fixtures.SamordningsnummerOfficial]);
+        }
+
+        [Test]
+        public async Task SourcesOfAFile_ARowReadTwice_NameTheFile()
+        {
+            var twice = RowSources.All.Append(ListedRowSource.Of<OrganisationRows.SoleTraders, OrganisationRow>());
+
+            await Assert.That(ListedRowSource.FilesNotSuppliedExactlyOnce(twice)).IsEquivalentTo([SoleTraderFile]);
+        }
+
+        [Test]
+        public async Task SourcesOfAFile_ASourceDeclaringAnotherFile_NameBothFiles()
+        {
+            ListedRowSource[] misdeclared =
+            [
+                .. RowSources.All.Where(source => source.File != SoleTraderFile),
+                ListedRowSource.Of<MisdeclaredSoleTraders, OrganisationRow>()
+            ];
+
+            await Assert.That(ListedRowSource.FilesNotSuppliedExactlyOnce(misdeclared))
+                .IsEquivalentTo([Fixtures.OrganisationsnummerExtended]);
+            await Assert.That(ListedRowSource.UnreadFiles(misdeclared)).IsEquivalentTo([SoleTraderFile]);
+        }
+
+        [Test]
+        public async Task SourcesOfAFile_AListedSourceOffItsPin_Throws()
+        {
+            ListedRowSource[] offPin = [ListedRowSource.Of<SoleTradersPinnedAtOneMore, OrganisationRow>()];
+
+            var thrown = await Assert.That(() => ListedRowSource.FilesNotSuppliedExactlyOnce(offPin).ToList())
+                .Throws<InvalidDataException>();
+
+            await Assert.That(thrown?.Message).Contains(nameof(SoleTradersPinnedAtOneMore));
+        }
+
+        [Test]
+        public async Task Sources_ReadEveryDataFile()
+        {
+            await Assert.That(ListedRowSource.UnreadFiles(RowSources.All)).IsEmpty();
+        }
+
+        [Test]
+        public async Task Sources_AFileUnread_NameIt()
+        {
+            await Assert.That(ListedRowSource.UnreadFiles(RowSources.All.Where(source => source.File != SoleTraderFile)))
+                .IsEquivalentTo([SoleTraderFile]);
+        }
     }
 
-    [Test]
-    public async Task EverySource_IsTheDataSourceOfATest()
+    public class DiscoveredTests
     {
-        var used = DataSourcesOfTests();
-        var unused = RowSources.All.Where(source => !used.Contains((source.Provider, source.Method)))
-            .Select(source => source.Name);
-
-        await Assert.That(used.Count).IsGreaterThan(0);
-        await Assert.That(unused).IsEmpty();
-    }
-
-    [Test]
-    public async Task EveryDataSourceOfARowTest_IsRegistered()
-    {
-        var registered = RowSources.All.Select(source => (Provider: (Type?)source.Provider, source.Method)).ToHashSet();
-        var unregistered = DataSourcesOfTests()
-            .Where(source => source.Provider?.Namespace == typeof(RowSources).Namespace)
-            .Where(source => !registered.Contains(source))
-            .Select(source => $"{source.Provider?.Name}.{source.Method}");
-
-        await Assert.That(unregistered).IsEmpty();
-    }
-
-    [Test]
-    public async Task SourcesOfAFile_SupplyEveryRowOfItExactlyOnce()
-    {
-        var wrong = RowSources.All.GroupBy(source => source.File)
-            .Where(file => file.Sum(source => source.Rows) != file.Key.DataRows)
-            .Select(file => file.Key.FileName);
-
-        await Assert.That(wrong).IsEmpty();
-    }
-
-    [Test]
-    public async Task Sources_ReadEveryDataFile()
-    {
-        var read = RowSources.All.Select(source => source.File.FileName).ToHashSet();
-        var files = Fixtures.All.Select(spec => spec.FileName).ToHashSet();
-
-        await Assert.That(files.Count).IsGreaterThan(0);
-        await Assert.That(read.SetEquals(files)).IsTrue();
-    }
-
-    private static HashSet<(Type? Provider, string Method)> DataSourcesOfTests()
-    {
-        return
+        private static readonly IReadOnlyList<ListedRowSource> Listed =
         [
-            .. TestMethods()
-                .SelectMany(method => method.GetCustomAttributes<MethodDataSourceAttribute>()
-                    .Select(attribute => (Provider: attribute.ClassProvidingDataSource ?? method.DeclaringType,
-                        Method: attribute.MethodNameProvidingDataSource)))
+            ListedRowSource.Of<OrganisationRows.Textual, NumberRow>(),
+            ListedRowSource.Of<OrganisationRows.SoleTraders, OrganisationRow>()
         ];
+
+        private static readonly string TextualName = RowsOfAttribute<OrganisationRows.Textual, NumberRow>.SourceName;
+        private static readonly string SoleTraderName = RowsOfAttribute<OrganisationRows.SoleTraders, OrganisationRow>.SourceName;
+
+        /// <summary>Test methods by name; each listed source here pins two of them.</summary>
+        private static readonly IReadOnlyList<string> Methods = ["Tests.First", "Tests.Second"];
+
+        private static IEnumerable<DiscoveredRow> Taken(string name, IEnumerable<FileRow> rows, IEnumerable<string> methods)
+        {
+            var read = rows.ToList();
+            return methods.SelectMany(method => read.Select(row => new DiscoveredRow(name, method, row.Source)));
+        }
+
+        private static IEnumerable<DiscoveredRow> AllTaken()
+        {
+            return Taken(TextualName, OrganisationRows.Textual.Read(), Methods)
+                .Concat(Taken(SoleTraderName, OrganisationRows.SoleTraders.Read(), Methods));
+        }
+
+        [Test]
+        public async Task EveryRowOfEveryListedSourceTaken_HasNoDifference()
+        {
+            await Assert.That(ListedRowSource.RowsNotDiscovered(Listed, AllTaken())).IsEmpty();
+        }
+
+        [Test]
+        public async Task ARowNotTaken_NamesTheSourceAndTheRow()
+        {
+            var first = OrganisationRows.Textual.Read().First().Source;
+
+            await Assert.That(ListedRowSource.RowsNotDiscovered(Listed, AllTaken().Where(row => row.Place != first)))
+                .IsEquivalentTo([$"rows of {TextualName} that no test takes: 1, the first {first}"]);
+        }
+
+        [Test]
+        public async Task ASourceThatFeedsNoTest_IsNamed()
+        {
+            var rows = OrganisationRows.Textual.Read().ToList();
+
+            await Assert.That(ListedRowSource.RowsNotDiscovered(Listed, AllTaken().Where(row => row.SourceName != TextualName)))
+                .IsEquivalentTo([
+                    $"rows of {TextualName} that no test takes: {rows.Count}, the first {rows[0].Source}",
+                    $"test methods fed by {TextualName}: 0, pinned at {OrganisationRows.Textual.Consumers}"
+                ]);
+        }
+
+        [Test]
+        public async Task OneConsumerFewer_NamesTheSourceAndBothCounts()
+        {
+            var fewer = AllTaken().Where(row => row.SourceName != TextualName || row.TestMethod == Methods[0]);
+
+            await Assert.That(ListedRowSource.RowsNotDiscovered(Listed, fewer))
+                .IsEquivalentTo([$"test methods fed by {TextualName}: 1, pinned at {OrganisationRows.Textual.Consumers}"]);
+        }
+
+        [Test]
+        public async Task OneConsumerMore_NamesTheSourceAndBothCounts()
+        {
+            var more = AllTaken().Concat(Taken(TextualName, OrganisationRows.Textual.Read(), ["Tests.Third"]));
+
+            await Assert.That(ListedRowSource.RowsNotDiscovered(Listed, more))
+                .IsEquivalentTo([$"test methods fed by {TextualName}: 3, pinned at {OrganisationRows.Textual.Consumers}"]);
+        }
+
+        [Test]
+        public async Task TheHook_CheckedThisRun_UnlessTheRunIsFiltered()
+        {
+            var session = TestContext.Current?.ClassContext.AssemblyContext.TestSessionContext;
+
+            await Assert.That(RowDiscovery.Checked || session?.TestFilter is not null).IsTrue();
+        }
+
+        [Test]
+        public async Task ASourceThatFeedsTestsButIsNotListed_IsNamed()
+        {
+            ListedRowSource[] textualOnly = [Listed[0]];
+
+            await Assert.That(ListedRowSource.RowsNotDiscovered(textualOnly, AllTaken()))
+                .IsEquivalentTo([$"{SoleTraderName} feeds tests but is not listed"]);
+        }
     }
 
-    private static IEnumerable<MethodInfo> TestMethods()
+    /// <summary>The sole-trader rows, declared as rows of the extended file.</summary>
+    private abstract class MisdeclaredSoleTraders : IRowSource<OrganisationRow>
     {
-        return typeof(RowSources).Assembly.GetTypes()
-            .SelectMany(type => type.GetMethods(BindingFlags.Public | BindingFlags.Instance | BindingFlags.Static))
-            .Where(method => method.GetCustomAttribute<TestAttribute>() is not null);
+        public static FixtureSpec File => Fixtures.OrganisationsnummerExtended;
+        public static int Pinned => OrganisationRows.SoleTraders.Pinned;
+        public static int Consumers => 0;
+
+        public static IEnumerable<OrganisationRow> Read()
+        {
+            return OrganisationRows.SoleTraders.Read();
+        }
+    }
+
+    /// <summary>The sole-trader rows, pinned at one more.</summary>
+    private abstract class SoleTradersPinnedAtOneMore : IRowSource<OrganisationRow>
+    {
+        public static FixtureSpec File => SoleTraderFile;
+        public static int Pinned => OrganisationRows.SoleTraders.Pinned + 1;
+        public static int Consumers => 0;
+
+        public static IEnumerable<OrganisationRow> Read()
+        {
+            return OrganisationRows.SoleTraders.Read();
+        }
     }
 }

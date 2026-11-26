@@ -11,28 +11,60 @@ namespace Civitas.Id.Sweden.Tests.Rows;
 /// </summary>
 public class OrganisationRows
 {
-    public static IEnumerable<OrganisationRow> ExtendedValid()
+    /// <summary>The valid rows of the extended file.</summary>
+    public abstract class ExtendedValid : IRowSource<OrganisationRow>
     {
-        return FileRows.ValidExtendedOrganisations();
+        public static FixtureSpec File => Fixtures.OrganisationsnummerExtended;
+        public static int Pinned => 6;
+        public static int Consumers => 1;
+
+        public static IEnumerable<OrganisationRow> Read()
+        {
+            return FileRows.ValidExtendedOrganisations();
+        }
     }
 
-    public static IEnumerable<OrganisationRow> ExtendedInvalid()
+    /// <summary>The rows of the extended file that are not valid.</summary>
+    public abstract class ExtendedInvalid : IRowSource<OrganisationRow>
     {
-        return FileRows.InvalidExtendedOrganisations();
+        public static FixtureSpec File => Fixtures.OrganisationsnummerExtended;
+        public static int Pinned => 4;
+        public static int Consumers => 1;
+
+        public static IEnumerable<OrganisationRow> Read()
+        {
+            return FileRows.InvalidExtendedOrganisations();
+        }
     }
 
-    public static IEnumerable<OrganisationRow> SoleTraders()
+    /// <summary>The rows of the sole-trader file.</summary>
+    public abstract class SoleTraders : IRowSource<OrganisationRow>
     {
-        return FileRows.SoleTraders();
+        public static FixtureSpec File => Fixtures.OrganisationsnummerEnskildFirma;
+        public static int Pinned => 20;
+        public static int Consumers => 2;
+
+        public static IEnumerable<OrganisationRow> Read()
+        {
+            return FileRows.SoleTraders();
+        }
     }
 
-    public static IEnumerable<NumberRow> Textual()
+    /// <summary>The numbers of the textual file.</summary>
+    public abstract class Textual : IRowSource<NumberRow>
     {
-        return FileRows.Numbers(Fixtures.OrganisationsnummerTextual);
+        public static FixtureSpec File => Fixtures.OrganisationsnummerTextual;
+        public static int Pinned => 6;
+        public static int Consumers => 2;
+
+        public static IEnumerable<NumberRow> Read()
+        {
+            return FileRows.Numbers(File);
+        }
     }
 
     [Test]
-    [MethodDataSource(nameof(ExtendedValid))]
+    [RowsOf<ExtendedValid, OrganisationRow>]
     public async Task Accepted_WithEveryColumn(OrganisationRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -41,7 +73,7 @@ public class OrganisationRows
     }
 
     [Test]
-    [MethodDataSource(nameof(SoleTraders))]
+    [RowsOf<SoleTraders, OrganisationRow>]
     public async Task SoleTrader_Accepted_WithEveryColumn(OrganisationRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -50,7 +82,7 @@ public class OrganisationRows
     }
 
     [Test]
-    [MethodDataSource(nameof(ExtendedInvalid))]
+    [RowsOf<ExtendedInvalid, OrganisationRow>]
     public async Task Rejected_ByEveryParser_AndFailsTheCheckDigit(OrganisationRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -61,7 +93,7 @@ public class OrganisationRows
     }
 
     [Test]
-    [MethodDataSource(nameof(SoleTraders))]
+    [RowsOf<SoleTraders, OrganisationRow>]
     public async Task SoleTrader_IsAnOfficialPersonNumberWithItsCentury(OrganisationRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -79,7 +111,7 @@ public class OrganisationRows
     [Test]
     public async Task SoleTraders_ReferenceDate_IsInsideTheWindowThatTheSeparatorsAllow()
     {
-        var rows = SoleTraders().ToList();
+        var rows = SoleTraders.Read().ToList();
         var born = rows.ToDictionary(row => row,
             row => OfficialNumbers.All.First(number => number.Long == WrittenNumber.Digits(row.Input)).BirthDate);
         var turned100 = (OrganisationRow row) => born[row].AddYears(100);
@@ -95,7 +127,7 @@ public class OrganisationRows
     }
 
     [Test]
-    [MethodDataSource(nameof(Textual))]
+    [RowsOf<Textual, NumberRow>]
     public async Task Accepted_AsLegalPerson(NumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -111,7 +143,7 @@ public class OrganisationRows
     }
 
     [Test]
-    [MethodDataSource(nameof(Textual))]
+    [RowsOf<Textual, NumberRow>]
     public async Task Rejected_AsPerson(NumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);

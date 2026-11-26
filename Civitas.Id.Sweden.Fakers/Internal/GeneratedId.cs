@@ -3,9 +3,10 @@ using Civitas.Id.Sweden.Internal;
 namespace Civitas.Id.Sweden.Fakers.Internal;
 
 /// <summary>
-///     A number generated as text, valid or deliberately invalid. Exactly two types derive from it, and the
-///     private protected abstract member keeps other assemblies from adding one: the constructor alone does
-///     not, because the copy constructor of an abstract record is protected.
+///     A number generated as text: a <see cref="ValidGeneratedId" /> or an <see cref="InvalidGeneratedId" />. The
+///     constructor and <see cref="Describe" /> are private protected so that, were the type public, no other
+///     assembly could derive from it; the constructor alone would not do, because the copy constructor of an
+///     abstract record is protected. While the type is internal, the assemblies it is visible to can derive from it.
 /// </summary>
 internal abstract record GeneratedId
 {

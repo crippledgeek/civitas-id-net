@@ -10,13 +10,21 @@ namespace Civitas.Id.Sweden.Tests.Rows;
 /// </summary>
 public class PersonnummerFinalRows
 {
-    public static IEnumerable<PersonRow> Rows()
+    /// <summary>Every row of the file.</summary>
+    public abstract class All : IRowSource<PersonRow>
     {
-        return FileRows.ValidPersons(Fixtures.PersonnummerFinal, PersonColumns.Personnummer);
+        public static FixtureSpec File => Fixtures.PersonnummerFinal;
+        public static int Pinned => 3653;
+        public static int Consumers => 1;
+
+        public static IEnumerable<PersonRow> Read()
+        {
+            return FileRows.ValidPersons(File, PersonColumns.Personnummer);
+        }
     }
 
     [Test]
-    [MethodDataSource(nameof(Rows))]
+    [RowsOf<All, PersonRow>]
     public async Task Accepted_WithEveryColumn(PersonRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -34,8 +42,8 @@ public class PersonnummerFinalRows
     [Test]
     public async Task Numbers_AreThoseOfTheSourceFileInOrder()
     {
-        var source = OfficialPersonnummerRows.Of1890S().Select(row => row.Number);
-        var derived = Rows().Select(row => row.Number);
+        var source = OfficialPersonnummerRows.Of1890S.Read().Select(row => row.Number);
+        var derived = All.Read().Select(row => row.Number);
         await Assert.That(source.SequenceEqual(derived)).IsTrue();
     }
 }

@@ -10,13 +10,21 @@ namespace Civitas.Id.Sweden.Tests.Rows;
 /// </summary>
 public class InvalidNumberRows
 {
-    public static IEnumerable<InvalidNumberRow> Rows()
+    /// <summary>Every row of the file.</summary>
+    public abstract class All : IRowSource<InvalidNumberRow>
     {
-        return FileRows.InvalidNumbers();
+        public static FixtureSpec File => Fixtures.InvalidIds;
+        public static int Pinned => 9;
+        public static int Consumers => 2;
+
+        public static IEnumerable<InvalidNumberRow> Read()
+        {
+            return FileRows.InvalidNumbers();
+        }
     }
 
     [Test]
-    [MethodDataSource(nameof(Rows))]
+    [RowsOf<All, InvalidNumberRow>]
     public async Task Rejected_ByEveryParser(InvalidNumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -24,7 +32,7 @@ public class InvalidNumberRows
     }
 
     [Test]
-    [MethodDataSource(nameof(Rows))]
+    [RowsOf<All, InvalidNumberRow>]
     public async Task ChecksumNote_MatchesTheDigits(InvalidNumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
