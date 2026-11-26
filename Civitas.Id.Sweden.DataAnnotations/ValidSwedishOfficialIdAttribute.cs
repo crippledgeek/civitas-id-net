@@ -16,19 +16,15 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 [PublicAPI]
-public sealed class ValidSwedishOfficialIdAttribute : ValidationAttribute
+public sealed class ValidSwedishOfficialIdAttribute() : ValidationAttribute(DefaultMessage)
 {
-    private static readonly IdAttributeRule<SwedishOfficialId> Rule = new(SwedishOfficialId.IsValid, "a Swedish official ID");
+    private const string DefaultMessage = "The {0} field is not a valid Swedish official ID.";
+
+    private static readonly IdAttributeRule<SwedishOfficialId> Rule = new(SwedishOfficialId.IsValid);
 
     /// <inheritdoc />
     protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
     {
         return Rule.Evaluate(value, validationContext, this);
-    }
-
-    /// <inheritdoc />
-    public override string FormatErrorMessage(string name)
-    {
-        return $"The {name} field is not a valid Swedish official ID.";
     }
 }

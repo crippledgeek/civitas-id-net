@@ -11,8 +11,16 @@ public class IdAttributeRuleTests
 {
     private const string Malformed = "not-an-id";
     private const string MemberName = "Field";
+    private const string Custom = "Bad {0}.";
+    private const string CustomForField = "Bad Field.";
+    private const string ResourceForField = "Resource Field.";
 
     private static ValidationContext Named => new(new object()) { MemberName = MemberName };
+
+    private static class MessageResource
+    {
+        internal static string Message => "Resource {0}.";
+    }
 
     private static async Task AssertWithoutContextAsync(AttributeKind kind)
     {
@@ -34,7 +42,57 @@ public class IdAttributeRuleTests
         await Assert.That(sut.GetValidationResult(null, Named) is null).IsTrue();
         await Assert.That(sut.GetValidationResult(Malformed, Named)?.ErrorMessage).IsEqualTo(kind.DefaultText(MemberName));
         await Assert.That(sut.GetValidationResult(Malformed, unnamed)?.ErrorMessage).IsEqualTo(kind.DefaultText("value"));
-        await Assert.That(sut.GetValidationResult(42, Named)?.ErrorMessage).IsEqualTo($"Type Int32 is not {kind.Article}.");
+        await Assert.That(sut.GetValidationResult(42, Named)?.ErrorMessage).IsEqualTo(kind.DefaultText(MemberName));
+    }
+
+    private static async Task AssertDefaultAsync(AttributeKind kind)
+    {
+        var sut = kind.Create();
+        await Assert.That(sut.FormatErrorMessage(MemberName)).IsEqualTo(kind.DefaultText(MemberName));
+        await Assert.That(sut.GetValidationResult(Malformed, Named)?.ErrorMessage).IsEqualTo(kind.DefaultText(MemberName));
+    }
+
+    private static async Task AssertCustomAsync(AttributeKind kind)
+    {
+        var sut = kind.Create();
+        sut.ErrorMessage = Custom;
+        await Assert.That(sut.FormatErrorMessage(MemberName)).IsEqualTo(CustomForField);
+        await Assert.That(sut.GetValidationResult(Malformed, Named)?.ErrorMessage).IsEqualTo(CustomForField);
+        await Assert.That(sut.GetValidationResult(42, Named)?.ErrorMessage).IsEqualTo(CustomForField);
+        await Assert.That(sut.IsValid(Malformed)).IsFalse();
+    }
+
+    private static async Task AssertResourceAsync(AttributeKind kind)
+    {
+        var sut = kind.Create();
+        sut.ErrorMessageResourceType = typeof(MessageResource);
+        sut.ErrorMessageResourceName = nameof(MessageResource.Message);
+        await Assert.That(sut.GetValidationResult(Malformed, Named)?.ErrorMessage).IsEqualTo(ResourceForField);
+        await Assert.That(sut.GetValidationResult(42, Named)?.ErrorMessage).IsEqualTo(ResourceForField);
+    }
+
+    private static async Task AssertMisconfiguredAsync(AttributeKind kind)
+    {
+        var both = kind.Create();
+        both.ErrorMessage = Custom;
+        both.ErrorMessageResourceType = typeof(MessageResource);
+        both.ErrorMessageResourceName = nameof(MessageResource.Message);
+        await Assert.That(() => both.GetValidationResult(Malformed, Named)).Throws<InvalidOperationException>();
+
+        var nameOnly = kind.Create();
+        nameOnly.ErrorMessageResourceName = nameof(MessageResource.Message);
+        await Assert.That(() => nameOnly.GetValidationResult(Malformed, Named)).Throws<InvalidOperationException>();
+    }
+
+    private static async Task AssertVerdictIgnoresMisconfigurationAsync(AttributeKind kind)
+    {
+        var sut = kind.Create();
+        sut.ErrorMessage = Custom;
+        sut.ErrorMessageResourceType = typeof(MessageResource);
+        sut.ErrorMessageResourceName = nameof(MessageResource.Message);
+        await Assert.That(sut.IsValid(kind.Accepted)).IsTrue();
+        await Assert.That(sut.IsValid(Malformed)).IsFalse();
+        await Assert.That(sut.IsValid(42)).IsFalse();
     }
 
     public class WithoutContext
@@ -114,6 +172,138 @@ public class IdAttributeRuleTests
 
             await Assert.That(ok).IsFalse();
             await Assert.That(results.Single().ErrorMessage).IsEqualTo(AttributeKind.Personal.DefaultText(nameof(Dto.Person)));
+        }
+    }
+
+    public class DefaultMessage
+    {
+        [Test]
+        public async Task PersonalId_KeepsItsText()
+        {
+            await AssertDefaultAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_KeepsItsText()
+        {
+            await AssertDefaultAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_KeepsItsText()
+        {
+            await AssertDefaultAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_KeepsItsText()
+        {
+            await AssertDefaultAsync(AttributeKind.Official).ConfigureAwait(false);
+        }
+    }
+
+    public class CustomMessage
+    {
+        [Test]
+        public async Task PersonalId_IsUsed()
+        {
+            await AssertCustomAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_IsUsed()
+        {
+            await AssertCustomAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_IsUsed()
+        {
+            await AssertCustomAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_IsUsed()
+        {
+            await AssertCustomAsync(AttributeKind.Official).ConfigureAwait(false);
+        }
+    }
+
+    public class ResourceMessage
+    {
+        [Test]
+        public async Task PersonalId_IsUsed()
+        {
+            await AssertResourceAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_IsUsed()
+        {
+            await AssertResourceAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_IsUsed()
+        {
+            await AssertResourceAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_IsUsed()
+        {
+            await AssertResourceAsync(AttributeKind.Official).ConfigureAwait(false);
+        }
+    }
+
+    public class Misconfigured
+    {
+        [Test]
+        public async Task PersonalId_Throws()
+        {
+            await AssertMisconfiguredAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_Throws()
+        {
+            await AssertMisconfiguredAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_Throws()
+        {
+            await AssertMisconfiguredAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_Throws()
+        {
+            await AssertMisconfiguredAsync(AttributeKind.Official).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task PersonalId_LeavesTheVerdict()
+        {
+            await AssertVerdictIgnoresMisconfigurationAsync(AttributeKind.Personal).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task CoordinationId_LeavesTheVerdict()
+        {
+            await AssertVerdictIgnoresMisconfigurationAsync(AttributeKind.Coordination).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task OrganisationId_LeavesTheVerdict()
+        {
+            await AssertVerdictIgnoresMisconfigurationAsync(AttributeKind.Organisation).ConfigureAwait(false);
+        }
+
+        [Test]
+        public async Task SwedishOfficialId_LeavesTheVerdict()
+        {
+            await AssertVerdictIgnoresMisconfigurationAsync(AttributeKind.Official).ConfigureAwait(false);
         }
     }
 

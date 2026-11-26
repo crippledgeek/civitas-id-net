@@ -21,6 +21,9 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
   `GenerateFemale` throw `ArgumentOutOfRangeException`, and so does `SwedishOfficialIdFaker.Generate(DateOnly)`,
   whichever type it would draw. `GenerateCentenarian` throws it with a clock before 1900 and, from 1900 to 1909,
   generates no one born before 1800. Other seeded output is unchanged. (#50)
+- **Civitas.Id.Sweden.DataAnnotations**: a value of the wrong type, such as an `int`, now fails the four `Valid*Id`
+  attributes with the attribute's error message, as it does for any `ValidationAttribute`, where it gave
+  "Type Int32 is not a PersonalId." and its like. (#57)
 
 ### Fixed
 - **Civitas.Id.Sweden**: a number with the year 0000, and a ten-digit number read on a date in one of the first
@@ -44,7 +47,12 @@ _When cut, rename this heading to `## [2.0.0] - YYYY-MM-DD` and add a fresh empt
 - **Civitas.Id.Sweden.DataAnnotations**: `IsValid(object)` on `ValidPersonalIdAttribute`,
   `ValidCoordinationIdAttribute`, `ValidOrganisationIdAttribute` and `ValidSwedishOfficialIdAttribute` threw
   `ArgumentNullException` for any non-null value, because `ValidationAttribute` calls the context overload with no
-  context. It now returns the verdict. Results with a context are unchanged. (#54)
+  context. It now returns the verdict. Failures with a context are as described under BREAKING CHANGES. (#54)
+
+- **Civitas.Id.Sweden.DataAnnotations**: the four `Valid*Id` attributes ignored `ErrorMessage`,
+  `ErrorMessageResourceName` and `ErrorMessageResourceType`, because each overrode `FormatErrorMessage` with a
+  fixed text. They now honour them like any `ValidationAttribute`, with `{0}` for the field name. Without one, the
+  default text is used. (#57)
 
 - **Civitas.Id.Sweden.AspNetCore**: a malformed value for a typed ID parameter now gives the
   documented 400 in Development too with `UseExceptionHandler()`, where ASP.NET Core answered 500. (#41)

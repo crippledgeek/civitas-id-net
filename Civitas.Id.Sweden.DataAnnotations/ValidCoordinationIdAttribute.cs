@@ -16,19 +16,15 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 [PublicAPI]
-public sealed class ValidCoordinationIdAttribute : ValidationAttribute
+public sealed class ValidCoordinationIdAttribute() : ValidationAttribute(DefaultMessage)
 {
-    private static readonly IdAttributeRule<CoordinationId> Rule = new(CoordinationId.IsValid, "a CoordinationId");
+    private const string DefaultMessage = "The {0} field is not a valid Swedish samordningsnummer.";
+
+    private static readonly IdAttributeRule<CoordinationId> Rule = new(CoordinationId.IsValid);
 
     /// <inheritdoc />
     protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
     {
         return Rule.Evaluate(value, validationContext, this);
-    }
-
-    /// <inheritdoc />
-    public override string FormatErrorMessage(string name)
-    {
-        return $"The {name} field is not a valid Swedish samordningsnummer.";
     }
 }
