@@ -10,6 +10,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- The fewest tests a run may count: a little below the number the project runs. -->
+    <MinimumExpectedTests>82</MinimumExpectedTests>
     <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052</NoWarn>
   </PropertyGroup>
 

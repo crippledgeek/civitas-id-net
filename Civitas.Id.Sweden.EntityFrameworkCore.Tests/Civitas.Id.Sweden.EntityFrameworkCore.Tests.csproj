@@ -11,6 +11,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- The fewest tests a run may count: a little below the number the project runs. -->
+    <MinimumExpectedTests>49</MinimumExpectedTests>
     <!--
       CA2007: ConfigureAwait — test projects run under TUnit's async infrastructure;
               there is no synchronization context where ConfigureAwait(false) would

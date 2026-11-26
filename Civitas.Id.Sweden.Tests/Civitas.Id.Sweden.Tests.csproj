@@ -10,6 +10,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- The fewest tests a run may count: a little below the number the project runs. -->
+    <MinimumExpectedTests>43000</MinimumExpectedTests>
     <!-- Standard test-project analyzer suppressions (universal across FluentValidation,
          dotnet/runtime, NodaTime test suites):
          CA1707 — test methods use Method_Scenario_Expected naming (underscores).

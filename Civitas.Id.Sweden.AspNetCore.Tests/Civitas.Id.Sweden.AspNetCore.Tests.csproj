@@ -10,6 +10,8 @@
     <EnforceCodeStyleInBuild>true</EnforceCodeStyleInBuild>
     <AnalysisMode>All</AnalysisMode>
     <AnalysisLevel>latest</AnalysisLevel>
+    <!-- The fewest tests a run may count: a little below the number the project runs. -->
+    <MinimumExpectedTests>225</MinimumExpectedTests>
     <!-- CA2007: ConfigureAwait is unnecessary in test code (no synchronization context). -->
     <NoWarn>$(NoWarn);CA1707;CA1515;CA1034;CA1052;CA2007</NoWarn>
     <!-- Required for the AspNetCore OpenAPI XML-comment source generator

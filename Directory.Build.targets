@@ -27,4 +27,67 @@
   <ItemGroup Condition="'$(IsPackable)' == 'true'">
     <None Include="README.md" Pack="true" PackagePath="\" Condition="Exists('README.md')" />
   </ItemGroup>
+
+  <!-- A test project is one that the testing platform's own build files mark as a testing platform application.
+       They are imported before this file, so the mark is set when the conditions below are evaluated. -->
+  <PropertyGroup>
+    <CivitasIsTestProject>false</CivitasIsTestProject>
+    <CivitasIsTestProject Condition="'$(IsTestingPlatformApplication)' == 'true'">true</CivitasIsTestProject>
+  </PropertyGroup>
+
+  <!-- Apply each test project's own coverage.runsettings by default, so coverage runs do not
+       need a fragile per-invocation coverage-settings path on the command line.
+
+       Why this shape:
+       * $(MSBuildProjectDirectory) expands at BUILD time to an absolute path, so it is immune to
+         the test host's runtime working directory. Microsoft.AspNetCore.Mvc.Testing sets
+         RunWorkingDirectory to the project dir, which made a repo-root-relative settings path fail
+         with "Provided settings file doesn't exist or is invalid" on AspNetCore.Tests while working
+         on the others. An absolute, build-time path resolves correctly everywhere.
+       * The argument is INERT unless coverage is also requested, so the normal `dotnet test` gate
+         (no coverage) is unaffected; it only takes effect when coverage is turned on.
+       * MTP has no VSTest-style RunSettingsFilePath / .runsettings auto-discovery;
+         TestingPlatformCommandLineArguments is the supported default-injection mechanism. -->
+  <PropertyGroup Condition="'$(CivitasIsTestProject)' == 'true'">
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --coverage-settings "$(MSBuildProjectDirectory)/coverage.runsettings"</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+
+  <!-- Make the convention self-enforcing: a new test project without a coverage.runsettings
+       would otherwise fail only at coverage-run time, with a cryptic settings-path error.
+       Fail at build time instead, with a message that names the fix. -->
+  <Target Name="ValidateCoverageRunsettingsPresent"
+          BeforeTargets="Build"
+          Condition="'$(CivitasIsTestProject)' == 'true'">
+    <Error Condition="!Exists('$(MSBuildProjectDirectory)/coverage.runsettings')"
+           Text="[Civitas.Id] '$(MSBuildProjectName)' is a test project but has no coverage.runsettings. Add one (mirror an existing test project's) so the default --coverage-settings embed in Directory.Build.targets resolves." />
+  </Target>
+
+  <!-- A floor on the tests each test project runs, so that a data source or a discovery change that makes many tests
+       disappear fails the run instead of passing with fewer tests. Each test project sets MinimumExpectedTests a little
+       below the number of tests it runs that are not skipped, since skipped tests do not count toward it.
+       The floor applies only where CI is true, which GitHub Actions always sets, or where
+       EnforceMinimumExpectedTests is set to true; setting it to false turns the floor off on CI too, and says so.
+       Locally it stays off because the platform rejects the list-tests option beside the floor, and a filtered run
+       would fail it. MTP's own targets append TestingPlatformCommandLineArguments to RunArguments, so the floor
+       reaches dotnet test (MTP mode, per module) and dotnet run; a test executable started directly never reads it. -->
+  <PropertyGroup Condition="'$(CivitasIsTestProject)' == 'true'">
+    <EnforceMinimumExpectedTests Condition="'$(EnforceMinimumExpectedTests)' == '' And '$(CI)' == 'true'">true</EnforceMinimumExpectedTests>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(CivitasIsTestProject)' == 'true' And '$(EnforceMinimumExpectedTests)' == 'true' And '$(MinimumExpectedTests)' != ''">
+    <TestingPlatformCommandLineArguments>$(TestingPlatformCommandLineArguments) --minimum-expected-tests $(MinimumExpectedTests)</TestingPlatformCommandLineArguments>
+  </PropertyGroup>
+
+  <Target Name="ValidateMinimumExpectedTestsPresent"
+          BeforeTargets="Build"
+          Condition="'$(CivitasIsTestProject)' == 'true'">
+    <Error Condition="!$([System.Text.RegularExpressions.Regex]::IsMatch('$(MinimumExpectedTests)', '^[1-9][0-9]*$'))"
+           Text="[Civitas.Id] '$(MSBuildProjectName)' is a test project but its MinimumExpectedTests ('$(MinimumExpectedTests)') is not a positive whole number. Set it a little below the number of tests the project runs that are not skipped." />
+  </Target>
+
+  <Target Name="ReportMinimumExpectedTestsOff"
+          BeforeTargets="Build;ComputeRunArguments"
+          Condition="'$(CivitasIsTestProject)' == 'true' And '$(CI)' == 'true' And '$(EnforceMinimumExpectedTests)' == 'false'">
+    <Message Importance="high"
+             Text="[Civitas.Id] '$(MSBuildProjectName)': the minimum test count is off on CI, because EnforceMinimumExpectedTests is false." />
+  </Target>
 </Project>

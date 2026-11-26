@@ -68,7 +68,7 @@ jobs:
   # Intentionally has no `needs: build-test` — it runs in parallel and (via if: always
   # on the upload) preserves coverage even when the gate is red, so coverage is a signal,
   # not a merge blocker. Each test project applies its own coverage.runsettings
-  # automatically via the TestingPlatformCommandLineArguments embed in Directory.Build.props
+  # automatically via the TestingPlatformCommandLineArguments embed in Directory.Build.targets
   # — no per-project --coverage-settings path needed here.
   coverage:
     runs-on: ubuntu-latest
