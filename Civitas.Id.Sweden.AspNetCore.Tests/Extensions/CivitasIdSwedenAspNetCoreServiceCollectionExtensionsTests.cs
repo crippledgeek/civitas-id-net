@@ -1,3 +1,4 @@
+using Civitas.Id.Sweden.AspNetCore.ExceptionHandlers;
 using Civitas.Id.Sweden.AspNetCore.Extensions;
 using Civitas.Id.Sweden.AspNetCore.Options;
 using Civitas.Id.Sweden.Format;
@@ -112,7 +113,7 @@ public class CivitasIdSwedenAspNetCoreServiceCollectionExtensionsTests
 
             var sp = services.BuildServiceProvider();
             var handlers = sp.GetServices<IExceptionHandler>()
-                .Where(h => h.GetType().Name == "InvalidIdNumberExceptionHandler")
+                .OfType<InvalidIdNumberExceptionHandler>()
                 .ToList();
             await Assert.That(handlers.Count).IsEqualTo(1);
         }
