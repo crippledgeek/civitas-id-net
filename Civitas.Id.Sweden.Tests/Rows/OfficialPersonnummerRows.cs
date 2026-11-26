@@ -9,19 +9,35 @@ namespace Civitas.Id.Sweden.Tests.Rows;
 /// </summary>
 public class OfficialPersonnummerRows
 {
-    public static IEnumerable<NumberRow> Of1890S()
+    /// <summary>The numbers of the 1890-1899 file.</summary>
+    public abstract class Of1890S : IRowSource<NumberRow>
     {
-        return FileRows.Numbers(Fixtures.Personnummer1890S);
+        public static FixtureSpec File => Fixtures.Personnummer1890S;
+        public static int Pinned => 3653;
+        public static int Consumers => 2;
+
+        public static IEnumerable<NumberRow> Read()
+        {
+            return FileRows.Numbers(File);
+        }
     }
 
-    public static IEnumerable<NumberRow> Of2000S()
+    /// <summary>The numbers of the 2000-2009 file.</summary>
+    public abstract class Of2000S : IRowSource<NumberRow>
     {
-        return FileRows.Numbers(Fixtures.Personnummer2000S);
+        public static FixtureSpec File => Fixtures.Personnummer2000S;
+        public static int Pinned => 7323;
+        public static int Consumers => 2;
+
+        public static IEnumerable<NumberRow> Read()
+        {
+            return FileRows.Numbers(File);
+        }
     }
 
     [Test]
-    [MethodDataSource(nameof(Of1890S))]
-    [MethodDataSource(nameof(Of2000S))]
+    [RowsOf<Of1890S, NumberRow>]
+    [RowsOf<Of2000S, NumberRow>]
     public async Task Accepted_AsPersonnummer(NumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -29,8 +45,8 @@ public class OfficialPersonnummerRows
     }
 
     [Test]
-    [MethodDataSource(nameof(Of1890S))]
-    [MethodDataSource(nameof(Of2000S))]
+    [RowsOf<Of1890S, NumberRow>]
+    [RowsOf<Of2000S, NumberRow>]
     public async Task Rejected_AsSamordningsnummer(NumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);

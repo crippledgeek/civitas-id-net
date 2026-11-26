@@ -10,28 +10,52 @@ namespace Civitas.Id.Sweden.Tests.Rows;
 /// </summary>
 public class OfficialSamordningsnummerRows
 {
-    public static IEnumerable<NumberRow> Of2019WithDate()
+    /// <summary>The numbers of the 2019 file that have a calendar date.</summary>
+    public abstract class Of2019WithDate : IRowSource<NumberRow>
     {
-        return FileRows.Numbers(Fixtures.SamordningsnummerOfficial)
-            .Where(row => UnsupportedShapes.Of(new OfficialSamordningsnummer(row.Number)) is null);
+        public static FixtureSpec File => Fixtures.SamordningsnummerOfficial;
+        public static int Pinned => 1306;
+        public static int Consumers => 2;
+
+        public static IEnumerable<NumberRow> Read()
+        {
+            return FileRows.Numbers(File)
+                .Where(row => UnsupportedShapes.Of(new OfficialSamordningsnummer(row.Number)) is null);
+        }
     }
 
-    public static IEnumerable<UnsupportedRow> Of2019WithoutDate()
+    /// <summary>The numbers of the 2019 file that have no calendar date.</summary>
+    public abstract class Of2019WithoutDate : IRowSource<UnsupportedRow>
     {
-        return CsvLoader.Rows(Fixtures.SamordningsnummerOfficial)
-            .Select(row => (row, shape: UnsupportedShapes.Of(new OfficialSamordningsnummer(row.Cells[0]))))
-            .Where(read => read.shape is not null)
-            .Select(read => new UnsupportedRow { Source = read.row.Source, Number = read.row.Cells[0], Shape = read.shape!.Value });
+        public static FixtureSpec File => Fixtures.SamordningsnummerOfficial;
+        public static int Pinned => 192;
+        public static int Consumers => 1;
+
+        public static IEnumerable<UnsupportedRow> Read()
+        {
+            return CsvLoader.Rows(File)
+                .Select(row => (row, shape: UnsupportedShapes.Of(new OfficialSamordningsnummer(row.Cells[0]))))
+                .Where(read => read.shape is not null)
+                .Select(read => new UnsupportedRow { Source = read.row.Source, Number = read.row.Cells[0], Shape = read.shape!.Value });
+        }
     }
 
-    public static IEnumerable<NumberRow> Of2020()
+    /// <summary>The numbers of the 2020 file.</summary>
+    public abstract class Of2020 : IRowSource<NumberRow>
     {
-        return FileRows.Numbers(Fixtures.Samordningsnummer2020);
+        public static FixtureSpec File => Fixtures.Samordningsnummer2020;
+        public static int Pinned => 14;
+        public static int Consumers => 2;
+
+        public static IEnumerable<NumberRow> Read()
+        {
+            return FileRows.Numbers(File);
+        }
     }
 
     [Test]
-    [MethodDataSource(nameof(Of2019WithDate))]
-    [MethodDataSource(nameof(Of2020))]
+    [RowsOf<Of2019WithDate, NumberRow>]
+    [RowsOf<Of2020, NumberRow>]
     public async Task Accepted_AsSamordningsnummer(NumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -40,8 +64,8 @@ public class OfficialSamordningsnummerRows
     }
 
     [Test]
-    [MethodDataSource(nameof(Of2019WithDate))]
-    [MethodDataSource(nameof(Of2020))]
+    [RowsOf<Of2019WithDate, NumberRow>]
+    [RowsOf<Of2020, NumberRow>]
     public async Task Rejected_AsPersonnummer(NumberRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -53,7 +77,7 @@ public class OfficialSamordningsnummerRows
     ///     Fails for a row as soon as any parser takes it: the day it does, the row belongs with the accepted ones.
     /// </summary>
     [Test]
-    [MethodDataSource(nameof(Of2019WithoutDate))]
+    [RowsOf<Of2019WithoutDate, UnsupportedRow>]
     public async Task KnownUnsupported_OfficialSamordningsnummer_RejectedByEveryParserToday(UnsupportedRow row)
     {
         ArgumentNullException.ThrowIfNull(row);
@@ -63,7 +87,7 @@ public class OfficialSamordningsnummerRows
     [Test]
     public async Task KnownUnsupported_OfficialSamordningsnummer_HasThePinnedShapes()
     {
-        var counts = Of2019WithoutDate().GroupBy(row => row.Shape).ToDictionary(group => group.Key, group => group.Count());
+        var counts = Of2019WithoutDate.Read().GroupBy(row => row.Shape).ToDictionary(group => group.Key, group => group.Count());
 
         await Assert.That(counts.GetValueOrDefault(UnsupportedShape.MonthUnknown)).IsEqualTo(127);
         await Assert.That(counts.GetValueOrDefault(UnsupportedShape.DayUnknown)).IsEqualTo(38);
