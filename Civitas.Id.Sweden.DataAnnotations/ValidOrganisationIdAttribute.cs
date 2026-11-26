@@ -24,25 +24,15 @@ namespace Civitas.Id.Sweden.DataAnnotations;
 /// </remarks>
 [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field | AttributeTargets.Parameter)]
 [PublicAPI]
-public sealed class ValidOrganisationIdAttribute : ValidationAttribute
+public sealed class ValidOrganisationIdAttribute() : ValidationAttribute(DefaultMessage)
 {
-    /// <inheritdoc />
-    protected override ValidationResult? IsValid(object? value, ValidationContext validationContext)
-    {
-        ArgumentNullException.ThrowIfNull(validationContext);
-        if (value is null) return ValidationResult.Success;
-        return value switch
-        {
-            string s when OrganisationId.TryParse(s, out _) => ValidationResult.Success,
-            OrganisationId => ValidationResult.Success,
-            string => new ValidationResult(FormatErrorMessage(validationContext.MemberName ?? "value")),
-            _ => new ValidationResult($"Type {value.GetType().Name} is not an OrganisationId.")
-        };
-    }
+    private const string DefaultMessage = "The {0} field is not a valid Swedish organisationsnummer.";
+
+    private static readonly IdAttributeRule<OrganisationId> Rule = new(OrganisationId.IsValid);
 
     /// <inheritdoc />
-    public override string FormatErrorMessage(string name)
+    protected override ValidationResult? IsValid(object? value, ValidationContext? validationContext)
     {
-        return $"The {name} field is not a valid Swedish organisationsnummer.";
+        return Rule.Evaluate(value, validationContext, this);
     }
 }
