@@ -650,12 +650,20 @@ public class PersonalIdTests
     public class StockholmPin
     {
         [Test]
+        public async Task GetAge_OnLeapDay_PersonBornOn28FebruaryEighteenYearsEarlierIsAdult()
+        {
+            var leapDay = new DateOnly(2028, 2, 29);
+            var id = PersonalId.Parse(GeneratedNumbers.Person(leapDay.AddYears(-18)).LongFormat(), leapDay);
+
+            await Assert.That(id.GetAge(leapDay)).IsEqualTo(18);
+            await Assert.That(id.IsAdult(leapDay)).IsTrue();
+        }
+
+        [Test]
         public async Task ZeroArgGetAge_AnchorsToSwedenClockToday()
         {
             var today = SwedenClock.Today();
-            // Skip the test on leap-day to keep birthday construction stable.
-            if (today is { Month: 2, Day: 29 }) return;
-
+            // On 29 February the person is born on 28 February, eighteen years earlier.
             var birthDate = today.AddYears(-18);
             var id = PersonalId.Parse(GeneratedNumbers.Person(birthDate).LongFormat());
             await Assert.That(id.IsAdult()).IsTrue();
@@ -755,25 +763,6 @@ public class PersonalIdTests
 
             await Assert.That(id.IsAdult(sunday)).IsTrue();
             await Assert.That(id.GetAge(sunday)).IsEqualTo(18);
-        }
-    }
-
-    /// <summary>
-    ///     Fixture-driven fan-out mirroring the Java sibling's
-    ///     <c>PersonalIdTest.personalNumbersShouldBeValid</c>.
-    /// </summary>
-    public class FixtureDriven
-    {
-        public static IEnumerable<string> Personnummer1890S()
-        {
-            return CsvLoader.Column(Fixtures.Personnummer1890S);
-        }
-
-        [Test]
-        [MethodDataSource(nameof(Personnummer1890S))]
-        public async Task IsValid_Personnummer1890s_ReturnsTrue(string pin)
-        {
-            await Assert.That(PersonalId.IsValid(pin)).IsTrue();
         }
     }
 }

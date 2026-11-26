@@ -50,10 +50,19 @@ internal abstract record OfficialNumber
     /// <summary>The last four digits, NNNN.</summary>
     public string Serial => Long[^SerialLength..];
 
+    /// <summary>Whether the number's gender digit, the one before the check digit, is even.</summary>
+    public bool IsFemale => (Long[^2] - '0') % 2 == 0;
+
+    /// <summary>The published month part, MM, which is not necessarily a calendar month.</summary>
+    public int EncodedMonth => Number(Long[4..6]);
+
+    /// <summary>The published day part, DD, which for a samordningsnummer is the calendar day plus 60.</summary>
+    public int EncodedDay => Number(Long[6..8]);
+
     /// <summary>The date of birth the number encodes, or null when it encodes no calendar date.</summary>
     public DateOnly? CalendarDate =>
         DateOnly.TryParseExact(
-            Long[..6] + CalendarDay(Number(Long[6..8])).ToString("00", CultureInfo.InvariantCulture),
+            Long[..6] + CalendarDay(EncodedDay).ToString("00", CultureInfo.InvariantCulture),
             "yyyyMMdd", CultureInfo.InvariantCulture, DateTimeStyles.None, out var date)
             ? date
             : null;
