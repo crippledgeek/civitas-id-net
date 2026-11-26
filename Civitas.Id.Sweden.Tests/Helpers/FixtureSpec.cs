@@ -15,7 +15,11 @@ public sealed record FixtureSpec
 }
 
 /// <summary>One data row of a verified fixture: where it came from and its trimmed cells.</summary>
-internal sealed record FixtureRow(string FileName, int Line, IReadOnlyList<string> Cells);
+internal sealed record FixtureRow(string FileName, int Line, IReadOnlyList<string> Cells)
+{
+    /// <summary>The place of the row, file name and line: what a test prints in place of a number.</summary>
+    public string Source => $"{FileName}:{Line}";
+}
 
 /// <summary>Every test data file in <c>Fixtures/</c>, pinned by content hash and row count.</summary>
 internal static class Fixtures

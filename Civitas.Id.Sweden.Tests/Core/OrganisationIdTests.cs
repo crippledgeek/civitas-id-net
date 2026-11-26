@@ -538,27 +538,4 @@ public class OrganisationIdTests
             await UnprintedAssert.HasSeparator(birthday, '+').ConfigureAwait(false);
         }
     }
-
-    /// <summary>
-    ///     Fixture-driven fan-out mirroring the Java sibling's
-    ///     <c>OrganisationIdTest.personalNumbersShouldBeValidOrganisationNumbers</c>.
-    ///     Asserts that every valid personnummer also validates and parses as an
-    ///     Enskild firma (physical-person) organisation number.
-    /// </summary>
-    public class FixtureDriven
-    {
-        public static IEnumerable<string> PersonnummerFinal()
-        {
-            return CsvLoader.Column(Fixtures.PersonnummerFinal);
-        }
-
-        [Test]
-        [MethodDataSource(nameof(PersonnummerFinal))]
-        public async Task PersonnummerFinal_ParseAsEnskildFirma(string pin)
-        {
-            await Assert.That(OrganisationId.IsValid(pin)).IsTrue();
-            var id = OrganisationId.Parse(pin);
-            await Assert.That(id.NumberType).IsEqualTo(OrganisationNumberType.PhysicalPerson);
-        }
-    }
 }

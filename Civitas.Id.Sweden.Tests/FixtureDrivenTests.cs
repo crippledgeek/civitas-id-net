@@ -12,67 +12,11 @@ namespace Civitas.Id.Sweden.Tests;
 public class FixtureDrivenTests
 {
     /// <summary>
-    ///     Reference "today" for personnummer age assertions. Calibrated empirically
-    ///     by intersecting (yyyy+age, mm, dd) bounds across every valid row of
-    ///     testpersonnummer_final.csv: the unique date satisfying every row is
-    ///     2025-04-23. The two derived CSVs (numbers from Skatteverket, other
-    ///     columns added) use different reference dates, so each has its own.
-    /// </summary>
-    private static readonly DateOnly PersonnummerFixtureToday = new(2025, 4, 23);
-
-    /// <summary>
     ///     Reference "today" for samordningsnummer age assertions. Calibrated
     ///     empirically against Testsamordningsnummer_2019_corrected.csv: the
     ///     unique date satisfying every valid row is 2025-05-01.
     /// </summary>
     private static readonly DateOnly SamordningsnummerFixtureToday = new(2025, 5, 1);
-
-    // ── Personnummer 1890s (single column, no header) ──
-
-    public static IEnumerable<string> Personnummer1890S()
-    {
-        return CsvLoader.Column(Fixtures.Personnummer1890S);
-    }
-
-    [Test]
-    [MethodDataSource(nameof(Personnummer1890S))]
-    public async Task PersonalId_1890sFixture_AllValid(string pin)
-    {
-        await Assert.That(PersonalId.IsValid(pin)).IsTrue();
-    }
-
-    // ── Personnummer extended (with full metadata) ──
-
-    public static IEnumerable<(string Pin, bool Female, bool Male, bool Adult, bool Child, int Age, bool Valid)>
-        PersonnummerFinal()
-    {
-        var rows = CsvLoader.Rows(Fixtures.PersonnummerFinal).Select(row => row.Cells);
-        foreach (var r in rows)
-            yield return (
-                r[0],
-                bool.Parse(r[1]),
-                bool.Parse(r[2]),
-                bool.Parse(r[3]),
-                bool.Parse(r[4]),
-                int.Parse(r[5], CultureInfo.InvariantCulture),
-                bool.Parse(r[6]));
-    }
-
-    [Test]
-    [MethodDataSource(nameof(PersonnummerFinal))]
-    public async Task PersonalId_FinalFixture_MatchesAllColumns(
-        string pin, bool female, bool male, bool adult, bool child, int age, bool valid)
-    {
-        await Assert.That(PersonalId.IsValid(pin)).IsEqualTo(valid);
-        if (!valid) return;
-
-        var id = PersonalId.Parse(pin);
-        await Assert.That(id.IsFemale).IsEqualTo(female);
-        await Assert.That(id.IsMale).IsEqualTo(male);
-        await Assert.That(id.GetAge(PersonnummerFixtureToday)).IsEqualTo(age);
-        await Assert.That(id.IsAdult(PersonnummerFixtureToday)).IsEqualTo(adult);
-        await Assert.That(id.IsChild(PersonnummerFixtureToday)).IsEqualTo(child);
-    }
 
     // ── Samordningsnummer (column order differs!) ──
 
@@ -107,21 +51,7 @@ public class FixtureDrivenTests
         await Assert.That(id.IsChild(SamordningsnummerFixtureToday)).IsEqualTo(child);
     }
 
-    // ── Official 2000-2009 personnummer and 2020 samordningsnummer ──
-
-    public static IEnumerable<string> Personnummer2000S()
-    {
-        return CsvLoader.Column(Fixtures.Personnummer2000S);
-    }
-
-    [Test]
-    [MethodDataSource(nameof(Personnummer2000S))]
-    public async Task PersonalId_2000sFixture_KeepsNumberAndBirthDate(string pin)
-    {
-        var id = PersonalId.Parse(pin);
-        await Assert.That(id.LongFormat()).IsEqualTo(pin);
-        await Assert.That(id.BirthDate).IsEqualTo(new OfficialPersonnummer(pin).BirthDate);
-    }
+    // ── Official 2020 samordningsnummer ──
 
     public static IEnumerable<string> Samordningsnummer2020()
     {

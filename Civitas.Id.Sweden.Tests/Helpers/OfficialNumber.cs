@@ -50,6 +50,9 @@ internal abstract record OfficialNumber
     /// <summary>The last four digits, NNNN.</summary>
     public string Serial => Long[^SerialLength..];
 
+    /// <summary>Whether the number's gender digit, the one before the check digit, is even.</summary>
+    public bool IsFemale => (Long[^2] - '0') % 2 == 0;
+
     /// <summary>The date of birth the number encodes, or null when it encodes no calendar date.</summary>
     public DateOnly? CalendarDate =>
         DateOnly.TryParseExact(

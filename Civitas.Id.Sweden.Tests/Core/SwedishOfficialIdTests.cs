@@ -333,16 +333,6 @@ public class SwedishOfficialIdTests
     {
         // ── Data sources ────────────────────────────────────────────────
 
-        public static IEnumerable<string> Personnummer1890S()
-        {
-            return CsvLoader.Column(Fixtures.Personnummer1890S);
-        }
-
-        public static IEnumerable<string> PersonnummerFinal()
-        {
-            return CsvLoader.Column(Fixtures.PersonnummerFinal);
-        }
-
         public static IEnumerable<string> Samordningsnummer()
         {
             return CsvLoader.Column(Fixtures.SamordningsnummerCorrected);
@@ -359,20 +349,6 @@ public class SwedishOfficialIdTests
         }
 
         // ── IsValid fan-out ─────────────────────────────────────────────
-
-        [Test]
-        [MethodDataSource(nameof(Personnummer1890S))]
-        public async Task IsValid_Personnummer1890s_ReturnsTrue(string pin)
-        {
-            await Assert.That(SwedishOfficialId.IsValid(pin)).IsTrue();
-        }
-
-        [Test]
-        [MethodDataSource(nameof(PersonnummerFinal))]
-        public async Task IsValid_PersonnummerFinal_ReturnsTrue(string pin)
-        {
-            await Assert.That(SwedishOfficialId.IsValid(pin)).IsTrue();
-        }
 
         [Test]
         [MethodDataSource(nameof(Samordningsnummer))]
@@ -396,24 +372,6 @@ public class SwedishOfficialIdTests
         }
 
         // ── TryParseAny fan-out (mirrors Java parseAny) ────────────────
-
-        [Test]
-        [MethodDataSource(nameof(Personnummer1890S))]
-        public async Task TryParseAny_Personnummer1890s_ReturnsPersonalId(string pin)
-        {
-            var ok = SwedishOfficialId.TryParseAny(pin, out var id);
-            await Assert.That(ok).IsTrue();
-            await Assert.That(id).IsTypeOf<PersonalId>();
-        }
-
-        [Test]
-        [MethodDataSource(nameof(PersonnummerFinal))]
-        public async Task TryParseAny_PersonnummerFinal_ReturnsPersonalId(string pin)
-        {
-            var ok = SwedishOfficialId.TryParseAny(pin, out var id);
-            await Assert.That(ok).IsTrue();
-            await Assert.That(id).IsTypeOf<PersonalId>();
-        }
 
         [Test]
         [MethodDataSource(nameof(Samordningsnummer))]
@@ -447,22 +405,6 @@ public class SwedishOfficialIdTests
         // ── ParseAny fan-out (mirrors Java parseAnyOrThrow) ────────────
 
         [Test]
-        [MethodDataSource(nameof(Personnummer1890S))]
-        public async Task ParseAny_Personnummer1890s_ReturnsPersonalId(string pin)
-        {
-            var id = SwedishOfficialId.ParseAny(pin);
-            await Assert.That(id).IsTypeOf<PersonalId>();
-        }
-
-        [Test]
-        [MethodDataSource(nameof(PersonnummerFinal))]
-        public async Task ParseAny_PersonnummerFinal_ReturnsPersonalId(string pin)
-        {
-            var id = SwedishOfficialId.ParseAny(pin);
-            await Assert.That(id).IsTypeOf<PersonalId>();
-        }
-
-        [Test]
         [MethodDataSource(nameof(Samordningsnummer))]
         public async Task ParseAny_Samordningsnummer_ReturnsCoordinationId(string pin)
         {
@@ -488,12 +430,5 @@ public class SwedishOfficialIdTests
 
         // ── Pattern-matching fan-out (mirrors Java getIdType) ──────────
 
-        [Test]
-        [MethodDataSource(nameof(Personnummer1890S))]
-        public async Task PatternMatch_Personnummer1890s_IsPersonalId(string pin)
-        {
-            var id = SwedishOfficialId.ParseAny(pin);
-            await Assert.That(id is PersonalId).IsTrue();
-        }
     }
 }
